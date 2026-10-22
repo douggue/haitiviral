@@ -20,6 +20,11 @@ export type ServiceMeta = {
   drip: boolean;
   /** The provider's own description (shown in the details sheet) */
   desc?: string;
+  /** Staff set the risk level by hand: "Re-analyze all" leaves it alone */
+  riskLocked?: boolean;
+  /** Turned off by the risk analysis (blocked words) or because it sold at a loss: turned back on automatically when fixed */
+  blocked?: boolean;
+  pausedLoss?: boolean;
 };
 
 export const LIVE_DURATIONS = [15, 30, 60, 120] as const;
@@ -40,6 +45,9 @@ export function parseMeta(v: unknown): ServiceMeta | null {
     refillDays: m.refillDays ?? 0,
     drip: !!m.drip,
     desc: m.desc,
+    riskLocked: !!m.riskLocked,
+    blocked: !!m.blocked,
+    pausedLoss: !!m.pausedLoss,
   };
 }
 

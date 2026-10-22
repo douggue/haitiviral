@@ -4,6 +4,7 @@ import { requireStaff } from "@/lib/session";
 import { formatMoney } from "@/lib/money";
 import { t } from "@/lib/text";
 import { PageTitle, Stat } from "@/components/admin/ui";
+import { providerAlerts } from "@/lib/suppliers/catalog";
 
 export const metadata = { title: "Dashboard" };
 
@@ -42,12 +43,20 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const yRev = Math.abs(yRevenue.find((r) => r.currency === "HTG")?._sum.amount ?? 0);
   const rev = (c: "HTG" | "USD") => todayRevenue.find((r) => r.currency === c)?._sum.amount ?? 0;
   const liab = (c: "HTG" | "USD") => liabilities.find((r) => r.currency === c)?._sum.balance ?? 0;
+  const alerts = await providerAlerts().catch(() => []);
   const recent = await prisma.order.findMany({ orderBy: { createdAt: "desc" }, take: 8, include: { user: { select: { name: true } } } });
 
   return (
     <>
       {sp.denied && <p className="mb-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">Your role does not have access to that page.</p>}
       <PageTitle title="Dashboard" sub="Today at a glance" />
+      {alerts.length > 0 && (
+        <ul className="mb-4 space-y-2">
+          {alerts.map((a) => (
+            <li key={a.text}><Link href={a.href} className={`block rounded-xl px-4 py-3 text-sm font-semibold ${a.tone === "danger" ? "bg-danger-soft text-danger" : "bg-warning-soft text-warning"}`}>{a.text} →</Link></li>
+          ))}
+        </ul>
+      )}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Orders today" value={todayOrders} delta={delta(todayOrders, yOrders)} />
         <Stat label="Sales today" value={<span className="text-xl">{formatMoney(rev("HTG"), "HTG", "en")}{rev("USD") ? ` + ${formatMoney(rev("USD"), "USD", "en")}` : ""}</span>} delta={delta(Math.abs(rev("HTG")), yRev)} />

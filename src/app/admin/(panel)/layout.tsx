@@ -28,6 +28,8 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     { href: "/admin/approvals", label: "Approvals", group: "Operations", perm: "approvals.decide", badge: approvals },
     { href: "/admin/support", label: "Support", group: "Operations", perm: "support.manage", badge: tickets },
     { href: "/admin/products", label: "Products", group: "Catalog", perm: "catalog.manage" },
+    { href: "/admin/services", label: "Services & risk", group: "Catalog", perm: "catalog.manage" },
+    { href: "/admin/pricing", label: "Pricing & profit", group: "Catalog", perm: "settings.manage" },
     { href: "/admin/codes", label: "Code inventory", group: "Catalog", perm: "codes.manage" },
     { href: "/admin/suppliers", label: "Suppliers", group: "Catalog", perm: "settings.manage", badge: supplierIssues },
     { href: "/admin/media", label: "Media", group: "Catalog", perm: "catalog.manage" },

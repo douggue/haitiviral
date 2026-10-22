@@ -1,0 +1,154 @@
+"use server";
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/db";
+import { assertStaff } from "@/lib/session";
+import { audit } from "@/lib/audit";
+import { getSettings, setSetting } from "@/lib/settings";
+import { rulesFromText } from "@/lib/service-risk";
+import { applyProfitRules, applyRisk, linkChoice, setChoiceRisk, syncAllProviders, syncProviderServices } from "@/lib/suppliers/catalog";
+
+type R = { ok: true; message?: string } | { ok: false; error: string };
+const fail = (e: unknown): R => ({ ok: false, error: e instanceof Error ? e.message : "Unexpected error" });
+const refresh = () => ["/admin/services", "/admin/pricing", "/admin/suppliers", "/admin"].forEach((p) => revalidatePath(p));
+
+/** "Sync from providers": one provider, or all SMM providers (then risk and profit are checked again). */
+export async function syncProvidersAction(supplierId: string | null): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    if (supplierId) {
+      const r = await syncProviderServices(supplierId);
+      await applyRisk();
+      await applyProfitRules();
+      await audit(staff.id, "provider.sync", "Supplier", supplierId, r);
+      refresh();
+      return { ok: true, message: `${r.total} services · ${r.added} new · ${r.updated} changed · ${r.removed} gone` };
+    }
+    const r = await syncAllProviders();
+    await audit(staff.id, "provider.sync", "Supplier", "all", r as Record<string, unknown>);
+    refresh();
+    const parts = Object.entries(r).map(([name, v]) => `${name}: ${"error" in (v as object) ? (v as { error: string }).error : `${(v as { total: number }).total} services`}`);
+    return { ok: true, message: parts.join(" · ") || "No SMM provider yet: add one in Suppliers" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function reanalyzeAction(): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const n = await applyRisk();
+    await audit(staff.id, "risk.reanalyze", "ProductVariant", "all", { changed: n });
+    refresh();
+    return { ok: true, message: n ? `${n} level(s) updated` : "Nothing changed" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function setRiskAction(variantId: string, form: FormData): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const level = String(form.get("level") ?? "auto");
+    if (!["auto", "low", "med", "high", "blocked"].includes(level)) return { ok: false, error: "Unknown level" };
+    await setChoiceRisk(variantId, level as "auto");
+    await audit(staff.id, "risk.set", "ProductVariant", variantId, { level });
+    refresh();
+    return { ok: true, message: level === "auto" ? "Uses the suggestion" : "Saved and locked" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function saveRiskRules(form: FormData): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const rules = rulesFromText(String(form.get("rules") ?? ""));
+    if (!rules.length) return { ok: false, error: 'Write at least one rule, like "+3 bot, fake"' };
+    const blocked = String(form.get("blocked") ?? "").split("\n").map((x) => x.trim()).filter(Boolean);
+    await setSetting("riskRules", rules);
+    await setSetting("riskBlocked", blocked);
+    const n = await applyRisk();
+    await audit(staff.id, "risk.rules", "SiteSetting", "riskRules", { rules: rules.length, blocked: blocked.length });
+    refresh();
+    return { ok: true, message: `Saved · ${n} level(s) updated` };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function linkChoiceAction(variantId: string, form: FormData): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const input = {
+      supplierId: String(form.get("supplierId") ?? "") || null,
+      sku: String(form.get("sku") ?? ""),
+      backupSupplierId: String(form.get("backupSupplierId") ?? "") || null,
+      backupSku: String(form.get("backupSku") ?? ""),
+    };
+    const main = await linkChoice(variantId, input);
+    await applyRisk();
+    await applyProfitRules();
+    await audit(staff.id, "choice.link", "ProductVariant", variantId, input);
+    refresh();
+    return { ok: true, message: main ? `Linked to ${main.name}` : "Unlinked" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function savePricing(form: FormData): Promise<R> {
+  try {
+    const staff = await assertStaff("settings.manage");
+    const num = (k: string, min: number, max: number) => {
+      const v = Number(String(form.get(k) ?? "").replace(",", "."));
+      if (!Number.isFinite(v) || v < min || v > max) throw new Error(`${k}: must be between ${min} and ${max}`);
+      return v;
+    };
+    const values = { htgPerUsd: num("htgPerUsd", 1, 10_000), paymentFeePct: num("paymentFeePct", 0, 50), minProfitPct: num("minProfitPct", 0, 95), autoPauseLoss: form.get("autoPauseLoss") === "on" };
+    for (const [k, v] of Object.entries(values)) await setSetting(k as "htgPerUsd", v as number);
+    const r = await applyProfitRules();
+    await audit(staff.id, "pricing.save", "SiteSetting", "pricing", values);
+    refresh();
+    return { ok: true, message: `Saved${r.paused ? ` · ${r.paused} paused (loss)` : ""}${r.resumed ? ` · ${r.resumed} back on` : ""}` };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Selling price per 1,000 for one choice, from the pricing table (in gourdes). */
+export async function setChoicePrice(variantId: string, gourdes: string): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const v = Math.round(Number(gourdes.replace(/[^\d.]/g, "")) * 100);
+    if (!Number.isFinite(v) || v <= 0) return { ok: false, error: "Write a price in gourdes, like 420" };
+    const before = await prisma.productVariant.findUniqueOrThrow({ where: { id: variantId }, select: { priceHtg: true } });
+    await prisma.productVariant.update({ where: { id: variantId }, data: { priceHtg: v } });
+    const r = await applyProfitRules();
+    await audit(staff.id, "choice.price", "ProductVariant", variantId, { from: before.priceHtg, to: v });
+    refresh();
+    return { ok: true, message: `G ${(v / 100).toLocaleString("en-US")}${r.resumed ? " · back on" : r.paused ? " · paused (loss)" : ""}` };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Services status shown to customers per platform: normal, slow, or paused (paused = no new orders). */
+export async function saveServiceStatus(form: FormData): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const s = await getSettings();
+    const next: Record<string, "ok" | "slow" | "pause"> = { ...s.serviceStatus };
+    for (const [k, v] of form.entries()) {
+      if (!k.startsWith("status_")) continue;
+      const val = String(v);
+      if (val === "ok") delete next[k.slice(7)];
+      else if (val === "slow" || val === "pause") next[k.slice(7)] = val;
+    }
+    await setSetting("serviceStatus", next);
+    await audit(staff.id, "services.status", "SiteSetting", "serviceStatus", next);
+    refresh();
+    return { ok: true, message: "Saved" };
+  } catch (e) {
+    return fail(e);
+  }
+}

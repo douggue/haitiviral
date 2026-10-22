@@ -4,7 +4,7 @@ import { prisma } from "../db";
 import { refundPart } from "../wallet";
 import { notify } from "../notify";
 import { formatMoney } from "../money";
-import { smmAdd, smmCancel, smmOutcome, smmRefill, smmStatuses, type SmmProgress } from "./smm";
+import { smmAdd, smmCancel, smmOutcome, smmRefill, smmRefillStatus, smmStatuses, type SmmProgress } from "./smm";
 
 /**
  * SMM panel orders (suppliers with preset smm_panel / smm_mock), on top of the supplier order steps in orders.ts:
@@ -160,14 +160,30 @@ export async function runSmmChecks(ids?: string[]): Promise<string[]> {
       if (done) finished.push(done);
     }
   }
+  if (!ids) await checkRefills().catch((e) => console.error("SMM refill checks failed", e));
   return finished;
+}
+
+/** Refills asked in the last 7 days: follow their status (every 30 minutes at most) until the provider finishes them. */
+async function checkRefills() {
+  const open = await prisma.supplierOrder.findMany({
+    where: { refillId: { not: null }, refillStatus: { notIn: ["Completed", "Rejected", "Canceled", "Error"] }, refillAt: { gt: new Date(Date.now() - 7 * 86_400_000) }, updatedAt: { lt: new Date(Date.now() - 30 * 60_000) } },
+    include: { supplier: true },
+    take: 50,
+  });
+  for (const so of open) {
+    const st = await smmRefillStatus(so.supplier, so.refillId!);
+    await prisma.supplierOrder.update({ where: { id: so.id }, data: { refillStatus: st ?? so.refillStatus } });
+  }
 }
 
 /** Customer "Refill" on a completed order: sent to the provider when the service has refill and the period isn't over. */
 export async function requestSmmRefill(orderItemId: string, refillDays: number): Promise<"sent" | "not_linked" | "expired" | "too_soon" | "refused"> {
-  const so = await prisma.supplierOrder.findFirst({ where: { orderItemId, status: "SUCCESS", supplierOrderId: { not: null } }, include: { supplier: true }, orderBy: { createdAt: "desc" } });
+  const so = await prisma.supplierOrder.findFirst({ where: { orderItemId, status: "SUCCESS", supplierOrderId: { not: null } }, include: { supplier: true, orderItem: { select: { order: { select: { fulfilledAt: true } } } } }, orderBy: { createdAt: "desc" } });
   if (!so || !isSmm(so.supplier.preset)) return "not_linked";
-  if (Date.now() - so.updatedAt.getTime() > refillDays * 86_400_000) return "expired";
+  // The refill period counts from delivery (the order's completion date), not from later updates of this row.
+  const deliveredAt = so.orderItem.order.fulfilledAt ?? so.createdAt;
+  if (refillDays <= 0 || Date.now() - deliveredAt.getTime() > refillDays * 86_400_000) return "expired";
   if (so.refillAt && Date.now() - so.refillAt.getTime() < 86_400_000) return "too_soon";
   const r = await smmRefill(so.supplier, so.supplierOrderId!, so.id);
   if (!r.ok) return "refused";

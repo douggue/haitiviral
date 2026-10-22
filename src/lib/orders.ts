@@ -179,6 +179,8 @@ export async function createServiceOrder(input: ServiceOrderInput) {
   });
   const meta = parseMeta(v?.service);
   if (!v || !meta || v.soldOut) throw new OrderError("unavailable");
+  // Admin → Services & risk: a paused platform takes no new orders.
+  if ((await getSettings()).serviceStatus?.[v.product.category.slug] === "pause") throw new OrderError("unavailable");
   const kind = productKind(v.product.tags);
   const link = checkLink(input.link, v.product.category.slug, wantsPost(kind, meta.type));
   if (!link.ok) throw new OrderError("invalid_link");

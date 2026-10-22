@@ -2,6 +2,7 @@ import { cache } from "react";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { prisma } from "./db";
 import { DEFAULT_EXCHANGE, type ExchangePricing } from "./amount";
+import { DEFAULT_BLOCKED, DEFAULT_RISK_RULES, type RiskRule } from "./service-risk";
 
 export type Settings = {
   /** Recent sales popup on the products ticked in Admin → Trust */
@@ -65,6 +66,13 @@ export type Settings = {
   trialOffers: { key: string; product: string; tier: number; quantity: number; label: Record<string, string>; avg: Record<string, string> }[];
   /** Services status per platform (category slug) shown on the help page and home bar; missing = normal */
   serviceStatus: Record<string, "ok" | "slow" | "pause">;
+  /** Risk analysis (Admin → Services & risk): clue rules and words that block a provider service */
+  riskRules: RiskRule[];
+  riskBlocked: string[];
+  /** Pricing (Admin → Pricing & profit): payment fee %, warning under this profit %, pause choices that lose money */
+  paymentFeePct: number;
+  minProfitPct: number;
+  autoPauseLoss: boolean;
   referralRewardHtg: number;
   referralMinOrderHtg: number;
   heroImageUrl: string;
@@ -170,6 +178,11 @@ export const DEFAULT_SETTINGS: Settings = {
   autoRefundHours: 96,
   referralEnabled: true,
   serviceStatus: {},
+  riskRules: DEFAULT_RISK_RULES,
+  riskBlocked: DEFAULT_BLOCKED,
+  paymentFeePct: 3,
+  minProfitPct: 15,
+  autoPauseLoss: true,
   trialEnabled: true,
   trialStrict: false,
   trialPerDay: 30,
