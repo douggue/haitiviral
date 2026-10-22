@@ -810,7 +810,14 @@
     "emptyCta": "Passer ma première commande",
     "today": "Aujourd'hui",
     "yesterday": "Hier",
-    "free": "GRATUIT"
+    "free": "GRATUIT",
+    "refillSent": "Recharge envoyée au fournisseur. Elle commence dans quelques heures.",
+    "cancelSent": "Demande envoyée au fournisseur. S'il annule, l'argent non livré revient automatiquement dans votre portefeuille.",
+    "refillExpired": "La période de recharge de ce service est terminée.",
+    "refillTooSoon": "Vous avez déjà demandé une recharge pour cette commande aujourd'hui. Réessayez demain.",
+    "helpError": "Ça n'a pas marché. Réessayez ou écrivez-nous sur WhatsApp.",
+    "notePartial": "Le fournisseur a livré {done} sur {total}. {amount} revient automatiquement dans votre portefeuille.",
+    "remains": "Reste : {n}"
   },
   "walletUi": {
     "title": "Mon portefeuille",

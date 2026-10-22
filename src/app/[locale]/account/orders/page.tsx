@@ -19,10 +19,10 @@ const LOOK: Record<Look, [bg: string, fg: string, bar: string]> = {
 };
 const lookOf = (s: OrderStatus): Look =>
   s === "FULFILLED" ? "done" : s === "PAID" || s === "PROCESSING" ? "run" : s === "AWAITING_PAYMENT" || s === "PAYMENT_REVIEW" ? "wait" : "cancel";
-const FILTERS: Record<string, Prisma.OrderWhereInput["status"]> = {
-  running: { in: ["PAID", "PROCESSING"] },
-  done: "FULFILLED",
-  partial: { in: [] },
+const FILTERS: Record<string, Prisma.OrderWhereInput> = {
+  running: { status: { in: ["PAID", "PROCESSING"] } },
+  done: { status: "FULFILLED", items: { none: { supplierOrders: { some: { refundedPartial: { gt: 0 } } } } } },
+  partial: { items: { some: { supplierOrders: { some: { refundedPartial: { gt: 0 } } } } } },
 };
 
 /** My orders (mockup "Kòmand mwen yo"): filters, one card per order with progress, refill, order again and cancel. */
@@ -34,10 +34,18 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
   const filter = f && f in FILTERS ? f : "all";
   const t = await getTranslations("ordersUi");
   const orders = await prisma.order.findMany({
-    where: { userId: user.id, ...(filter !== "all" ? { status: FILTERS[filter] } : {}) },
+    where: { userId: user.id, ...(filter !== "all" ? FILTERS[filter] : {}) },
     orderBy: { createdAt: "desc" },
     take: 100,
-    include: { items: { include: { variant: { include: { product: { include: { category: true } } } } } } },
+    include: {
+      items: {
+        include: {
+          variant: { include: { product: { include: { category: true } } } },
+          // The provider attempt that counts (the latest): start count, what remains, partial refund.
+          supplierOrders: { where: { status: { not: "CLOSED" } }, orderBy: { createdAt: "desc" }, take: 1, select: { startCount: true, remains: true, refundedPartial: true } },
+        },
+      },
+    },
   });
   const now = new Date();
   const day = (d: Date) => {
@@ -71,11 +79,15 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
           const meta = parseMeta(item?.variant.service);
           const fv = (item?.fieldValues ?? {}) as Record<string, string>;
           const qty = Number(fv.quantity) || 0;
-          const look = lookOf(o.status);
+          const so = item?.supplierOrders[0];
+          const refundedPart = so?.refundedPartial ?? 0;
+          const look: Look = refundedPart > 0 && o.status === "FULFILLED" ? "partial" : lookOf(o.status);
           const [bg, fg, bar] = LOOK[look];
-          const pct = look === "done" ? 100 : look === "run" ? 8 : 0;
+          // Real progress from the provider when known (quantity − remains), otherwise a small "started" bar.
+          const done = look === "done" ? qty : so?.remains != null && qty ? Math.max(0, Math.min(qty, qty - so.remains)) : 0;
+          const pct = look === "done" ? 100 : qty && done ? Math.round((done / qty) * 100) : look === "run" ? 8 : 0;
           const name = product ? `${txt(product.name, locale)}${qty ? ` · ${qty.toLocaleString("en-US")}` : ""}` : `#${o.number}`;
-          const statusLabel = look === "run" ? t("running") : look === "done" ? t("done") : look === "wait" ? t("waiting") : t("canceled");
+          const statusLabel = look === "run" ? t("running") : look === "done" ? t("done") : look === "partial" ? t("partial") : look === "wait" ? t("waiting") : t("canceled");
           const refunded = o.status === "REFUNDED" || o.status === "CANCELED";
           return (
             <article key={o.id} className="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface p-3.5">
@@ -96,15 +108,16 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
               </Link>
               <div className="h-2 overflow-hidden rounded-full bg-[#EEF0F5] dark:bg-surface-2"><div className="h-full rounded-full" style={{ width: `${pct}%`, background: bar }} /></div>
               <div className="flex justify-between text-xs text-muted">
-                <span>{t("started", { n: "—" })}</span>
-                <span>{qty ? t("delivered", { done: (look === "done" ? qty : 0).toLocaleString("en-US"), total: qty.toLocaleString("en-US") }) : ""}</span>
+                <span>{t("started", { n: so?.startCount != null ? so.startCount.toLocaleString("en-US") : "—" })}</span>
+                <span>{qty ? t("delivered", { done: done.toLocaleString("en-US"), total: qty.toLocaleString("en-US") }) : ""}</span>
                 <span className="font-bold text-text">{o.total === 0 ? t("free") : formatMoney(o.total, o.currency, locale)}</span>
               </div>
+              {look === "partial" && <p className="rounded-[10px] px-3 py-2.5 text-xs leading-normal" style={{ background: bg, color: fg }}>{t("notePartial", { done: done.toLocaleString("en-US"), total: qty.toLocaleString("en-US"), amount: formatMoney(refundedPart, o.currency, locale) })}</p>}
               {refunded && <p className="rounded-[10px] px-3 py-2.5 text-xs leading-normal" style={{ background: bg, color: fg }}>{t("noteRefunded", { amount: formatMoney(o.total, o.currency, locale) })}</p>}
-              {look === "done" && (
+              {(look === "done" || look === "partial") && (
                 <div className="flex gap-2">
                   {!!meta?.refillDays && (
-                    <OrderHelpButton orderId={o.id} kind="refill" label={t("refill")} done={t("requested")} className="flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-text bg-surface text-sm font-bold text-text">
+                    <OrderHelpButton orderId={o.id} kind="refill" label={t("refill")} className="flex min-h-11 w-full flex-1 items-center justify-center gap-1.5 rounded-xl border border-text bg-surface text-sm font-bold text-text">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" /></svg>
                     </OrderHelpButton>
                   )}
@@ -115,7 +128,7 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
               )}
               {look === "run" && meta && <p className="text-xs text-[#1E40AF] dark:text-primary">{t("avg", { time: txt(meta.avg, locale) })}</p>}
               {look === "run" && (
-                <OrderHelpButton orderId={o.id} kind="cancel" label={t("cancel")} done={t("requested")} className="min-h-11 rounded-xl border border-[#FCA5A5] bg-surface px-3 text-sm font-bold text-[#B91C1C]" />
+                <OrderHelpButton orderId={o.id} kind="cancel" label={t("cancel")} className="min-h-11 w-full rounded-xl border border-[#FCA5A5] bg-surface px-3 text-sm font-bold text-[#B91C1C]" />
               )}
             </article>
           );

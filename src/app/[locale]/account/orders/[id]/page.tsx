@@ -26,14 +26,14 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
   const order = await prisma.order.findFirst({
     where: { id, userId: user.id },
     include: {
-      items: { include: { codes: true, variant: { include: { product: { select: { slug: true, tags: true, category: { select: { slug: true } } } } } } } },
+      items: { include: { codes: true, supplierOrders: { where: { refundedPartial: { gt: 0 } }, take: 1, select: { remains: true, refundedPartial: true } }, variant: { include: { product: { select: { slug: true, tags: true, category: { select: { slug: true } } } } } } } },
       events: { orderBy: { createdAt: "asc" } },
       payments: { orderBy: { createdAt: "desc" }, take: 1 },
       review: { select: { id: true } },
     },
   });
   if (!order) notFound();
-  const [to, tc, fmt, settings, ts, td] = await Promise.all([getTranslations("order"), getTranslations("common"), getFormatter(), getSettings(), getTranslations("support"), getTranslations("orderDetail")]);
+  const [to, tc, fmt, settings, ts, td, tu] = await Promise.all([getTranslations("order"), getTranslations("common"), getFormatter(), getSettings(), getTranslations("support"), getTranslations("orderDetail"), getTranslations("ordersUi")]);
 
   const manual = order.manualMethodId ? await prisma.manualMethod.findUnique({ where: { id: order.manualMethodId } }) : null;
   const codes = order.items.flatMap((i) => i.codes);
@@ -136,6 +136,15 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
                 </ul>
               </div>
             )}
+            {item.supplierOrders[0] && (() => {
+              const qty = Number((item.fieldValues as Record<string, string> | null)?.quantity) || 0;
+              const part = item.supplierOrders[0];
+              return (
+                <p className="rounded-xl bg-[#FEF3C7] p-4 text-sm text-[#92400E]">
+                  {tu("notePartial", { done: Math.max(0, qty - (part.remains ?? 0)).toLocaleString("en-US"), total: qty.toLocaleString("en-US"), amount: formatMoney(part.refundedPartial ?? 0, order.currency, locale) })}
+                </p>
+              );
+            })()}
             {item.deliveryNote && (
               <div className="rounded-xl bg-surface-2 p-4 text-sm">
                 <p className="font-semibold">{to("deliveryNote")}</p>

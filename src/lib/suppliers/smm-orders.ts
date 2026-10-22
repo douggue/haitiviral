@@ -107,7 +107,7 @@ async function refundUndelivered(so: SmmOrder, remains: number, reason: string) 
   await prisma.$transaction(async (tx) => {
     await refundPart(tx, order, amount, so.orderItemId, reason);
     await tx.supplierOrder.update({ where: { id: so.id }, data: { refundedPartial: amount } });
-    await tx.orderItem.update({ where: { id: so.orderItemId }, data: { status: "DELIVERED", deliveryNote: `Partly delivered: ${qty - remains} of ${qty}` } });
+    await tx.orderItem.update({ where: { id: so.orderItemId }, data: { status: "DELIVERED" } }); // the customer sees the partial note in their language
     await tx.orderEvent.create({ data: { orderId: order.id, status: "PROCESSING", note: `Partly delivered (${qty - remains}/${qty}): ${formatMoney(amount, order.currency, "en")} back to the wallet` } });
   });
   await notify(order.userId, "order_partial", { number: order.number, amount, currency: order.currency }, `/account/orders/${order.id}`);

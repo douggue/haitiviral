@@ -810,7 +810,14 @@
     "emptyCta": "Fè premye kòmand ou",
     "today": "Jodi a",
     "yesterday": "Yè",
-    "free": "GRATIS"
+    "free": "GRATIS",
+    "refillSent": "Refill la voye bay founisè a. L ap kòmanse nan kèk èdtan.",
+    "cancelSent": "Demann lan voye bay founisè a. Si l anile, kòb sa ki pa livre a ap tounen nan bous ou otomatikman.",
+    "refillExpired": "Peryòd refill sèvis sa a fini.",
+    "refillTooSoon": "Ou deja mande yon refill pou kòmand sa a jodi a. Eseye ankò demen.",
+    "helpError": "Sa pa mache. Eseye ankò oswa ekri nou sou WhatsApp.",
+    "notePartial": "Founisè a livre {done} sou {total}. {amount} tounen nan bous ou otomatikman.",
+    "remains": "Rete: {n}"
   },
   "walletUi": {
     "title": "Bous mwen",

@@ -5,6 +5,8 @@ import { verify } from "@node-rs/argon2";
 import { prisma } from "@/lib/db";
 import { assertUser } from "@/lib/session";
 import { getBalances } from "@/lib/ledger";
+import { parseMeta } from "@/lib/services";
+import { requestSmmCancel, requestSmmRefill } from "@/lib/suppliers/smm-orders";
 import { audit } from "@/lib/audit";
 import { savePrivateImage, uploadsEnabled } from "@/lib/storage";
 
@@ -188,17 +190,30 @@ export async function changeUnverifiedEmail(newEmail: string, callbackURL: strin
 
 // ───────────── Refill / cancel requests (handled by staff until the provider connector does it) ─────────────
 
-export async function requestOrderHelp(orderId: string, kind: "refill" | "cancel"): Promise<R> {
+export async function requestOrderHelp(orderId: string, kind: "refill" | "cancel"): Promise<{ ok: true; how: "provider" | "ticket" } | { ok: false; error: string }> {
   const user = await assertUser();
-  const order = await prisma.order.findFirst({ where: { id: orderId, userId: user.id } });
+  const order = await prisma.order.findFirst({ where: { id: orderId, userId: user.id }, include: { items: { take: 1, include: { variant: { select: { service: true } } } } } });
   if (!order || !["refill", "cancel"].includes(kind)) return { ok: false, error: "missing" };
+  const item = order.items[0];
+  // Linked to an SMM provider: ask the provider directly. Otherwise (or if the provider says no) staff gets a ticket.
+  if (item) {
+    if (kind === "refill") {
+      const r = await requestSmmRefill(item.id, parseMeta(item.variant.service)?.refillDays ?? 0);
+      if (r === "sent") return { ok: true, how: "provider" };
+      if (r === "expired" || r === "too_soon") return { ok: false, error: r };
+    } else {
+      if (order.status !== "PROCESSING" && order.status !== "PAID") return { ok: false, error: "missing" };
+      const r = await requestSmmCancel(item.id);
+      if (r === "sent") return { ok: true, how: "provider" };
+    }
+  }
   const subject = `${kind === "refill" ? "Refill" : "Cancel"} #${order.number}`;
   const existing = await prisma.supportTicket.findFirst({ where: { userId: user.id, orderId, subject, status: { not: "CLOSED" } } });
-  if (existing) return { ok: true, id: existing.id };
-  const ticket = await prisma.supportTicket.create({
+  if (existing) return { ok: true, how: "ticket" };
+  await prisma.supportTicket.create({
     data: { userId: user.id, subject, orderId, messages: { create: { authorId: user.id, body: kind === "refill" ? "Customer asked for a refill from My orders." : "Customer asked to cancel from My orders." } } },
   });
-  return { ok: true, id: ticket.id };
+  return { ok: true, how: "ticket" };
 }
 
 /** Account screen switch: promotions on/off (other notification preferences unchanged). */
