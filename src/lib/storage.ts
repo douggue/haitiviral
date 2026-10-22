@@ -52,8 +52,9 @@ const PUBLIC_ROOT = path.join(ROOT, "public");
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 /**
- * Store a public image and return its URL.
- * Vercel Blob (public access) when configured; otherwise `uploads/public`, served at /media/... (development).
+ * Store a public image and return its URL, always /media/<folder>/<file> (served by app/media/[...path]).
+ * Production: kept in the same private Blob store as payment screenshots (one store, set to Private), under public/.
+ * Development: `uploads/public`.
  */
 export async function savePublicImage(file: File, folder: "products" | "categories" | "brand"): Promise<string> {
   const ext = ALLOWED[file.type];
@@ -67,13 +68,24 @@ export async function savePublicImage(file: File, folder: "products" | "categori
   const name = `${folder}/${Date.now()}-${randomToken(8)}.${ext}`;
 
   if (blobEnabled()) {
-    const blob = await put(`public/${name}`, buf, { access: "public", contentType: file.type, addRandomSuffix: false, cacheControlMaxAge: 60 * 60 * 24 * 365 });
-    return blob.url;
+    await put(`public/${name}`, buf, { access: "private", contentType: file.type, addRandomSuffix: false });
+    return `/media/${name}`;
   }
   if (!uploadsEnabled()) throw new UploadError("storage");
   await mkdir(path.join(PUBLIC_ROOT, folder), { recursive: true });
   await writeFile(path.join(PUBLIC_ROOT, name), buf);
   return `/media/${name}`;
+}
+
+/** A public image by its path after /media/ (from the Blob store in production, the local folder otherwise). */
+export async function readPublicFile(relPath: string): Promise<Buffer> {
+  if (!/^(products|categories|brand)\/[\w.-]+$/.test(relPath)) throw new Error("Invalid path");
+  if (blobEnabled()) {
+    const res = await get(`public/${relPath}`, { access: "private" });
+    if (!res || res.statusCode !== 200) throw new Error("File not found");
+    return Buffer.from(await new Response(res.stream).arrayBuffer());
+  }
+  return readLocalPublicFile(relPath);
 }
 
 export async function readLocalPublicFile(relPath: string): Promise<Buffer> {
@@ -85,6 +97,10 @@ export async function readLocalPublicFile(relPath: string): Promise<Buffer> {
 /** Remove a public image we stored (Blob URL or local /media path). Unknown URLs are ignored. */
 export async function deletePublicImage(url: string): Promise<void> {
   if (!isOwnImageUrl(url)) return;
+  if (url.startsWith("/media/") && blobEnabled()) {
+    await del(`public/${url.slice("/media/".length)}`).catch(() => {});
+    return;
+  }
   if (url.startsWith("/media/")) {
     const full = path.resolve(PUBLIC_ROOT, url.slice("/media/".length));
     if (!full.startsWith(path.resolve(PUBLIC_ROOT) + path.sep)) return;
@@ -94,7 +110,7 @@ export async function deletePublicImage(url: string): Promise<void> {
   if (blobEnabled()) await del(url);
 }
 
-/** Only accept image URLs we produced: Vercel Blob public URLs or local /media paths. */
+/** Only accept image URLs we produced: /media paths (and Blob public URLs from older uploads). */
 export function isOwnImageUrl(url: string): boolean {
   if (/^\/media\/(products|categories|brand)\/[\w.-]+$/.test(url)) return true;
   try {
