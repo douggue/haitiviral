@@ -203,10 +203,8 @@ export function ProductPurchase({ product, saved, pricing }: Props) {
 
       {error && <p className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger" role="alert">{error}</p>}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <button type="button" className="btn-secondary min-h-12" onClick={() => submit(false)} disabled={!variant?.inStock}>
-          {added ? `✓ ${tp("added")}` : tp("addToCart")}
-        </button>
+      {/* No cart in the HaitiViral menu (mockup): packs are bought directly. */}
+      <div className="grid gap-3">
         <button type="button" className="btn-primary min-h-12" onClick={() => submit(true)} disabled={!variant?.inStock}>
           {tp("buyNow")}
         </button>

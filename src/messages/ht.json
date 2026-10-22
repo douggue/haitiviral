@@ -945,5 +945,17 @@
     "error_offer": "Esè sa a pa disponib ankò.",
     "error_verify_email": "Konfime imèl ou anvan.",
     "error_generic": "Gen yon pwoblèm. Eseye ankò."
+  },
+  "orderDetail": {
+    "link": "Lyen",
+    "quantity": "Kantite",
+    "comments": "Kòmantè",
+    "username": "Moun ki ekri kòmantè a",
+    "durationMin": "Dire (minit)",
+    "drip": "Drip-feed",
+    "WALLET": "Bous HaitiViral",
+    "MONCASH": "MonCash",
+    "NATCASH": "NatCash",
+    "MANUAL": "Transfè"
   }
 }

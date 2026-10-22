@@ -945,5 +945,17 @@
     "error_offer": "Cet essai n'est plus disponible.",
     "error_verify_email": "Confirmez d'abord votre e-mail.",
     "error_generic": "Un problème est survenu. Réessayez."
+  },
+  "orderDetail": {
+    "link": "Lien",
+    "quantity": "Quantité",
+    "comments": "Commentaires",
+    "username": "Auteur du commentaire",
+    "durationMin": "Durée (minutes)",
+    "drip": "Drip-feed",
+    "WALLET": "Portefeuille HaitiViral",
+    "MONCASH": "MonCash",
+    "NATCASH": "NatCash",
+    "MANUAL": "Virement"
   }
 }

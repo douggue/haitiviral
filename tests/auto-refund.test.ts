@@ -28,7 +28,7 @@ async function paidOrder(hoursAgo: number) {
 
 describe("automatic refund of undelivered orders", () => {
   it("refunds orders older than autoRefundHours and leaves recent ones", async () => {
-    const old = await paidOrder(48);
+    const old = await paidOrder(120); // older than the default autoRefundHours (96)
     const recent = await paidOrder(1);
     expect((await getBalances(prisma, old.userId)).HTG.available).toBe(200_00);
     const { GET } = await import("@/app/api/cron/maintenance/route");

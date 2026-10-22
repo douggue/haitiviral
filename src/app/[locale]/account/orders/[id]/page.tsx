@@ -17,6 +17,7 @@ import { ReviewRequest } from "@/components/ReviewRequest";
 import { formatPhone } from "@/lib/phone";
 import { randomToken } from "@/lib/crypto";
 import { GiftShare } from "@/components/GiftShare";
+import { PageBar } from "@/components/PageBar";
 
 export default async function OrderPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale, id } = await params;
@@ -25,14 +26,14 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
   const order = await prisma.order.findFirst({
     where: { id, userId: user.id },
     include: {
-      items: { include: { codes: true, variant: { include: { product: { select: { slug: true } } } } } },
+      items: { include: { codes: true, variant: { include: { product: { select: { slug: true, tags: true, category: { select: { slug: true } } } } } } } },
       events: { orderBy: { createdAt: "asc" } },
       payments: { orderBy: { createdAt: "desc" }, take: 1 },
       review: { select: { id: true } },
     },
   });
   if (!order) notFound();
-  const [to, tc, fmt, settings, ts] = await Promise.all([getTranslations("order"), getTranslations("common"), getFormatter(), getSettings(), getTranslations("support")]);
+  const [to, tc, fmt, settings, ts, td] = await Promise.all([getTranslations("order"), getTranslations("common"), getFormatter(), getSettings(), getTranslations("support"), getTranslations("orderDetail")]);
 
   const manual = order.manualMethodId ? await prisma.manualMethod.findUnique({ where: { id: order.manualMethodId } }) : null;
   const codes = order.items.flatMap((i) => i.codes);
@@ -57,15 +58,10 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
   const lastPayment = order.payments[0];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <Link href="/account/orders" className="text-sm text-muted hover:text-text">← {tc("orders")}</Link>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">{to("title", { number: order.number })}</h1>
-          <p className="text-sm text-muted">{to("placedOn", { date: fmt.dateTime(order.createdAt, { dateStyle: "long", timeStyle: "short" }) })}</p>
-        </div>
-        <StatusBadge status={order.status} label={to(`status.${order.status}`)} />
-      </div>
+    <>
+    <PageBar title={to("title", { number: order.number })} back="/account/orders" backLabel={tc("orders")} right={<StatusBadge status={order.status} label={to(`status.${order.status}`)} />} />
+    <div className="mx-auto max-w-[560px] space-y-5 px-5 py-4 lg:max-w-none lg:px-0">
+      <p className="text-sm text-muted">{to("placedOn", { date: order.createdAt.toLocaleString(locale === "fr" ? "fr-FR" : "fr-HT", { dateStyle: "long", timeStyle: "short" }) })}</p>
 
       {order.status === "FULFILLED" && !order.review && <ReviewRequest orderId={order.id} city={(await prisma.user.findUnique({ where: { id: user.id }, select: { city: true } }))?.city ?? ""} />}
 
@@ -113,9 +109,11 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="font-medium">{itemTitle(item, locale)} × {item.quantity}</p>
-                {Object.keys(item.fieldValues as object).length > 0 && (
-                  <p className="text-sm text-muted">{Object.values(item.fieldValues as Record<string, string>).join(" · ")}</p>
-                )}
+                <dl className="mt-1 space-y-0.5 text-sm">
+                  {Object.entries(item.fieldValues as Record<string, string>).filter(([k]) => !["riskAcceptedAt", "trial", "amountUsd", "feeUsd", "rate"].includes(k)).map(([k, v]) => (
+                    <div key={k} className="flex gap-1.5"><dt className="text-muted">{td.has(k) ? td(k) : k}:</dt><dd className="min-w-0 whitespace-pre-line break-all font-medium">{v}</dd></div>
+                  ))}
+                </dl>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold">{formatMoney(item.unitPrice * item.quantity, order.currency, locale)}</span>
@@ -144,11 +142,11 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
                 <p className="mt-1 whitespace-pre-wrap">{item.deliveryNote}</p>
               </div>
             )}
-            <Link href={`/products/${item.variant.product.slug}`} className="inline-block text-sm font-semibold text-primary">{to("buyAgain")} →</Link>
+            <Link href={item.variant.product.tags.some((x) => x.startsWith("kind:")) ? `/order?platform=${item.variant.product.category.slug}&kind=${item.variant.product.tags.find((x) => x.startsWith("kind:"))!.slice(5)}` : `/products/${item.variant.product.slug}`} className="inline-block text-sm font-semibold text-primary">{to("buyAgain")} →</Link>
           </div>
         ))}
         <div className="flex items-center justify-between p-5">
-          <span className="text-muted">{to("paidWith")}: {order.paymentMethod}</span>
+          <span className="text-muted">{to("paidWith")}: {td(order.paymentMethod)}</span>
           <span className="text-lg font-bold">{formatMoney(order.total, order.currency, locale)}</span>
         </div>
         {order.recipientNote && <p className="p-5 text-sm"><span className="text-muted">{to("recipientNote")}:</span> {order.recipientNote}</p>}
@@ -177,5 +175,6 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
         <Link href={`/account/support?order=${order.id}`} className="btn-secondary">{ts("new")}</Link>
       </div>
     </div>
+    </>
   );
 }
