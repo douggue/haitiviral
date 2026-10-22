@@ -786,5 +786,27 @@
     "error_unavailable": "Sèvis sa a pa disponib kounye a.",
     "error_account_restricted": "Kont ou limite. Kontakte sipò.",
     "empty": "Pa gen sèvis pou platfòm sa a ankò."
+  },
+  "ordersUi": {
+    "title": "Kòmand mwen yo",
+    "all": "Tout",
+    "running": "Ap trete",
+    "done": "Konplete",
+    "partial": "Pasyèl",
+    "canceled": "Anile",
+    "waiting": "An atant",
+    "started": "Kòmanse: {n}",
+    "delivered": "{done} / {total}",
+    "refill": "Refill",
+    "again": "Kòmande ankò",
+    "cancel": "Mande anile (si founisè a aksepte, kòb la tounen)",
+    "requested": "Demann lan voye. Ekip nou an ap okipe l.",
+    "avg": "Mwayèn sèvis sa a: {time}",
+    "noteRefunded": "Kòmand lan anile. {amount} ranbouse nan bous ou.",
+    "noteFailed": "Founisè a pa t ka fini. Rès kòb la tounen nan bous ou otomatikman.",
+    "empty": "Ou poko gen kòmand.",
+    "emptyCta": "Fè premye kòmand ou",
+    "today": "Jodi a",
+    "yesterday": "Yè"
   }
 }

@@ -185,3 +185,18 @@ export async function changeUnverifiedEmail(newEmail: string, callbackURL: strin
   revalidatePath("/", "layout");
   return { ok: true };
 }
+
+// ───────────── Refill / cancel requests (handled by staff until the provider connector does it) ─────────────
+
+export async function requestOrderHelp(orderId: string, kind: "refill" | "cancel"): Promise<R> {
+  const user = await assertUser();
+  const order = await prisma.order.findFirst({ where: { id: orderId, userId: user.id } });
+  if (!order || !["refill", "cancel"].includes(kind)) return { ok: false, error: "missing" };
+  const subject = `${kind === "refill" ? "Refill" : "Cancel"} #${order.number}`;
+  const existing = await prisma.supportTicket.findFirst({ where: { userId: user.id, orderId, subject, status: { not: "CLOSED" } } });
+  if (existing) return { ok: true, id: existing.id };
+  const ticket = await prisma.supportTicket.create({
+    data: { userId: user.id, subject, orderId, messages: { create: { authorId: user.id, body: kind === "refill" ? "Customer asked for a refill from My orders." : "Customer asked to cancel from My orders." } } },
+  });
+  return { ok: true, id: ticket.id };
+}

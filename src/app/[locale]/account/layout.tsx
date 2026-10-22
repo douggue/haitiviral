@@ -23,8 +23,11 @@ export default async function AccountLayout({ children, params }: { children: Re
     { href: "/account/privacy", label: ta("privacy") },
   ];
   return (
-    <div className="container-page grid grid-cols-[minmax(0,1fr)] gap-6 py-6 sm:py-10 lg:grid-cols-[220px_minmax(0,1fr)]">
-      <AccountNav items={items} />
+    // Phones: each screen is full width with its own top bar (mockup); wide screens keep the side menu.
+    <div className="lg:container-page lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-6 lg:py-10">
+      <div className="hidden lg:block">
+        <AccountNav items={items} />
+      </div>
       <div className="min-w-0">{children}</div>
     </div>
   );

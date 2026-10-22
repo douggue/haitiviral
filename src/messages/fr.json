@@ -786,5 +786,27 @@
     "error_unavailable": "Ce service n'est pas disponible pour le moment.",
     "error_account_restricted": "Votre compte est limité. Contactez le support.",
     "empty": "Aucun service pour cette plateforme pour le moment."
+  },
+  "ordersUi": {
+    "title": "Mes commandes",
+    "all": "Toutes",
+    "running": "En cours",
+    "done": "Terminées",
+    "partial": "Partielles",
+    "canceled": "Annulée",
+    "waiting": "En attente",
+    "started": "Départ : {n}",
+    "delivered": "{done} / {total}",
+    "refill": "Refill",
+    "again": "Commander à nouveau",
+    "cancel": "Demander l'annulation (remboursé si le fournisseur accepte)",
+    "requested": "Demande envoyée. Notre équipe s'en occupe.",
+    "avg": "Délai moyen de ce service : {time}",
+    "noteRefunded": "Commande annulée. {amount} remboursés dans votre portefeuille.",
+    "noteFailed": "Le fournisseur n'a pas pu terminer. Le reste est revenu automatiquement dans votre portefeuille.",
+    "empty": "Vous n'avez pas encore de commande.",
+    "emptyCta": "Passer ma première commande",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier"
   }
 }
