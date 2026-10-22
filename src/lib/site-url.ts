@@ -1,16 +1,21 @@
-/** The shop's own domain. haitiviral.com already redirects here. */
-export const CANONICAL_SITE = "https://www.haitiviral.com";
+/**
+ * The site's own domain (e.g. https://www.haitiviral.com), from NEXT_PUBLIC_SITE_URL once the domain is connected.
+ * Null while the site only lives on its .vercel.app address.
+ */
+export function ownDomain(): string | null {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  return explicit && !explicit.includes(".vercel.app") ? explicit : null;
+}
 
 /**
  * Public address of the site, without a trailing slash. Used for links in emails, SEO and payment returns.
- * - NEXT_PUBLIC_SITE_URL when set to your own domain;
- * - on the live site (Vercel production): www.haitiviral.com, never the .vercel.app address;
- * - otherwise the Vercel address, then localhost for development.
+ * - the own domain (NEXT_PUBLIC_SITE_URL) when it is set;
+ * - otherwise NEXT_PUBLIC_SITE_URL as given, then the Vercel address, then localhost for development.
  */
 export function siteUrl(): string {
+  const own = ownDomain();
+  if (own) return own;
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
-  if (explicit && !explicit.includes(".vercel.app")) return explicit;
-  if (process.env.VERCEL_ENV === "production") return CANONICAL_SITE;
   if (explicit) return explicit;
   const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   if (vercel) return `https://${vercel}`;

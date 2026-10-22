@@ -10,7 +10,7 @@ import { isPasswordBreached } from "./password-check";
 import { recordReferral } from "./referrals";
 import { recordDevice } from "./devices";
 import { verifyTurnstile } from "./turnstile";
-import { CANONICAL_SITE, onSiteDomain, siteUrl } from "./site-url";
+import { onSiteDomain, ownDomain, siteUrl } from "./site-url";
 
 // Argon2id parameters (OWASP recommended minimums)
 const argonOpts = { memoryCost: 19456, timeCost: 2, parallelism: 1, algorithm: 2 as const };
@@ -24,8 +24,8 @@ const trustedOrigins = [
   ...(process.env.VERCEL_BRANCH_URL ? [`https://${process.env.VERCEL_BRANCH_URL}`] : []),
   ...(process.env.VERCEL_PROJECT_PRODUCTION_URL ? [`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`] : []),
   ...(process.env.NEXT_PUBLIC_SITE_URL ? [process.env.NEXT_PUBLIC_SITE_URL] : []),
-  CANONICAL_SITE,
-  CANONICAL_SITE.replace("://www.", "://"),
+  // The own domain with and without "www."
+  ...(ownDomain() ? [ownDomain()!, ownDomain()!.replace("://www.", "://")] : []),
   ...(process.env.TRUSTED_ORIGINS ?? "").split(",").map((s) => s.trim()).filter(Boolean),
 ];
 
