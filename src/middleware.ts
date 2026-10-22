@@ -24,7 +24,7 @@ export default function middleware(req: NextRequest) {
   }
   // The saved language (NEXT_LOCALE) is written only when the visitor picks one (saveLocalePreference).
   // next-intl would also write it on every page response, including the background prefetch of each
-  // language flag, so the last flag prefetched (Español) would silently become the saved language.
+  // language flag, so the last flag prefetched would silently become the saved language.
   // Last step: the cookies set above rewrite the header.
   dropLocaleCookie(res);
   return res;

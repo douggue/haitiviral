@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { restoreHomepage, saveHomepage } from "@/actions/content";
 import { HOME_SECTION_LABELS, type HomepageConfig } from "@/lib/homepage";
 
-const LOCALES = [["ht", "Kreyòl"], ["fr", "Français"], ["en", "English"], ["es", "Español"]] as const;
+const LOCALES = [["ht", "Kreyòl"], ["fr", "Français"]] as const;
 const FIELDS = [["eyebrow", "Small label above the title"], ["title", "Headline"], ["subtitle", "Sub-headline"]] as const;
 
 export function HomepageEditor({ initial, unpublishedChanges, history }: { initial: HomepageConfig; unpublishedChanges: boolean; history: { at: string; by: string }[] }) {

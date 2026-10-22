@@ -7,7 +7,7 @@ import { verifyMoncashIntent } from "@/lib/payments/verify";
 export async function GET(req: NextRequest) {
   const url = req.nextUrl;
   const saved = req.cookies.get("NEXT_LOCALE")?.value;
-  let locale = saved && ["ht", "fr", "en", "es"].includes(saved) ? saved : "ht";
+  let locale = saved && ["ht", "fr"].includes(saved) ? saved : "ht";
   let ref = url.searchParams.get("ref") ?? url.searchParams.get("orderId");
   const transactionId = url.searchParams.get("transactionId");
   if (!ref && transactionId) ref = (await retrieveByTransaction(transactionId))?.reference ?? null;

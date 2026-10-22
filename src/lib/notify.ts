@@ -1,8 +1,6 @@
 import { siteUrl } from "./site-url";
 import ht from "@/messages/ht.json";
 import fr from "@/messages/fr.json";
-import en from "@/messages/en.json";
-import es from "@/messages/es.json";
 import { prisma, type Tx } from "./db";
 import { emailEnabled, sendEmail } from "./email";
 import { formatMoney } from "./money";
@@ -19,7 +17,7 @@ export type NotificationType =
   | "wallet_adjusted"
   | "referral_rewarded";
 
-const CATALOGS: Record<string, { notifications: Record<string, string> }> = { ht, fr, en, es };
+const CATALOGS: Record<string, { notifications: Record<string, string> }> = { ht, fr };
 
 function render(type: string, params: Record<string, string | number>, locale: string) {
   const template = (CATALOGS[locale] ?? ht).notifications[type] ?? ht.notifications[type as keyof typeof ht.notifications] ?? type;

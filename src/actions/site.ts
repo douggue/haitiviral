@@ -11,7 +11,7 @@ import { randomToken } from "@/lib/crypto";
 
 type R = { ok: true; message?: string; id?: string } | { ok: false; error: string };
 const fail = (e: unknown): R => ({ ok: false, error: e instanceof Error ? e.message : "Unexpected error" });
-const LOCALES = ["ht", "fr", "en", "es"];
+const LOCALES = ["ht", "fr"];
 const cleanL = (v: unknown, max = 200) => Object.fromEntries(LOCALES.map((l) => [l, String((v as Record<string, string>)?.[l] ?? "").trim().slice(0, max)]));
 
 // ───────────── Custom pages ─────────────
@@ -104,7 +104,7 @@ export async function saveManualMethod(form: FormData): Promise<R> {
     if (!/^[a-z0-9-]{2,30}$/.test(code)) return { ok: false, error: "Code: 2–30 lowercase letters, numbers or dashes" };
     const L = (prefix: string, max: number) => Object.fromEntries(LOCALES.map((l) => [l, String(form.get(`${prefix}_${l}`) ?? "").trim().slice(0, max)]));
     const name = L("name", 40);
-    if (!name.ht && !name.fr && !name.en) return { ok: false, error: "Give the method a name" };
+    if (!name.ht && !name.fr) return { ok: false, error: "Give the method a name" };
     const recipientName = String(form.get("recipientName") ?? "").trim().slice(0, 80);
     const recipientNumber = String(form.get("recipientNumber") ?? "").trim().slice(0, 60);
     if (!recipientName || !recipientNumber) return { ok: false, error: "Recipient name and number/account are required" };

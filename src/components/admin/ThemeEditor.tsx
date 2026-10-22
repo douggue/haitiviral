@@ -20,7 +20,7 @@ const MOTION: [MotionStyle, string, string][] = [
   ["neon", "Neon", "Lively, plus glowing edges, a shining headline and a pulsing main button."],
 ];
 
-const LANGS: [string, string][] = [["ht", "Kreyòl"], ["fr", "Français"], ["en", "English"], ["es", "Español"]];
+const LANGS: [string, string][] = [["ht", "Kreyòl"], ["fr", "Français"]];
 
 export function ThemeEditor({ initial, defaults, history }: { initial: ThemeConfig; defaults: ThemeConfig; history: { at: string; by: string; theme: ThemeConfig }[] }) {
   const router = useRouter();

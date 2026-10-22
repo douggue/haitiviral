@@ -11,7 +11,7 @@ import { contrastRatio } from "@/lib/color";
 
 type R = { ok: true; message?: string } | { ok: false; error: string };
 const fail = (e: unknown): R => ({ ok: false, error: e instanceof Error ? e.message : "Unexpected error" });
-const LOCALES = ["ht", "fr", "en", "es"] as const;
+const LOCALES = ["ht", "fr"] as const;
 const localized = (form: FormData, prefix: string, max = 300) =>
   Object.fromEntries(LOCALES.map((l) => [l, String(form.get(`${prefix}_${l}`) ?? "").trim().slice(0, max)]));
 
@@ -175,7 +175,7 @@ export async function saveTheme(input: ThemeConfig): Promise<R> {
     if (contrastRatio(theme.navy, "#FFFFFF") < 7) return { ok: false, error: "Dark cards must stay dark enough for white text (7:1)." };
     if (contrastRatio(theme.lightBg, "#0B1426") < 10) return { ok: false, error: "Light background is too dark for dark text. Pick a lighter color." };
     const marquee: Record<string, string> = {};
-    for (const l of ["ht", "fr", "en", "es"]) marquee[l] = String(theme.marquee[l] ?? "").replace(/[<>]/g, "").slice(0, 300);
+    for (const l of ["ht", "fr"]) marquee[l] = String(theme.marquee[l] ?? "").replace(/[<>]/g, "").slice(0, 300);
     const clean: ThemeConfig = {
       primary: theme.primary.toUpperCase(),
       primaryDark: theme.primaryDark.toUpperCase(),

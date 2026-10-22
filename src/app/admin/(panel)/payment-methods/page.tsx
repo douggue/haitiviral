@@ -36,7 +36,7 @@ function MethodForm({ m, crypto }: { m?: M; crypto?: boolean }) {
           <label><span className="label">Number / account</span><input name="recipientNumber" defaultValue={m?.recipientNumber} required className="input" /></label>
         </div>
       )}
-      <LocalizedInputs prefix="name" label="Name shown to customers" value={(m?.name ?? (isCrypto ? { ht: "USDT", fr: "USDT", en: "USDT", es: "USDT" } : {})) as Record<string, string>} />
+      <LocalizedInputs prefix="name" label="Name shown to customers" value={(m?.name ?? (isCrypto ? { ht: "USDT", fr: "USDT" } : {})) as Record<string, string>} />
       <LocalizedInputs prefix="instructions" label="Instructions (optional)" value={(m?.instructions ?? {}) as Record<string, string>} textarea />
       <div className="grid gap-4 sm:grid-cols-2">
         <ImageField

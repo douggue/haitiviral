@@ -23,7 +23,7 @@ export function explainResendError(status: number, body: string): string {
   if (b.includes("restricted")) return "This key can only send. That is fine for email, so this is not the problem.";
   if (b.includes("only send testing emails to your own email")) return "Your domain is not verified yet: Resend only lets you send to your own Resend account email. Verify your domain in Resend → Domains and use an address on it in EMAIL_FROM.";
   if (b.includes("domain is not verified") || b.includes("not verified")) return "The domain in EMAIL_FROM is not verified in Resend. Finish the DNS records in Resend → Domains, or change EMAIL_FROM to an address on your verified domain.";
-  if (b.includes("invalid `from`") || b.includes("from") && status === 422) return "EMAIL_FROM is not in the right format. Use: Haiti Gaming <noreply@yourdomain.com>";
+  if (b.includes("invalid `from`") || b.includes("from") && status === 422) return "EMAIL_FROM is not in the right format. Use: HaitiViral <noreply@yourdomain.com>";
   if (status === 429) return "Too many emails at once (Resend limit). Wait a minute and try again.";
   return `Resend refused the message (HTTP ${status}).`;
 }
@@ -69,21 +69,17 @@ export async function sendEmailResult(msg: { to: string; subject: string; html: 
   }
 }
 
-type L = "ht" | "fr" | "en" | "es";
-const lang = (l?: string | null): L => (l === "fr" || l === "en" || l === "es" ? l : "ht");
+type L = "ht" | "fr";
+const lang = (l?: string | null): L => (l === "fr" ? l : "ht");
 
 const COPY = {
   reset: {
-    ht: { subject: "Chanje modpas Haiti Gaming ou", body: "Nou resevwa yon demann pou chanje modpas ou. Klike sou bouton an pou chwazi yon nouvo modpas. Lyen an bon pou 1 èdtan.", cta: "Chanje modpas mwen", ignore: "Si se pa ou ki te mande sa, ou pa bezwen fè anyen." },
-    fr: { subject: "Réinitialisez votre mot de passe Haiti Gaming", body: "Nous avons reçu une demande de réinitialisation de votre mot de passe. Cliquez sur le bouton pour en choisir un nouveau. Le lien est valable 1 heure.", cta: "Réinitialiser mon mot de passe", ignore: "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail." },
-    en: { subject: "Reset your Haiti Gaming password", body: "We received a request to reset your password. Click the button to choose a new one. The link is valid for 1 hour.", cta: "Reset my password", ignore: "If you didn't ask for this, you can ignore this email." },
-    es: { subject: "Restablece tu contraseña de Haiti Gaming", body: "Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón para elegir una nueva. El enlace es válido por 1 hora.", cta: "Restablecer mi contraseña", ignore: "Si no lo solicitaste, puedes ignorar este correo." },
+    ht: { subject: "Chanje modpas HaitiViral ou", body: "Nou resevwa yon demann pou chanje modpas ou. Klike sou bouton an pou chwazi yon nouvo modpas. Lyen an bon pou 1 èdtan.", cta: "Chanje modpas mwen", ignore: "Si se pa ou ki te mande sa, ou pa bezwen fè anyen." },
+    fr: { subject: "Réinitialisez votre mot de passe HaitiViral", body: "Nous avons reçu une demande de réinitialisation de votre mot de passe. Cliquez sur le bouton pour en choisir un nouveau. Le lien est valable 1 heure.", cta: "Réinitialiser mon mot de passe", ignore: "Si vous n'êtes pas à l'origine de cette demande, ignorez cet e-mail." },
   },
   verify: {
-    ht: { subject: "Konfime imèl ou pou Haiti Gaming", body: "Klike sou bouton an pou konfime adrès imèl ou.", cta: "Konfime imèl mwen", ignore: "Si ou pa t kreye kont sa a, ou pa bezwen fè anyen." },
-    fr: { subject: "Confirmez votre e-mail Haiti Gaming", body: "Cliquez sur le bouton pour confirmer votre adresse e-mail.", cta: "Confirmer mon e-mail", ignore: "Si vous n'avez pas créé ce compte, ignorez cet e-mail." },
-    en: { subject: "Confirm your Haiti Gaming email", body: "Click the button to confirm your email address.", cta: "Confirm my email", ignore: "If you didn't create this account, you can ignore this email." },
-    es: { subject: "Confirma tu correo de Haiti Gaming", body: "Haz clic en el botón para confirmar tu correo.", cta: "Confirmar mi correo", ignore: "Si no creaste esta cuenta, puedes ignorar este correo." },
+    ht: { subject: "Konfime imèl ou pou HaitiViral", body: "Klike sou bouton an pou konfime adrès imèl ou.", cta: "Konfime imèl mwen", ignore: "Si ou pa t kreye kont sa a, ou pa bezwen fè anyen." },
+    fr: { subject: "Confirmez votre e-mail HaitiViral", body: "Cliquez sur le bouton pour confirmer votre adresse e-mail.", cta: "Confirmer mon e-mail", ignore: "Si vous n'avez pas créé ce compte, ignorez cet e-mail." },
   },
 } as const;
 
@@ -92,10 +88,10 @@ export function emailLayout(name: string, body: string, cta: string, url: string
   const html = `<!doctype html><html><body style="margin:0;background:#F5F7FC;font-family:Arial,sans-serif;color:#0b1426">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px">
 <table width="100%" style="max-width:480px;background:#fff;border-radius:16px;padding:28px" cellpadding="0" cellspacing="0"><tr><td>
-<p style="font-size:20px;font-weight:800;margin:0 0 16px">Haiti<span style="color:#1467F5">Gaming</span></p>
+<p style="font-size:20px;font-weight:800;margin:0 0 16px">Haiti<span style="color:#D21034">Viral</span></p>
 <p style="margin:0 0 8px">${safeName ? `${safeName},` : ""}</p>
 <p style="margin:0 0 24px;line-height:1.5">${body}</p>
-<p style="margin:0 0 24px"><a href="${url}" style="display:inline-block;background:#1467F5;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px">${cta}</a></p>
+<p style="margin:0 0 24px"><a href="${url}" style="display:inline-block;background:#0F172A;color:#fff;text-decoration:none;font-weight:700;padding:12px 20px;border-radius:10px">${cta}</a></p>
 <p style="margin:0;font-size:13px;color:#55668a;line-height:1.5">${ignore}</p>
 </td></tr></table></td></tr></table></body></html>`;
   const text = `${safeName ? `${safeName},\n\n` : ""}${body}\n\n${cta}: ${url}\n\n${ignore}`;

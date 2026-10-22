@@ -13,7 +13,7 @@ type P = {
 };
 
 const FIELD_EXAMPLE = `[
-  { "key": "playerId", "label": { "ht": "ID jwè", "fr": "ID joueur", "en": "Player ID", "es": "ID de jugador" }, "type": "number", "required": true }
+  { "key": "playerId", "label": { "ht": "ID jwè", "fr": "ID joueur" }, "type": "number", "required": true }
 ]`;
 
 export function ProductForm({ product, categories }: { product?: P; categories: { id: string; name: string }[] }) {

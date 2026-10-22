@@ -110,7 +110,7 @@ export default async function SettingsPage() {
           <h2 className="font-semibold">Announcement bar</h2>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="announcementEnabled" defaultChecked={s.announcement.enabled} /> Show announcement</label>
           <div className="grid gap-4 sm:grid-cols-2">
-            {(["ht", "fr", "en", "es"] as const).map((l) => <Field key={l} name={`announcement_${l}`} label={`Text (${l.toUpperCase()})`} value={s.announcement.text[l] ?? ""} />)}
+            {(["ht", "fr"] as const).map((l) => <Field key={l} name={`announcement_${l}`} label={`Text (${l.toUpperCase()})`} value={s.announcement.text[l] ?? ""} />)}
             <Field name="announcementLink" label="Link (optional)" value={s.announcement.link} />
             <Field name="announcementStartsAt" label="Show from (optional)" value={s.announcement.startsAt ?? ""} type="datetime-local" />
             <Field name="announcementEndsAt" label="Hide after (optional)" value={s.announcement.endsAt ?? ""} type="datetime-local" />

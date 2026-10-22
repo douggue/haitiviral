@@ -1,7 +1,5 @@
-import en from "@/messages/en.json";
 import ht from "@/messages/ht.json";
 import fr from "@/messages/fr.json";
-import es from "@/messages/es.json";
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
 import { TranslationEditor } from "@/components/admin/TranslationEditor";
@@ -18,16 +16,16 @@ function flatten(obj: unknown, prefix = "", out: Record<string, string> = {}) {
 
 export default async function TranslationsPage() {
   await requireStaff("content.manage");
-  const base = { en: flatten(en), ht: flatten(ht), fr: flatten(fr), es: flatten(es) };
+  const base = { ht: flatten(ht), fr: flatten(fr) };
   const overrides = await prisma.translationOverride.findMany();
-  const keys = Object.keys(base.en).sort();
-  const coverage = (["ht", "fr", "es"] as const).map((l) => ({ l, missing: keys.filter((k) => !base[l][k]).length }));
+  const keys = Object.keys(base.ht).sort();
+  const coverage = (["fr"] as const).map((l) => ({ l, missing: keys.filter((k) => !base[l][k]).length }));
   return (
     <>
       <PageTitle title="Translations" sub={`Change any interface wording without a developer. ${keys.length} texts. Clearing a box restores the standard wording.`} />
       <div className="mb-4 flex flex-wrap gap-2 text-xs">
         {coverage.map((c) => (
-          <span key={c.l} className={`badge px-3 py-1.5 ${c.missing ? "bg-warning-soft text-warning" : "bg-success-soft text-success"}`}>{c.l.toUpperCase()}: {c.missing ? `${c.missing} missing (shows Kreyòl/English)` : "complete"}</span>
+          <span key={c.l} className={`badge px-3 py-1.5 ${c.missing ? "bg-warning-soft text-warning" : "bg-success-soft text-success"}`}>{c.l.toUpperCase()}: {c.missing ? `${c.missing} missing (shows Kreyòl)` : "complete"}</span>
         ))}
         <span className="badge bg-surface-2 px-3 py-1.5">{overrides.length} custom edits</span>
       </div>

@@ -34,13 +34,12 @@ function applyOverrides(messages: Record<string, unknown>, rows: { key: string; 
 export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
   const locale = hasLocale(routing.locales, requested) ? requested : routing.defaultLocale;
-  // Missing keys fall back to Kreyòl, then English.
-  const [own, ht, en] = await Promise.all([
+  // Missing keys fall back to Kreyòl.
+  const [own, ht] = await Promise.all([
     import(`../messages/${locale}.json`).then((m) => m.default),
     import(`../messages/ht.json`).then((m) => m.default),
-    import(`../messages/en.json`).then((m) => m.default),
   ]);
-  const messages = deepMerge(deepMerge(en, ht), own);
+  const messages = deepMerge(ht, own);
   return { locale, messages: applyOverrides(structuredClone(messages), await getOverrides(locale)) };
 });
 

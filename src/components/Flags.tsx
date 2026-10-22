@@ -2,7 +2,7 @@ import type { Locale } from "@/i18n/routing";
 
 /**
  * Small round flags for the language picker. Drawn as SVG so they look the same everywhere
- * (Windows does not draw flag emoji). Kreyòl → Haiti (real flag file in /public/flags), Français → France, English → USA, Español → Spain.
+ * (Windows does not draw flag emoji). Kreyòl → Haiti (real flag file in /public/flags), Français → France.
  */
 export function Flag({ locale, size = 22, className = "" }: { locale: Locale; size?: number; className?: string }) {
   // Haiti: the real flag with the coat of arms (flag-icons, MIT), zoomed a little so the arms show in the small circle.
@@ -39,22 +39,6 @@ const FLAGS: Record<Locale, React.ReactNode> = {
       <rect width="8" height="24" fill="#0055A4" />
       <rect x="8" width="8" height="24" fill="#fff" />
       <rect x="16" width="8" height="24" fill="#EF4135" />
-    </>
-  ),
-  en: (
-    <>
-      <rect width="24" height="24" fill="#fff" />
-      {[0, 2, 4, 6, 8, 10, 12].map((i) => (
-        <rect key={i} y={i * (24 / 13)} width="24" height={24 / 13} fill="#B22234" />
-      ))}
-      <rect width="11" height={(24 / 13) * 7} fill="#3C3B6E" />
-      {[2.2, 5.5, 8.8].map((x) => [2.2, 5.6, 9].map((y) => <circle key={`${x}-${y}`} cx={x} cy={y} r="0.8" fill="#fff" />))}
-    </>
-  ),
-  es: (
-    <>
-      <rect width="24" height="24" fill="#AA151B" />
-      <rect y="6" width="24" height="12" fill="#F1BF00" />
     </>
   ),
 };

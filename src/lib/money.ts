@@ -1,6 +1,7 @@
 import type { Currency } from "@prisma/client";
 
-const intlLocale: Record<string, string> = { ht: "fr-HT", fr: "fr-HT", en: "en-US", es: "es-DO" };
+// "en" is used by the English back office.
+const intlLocale: Record<string, string> = { ht: "fr-HT", fr: "fr-HT", en: "en-US" };
 
 /** Format integer minor units (centimes / cents) for display. */
 export function formatMoney(minor: number, currency: Currency, locale = "ht"): string {

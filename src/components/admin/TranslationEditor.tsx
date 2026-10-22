@@ -2,7 +2,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { saveTranslation } from "@/actions/content";
 
-const LOCALES = ["ht", "fr", "en", "es"] as const;
+const LOCALES = ["ht", "fr"] as const;
 type Base = Record<(typeof LOCALES)[number], Record<string, string>>;
 
 export function TranslationEditor({ keys, base, overrides }: { keys: string[]; base: Base; overrides: { locale: string; key: string; value: string }[] }) {

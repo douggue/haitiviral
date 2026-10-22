@@ -5,7 +5,7 @@ import { deletePage, savePage } from "@/actions/site";
 import { BLOCK_LABELS, type PageBlock } from "@/lib/pages";
 import { ImageField } from "./ImageField";
 
-const LOCALES = [["ht", "Kreyòl"], ["fr", "Français"], ["en", "English"], ["es", "Español"]] as const;
+const LOCALES = [["ht", "Kreyòl"], ["fr", "Français"]] as const;
 type L = Record<string, string>;
 type PageData = { id?: string; slug: string; title: L; description: L; blocks: PageBlock[]; isPublished: boolean; showInFooter: boolean };
 

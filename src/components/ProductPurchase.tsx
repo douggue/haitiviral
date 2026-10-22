@@ -54,7 +54,7 @@ export function ProductPurchase({ product, saved, pricing }: Props) {
       variantId: variant.id,
       productSlug: product.slug,
       productName: product.name,
-      variantName: quote ? { ht: usd(quote.amount), fr: usd(quote.amount), en: usd(quote.amount), es: usd(quote.amount) } : variant.name,
+      variantName: quote ? { ht: usd(quote.amount), fr: usd(quote.amount) } : variant.name,
       accent: product.accent,
       image: product.image,
       priceHtg: quote ? quote.totalHtg : variant.salePriceHtg ?? variant.priceHtg,

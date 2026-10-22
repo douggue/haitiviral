@@ -133,8 +133,6 @@ export async function resolveRisk(flagId: string, decision: "APPROVED" | "REJECT
 const localized = (form: FormData, prefix: string) => ({
   ht: String(form.get(`${prefix}_ht`) ?? "").trim(),
   fr: String(form.get(`${prefix}_fr`) ?? "").trim(),
-  en: String(form.get(`${prefix}_en`) ?? "").trim(),
-  es: String(form.get(`${prefix}_es`) ?? "").trim(),
 });
 
 const fieldDefSchema = z.array(
@@ -445,7 +443,7 @@ export async function saveSettings(form: FormData): Promise<R> {
         startsAt: String(form.get("announcementStartsAt") ?? "") || undefined,
         endsAt: String(form.get("announcementEndsAt") ?? "") || undefined,
         enabled: form.get("announcementEnabled") === "on",
-        text: { ht: str("announcement_ht"), fr: str("announcement_fr"), en: str("announcement_en"), es: str("announcement_es") },
+        text: { ht: str("announcement_ht"), fr: str("announcement_fr") },
         link: str("announcementLink"),
       },
     };

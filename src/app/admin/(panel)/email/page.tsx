@@ -10,7 +10,7 @@ export default async function Email({ searchParams }: { searchParams: Promise<{ 
   await requireStaff("settings.manage");
   const sp = await searchParams;
   const kind = sp.preview === "verify" ? "verify" : "reset";
-  const lang = ["ht", "fr", "en", "es"].includes(sp.lang ?? "") ? sp.lang! : "ht";
+  const lang = ["ht", "fr"].includes(sp.lang ?? "") ? sp.lang! : "ht";
   const since = new Date(Date.now() - 7 * 86_400_000);
   const [logs, counts] = await Promise.all([
     prisma.emailLog.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
@@ -72,7 +72,7 @@ export default async function Email({ searchParams }: { searchParams: Promise<{ 
           <h2 className="mb-3 font-semibold">Template preview</h2>
           <div className="mb-3 flex flex-wrap gap-2 text-xs">
             {(["reset", "verify"] as const).map((k) => <a key={k} href={`?preview=${k}&lang=${lang}`} className={`badge ${kind === k ? "bg-primary text-white" : "bg-surface-2"}`}>{k === "reset" ? "Password reset" : "Confirm email"}</a>)}
-            {["ht", "fr", "en", "es"].map((l) => <a key={l} href={`?preview=${kind}&lang=${l}`} className={`badge ${lang === l ? "bg-primary text-white" : "bg-surface-2"}`}>{l.toUpperCase()}</a>)}
+            {["ht", "fr"].map((l) => <a key={l} href={`?preview=${kind}&lang=${l}`} className={`badge ${lang === l ? "bg-primary text-white" : "bg-surface-2"}`}>{l.toUpperCase()}</a>)}
           </div>
           <p className="mb-2 text-sm"><span className="text-muted">Subject:</span> {preview.subject}</p>
           <iframe title="Email preview" srcDoc={preview.html} sandbox="" className="h-80 w-full rounded-xl border border-border bg-white" />

@@ -109,7 +109,7 @@ function useChangeLocale() {
   /**
    * Fetch the other languages of this page ahead of time, so switching is near-instant.
    * Through Next's own router: next-intl's router.prefetch would also save each prefetched language
-   * as the visitor's choice (the last one, Español, would win).
+   * as the visitor's choice (the last one prefetched would win).
    */
   const prefetch = () => {
     for (const l of locales) {

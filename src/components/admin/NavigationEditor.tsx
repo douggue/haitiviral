@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { saveNavigation } from "@/actions/site";
 import type { NavLink } from "@/lib/settings";
 
-const LOCALES = ["ht", "fr", "en", "es"] as const;
+const LOCALES = ["ht", "fr"] as const;
 const DEFAULT_HEADER: NavLink[] = [
-  { label: { ht: "Boutik", fr: "Boutique", en: "Store", es: "Tienda" }, href: "/store" },
-  { label: { ht: "Kategori", fr: "Catégories", en: "Categories", es: "Categorías" }, href: "/categories" },
-  { label: { ht: "Gid peman", fr: "Guides de paiement", en: "Payment guides", es: "Guías de pago" }, href: "/guides" },
-  { label: { ht: "Nouvèl", fr: "Actualités", en: "News", es: "Noticias" }, href: "/news" },
+  { label: { ht: "Boutik", fr: "Boutique" }, href: "/store" },
+  { label: { ht: "Kategori", fr: "Catégories" }, href: "/categories" },
+  { label: { ht: "Gid peman", fr: "Guides de paiement" }, href: "/guides" },
+  { label: { ht: "Nouvèl", fr: "Actualités" }, href: "/news" },
 ];
 
 function LinkList({ title, links, onChange }: { title: string; links: NavLink[]; onChange: (l: NavLink[]) => void }) {

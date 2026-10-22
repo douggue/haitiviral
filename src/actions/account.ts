@@ -9,7 +9,7 @@ import { normalizePhone } from "@/lib/phone";
 const profile = z.object({
   name: z.string().trim().min(1).max(80),
   phone: z.string().trim().max(30).optional(),
-  locale: z.enum(["ht", "fr", "en", "es"]),
+  locale: z.enum(["ht", "fr"]),
   displayCurrency: z.enum(["HTG", "USD"]),
 });
 

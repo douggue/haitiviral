@@ -91,7 +91,7 @@ export async function createOrder(input: {
       return {
         variantId: v.id,
         productName: v.product.name as Prisma.InputJsonValue,
-        variantName: { ht: label, fr: label, en: label, es: label } as Prisma.InputJsonValue,
+        variantName: { ht: label, fr: label } as Prisma.InputJsonValue,
         quantity: item.quantity,
         unitPrice: currency === "USD" ? q.totalUsd : q.totalHtg,
         unitHtg: q.totalHtg,

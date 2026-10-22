@@ -7,7 +7,7 @@ import { StoreBrowser, type StoreCategory, type StoreProduct } from "@/component
 
 type SP = Promise<{ q?: string; category?: string; sort?: string; tag?: string; min?: string; max?: string }>;
 
-const LOCALES = ["ht", "fr", "en", "es"] as const;
+const LOCALES = ["ht", "fr"] as const;
 const allNames = (v: unknown) => LOCALES.map((l) => t(v, l)).filter(Boolean);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
