@@ -67,7 +67,8 @@
     "tabOrders": "Kòmand yo",
     "statusOk": "Tout sèvis yo ap mache nòmal",
     "balance": "Balans",
-    "otherLanguage": "Chanje lang"
+    "otherLanguage": "Chanje lang",
+    "statusSome": "Kèk sèvis pi dousman kounye a"
   },
   "home": {
     "eyebrow": "Fèt an Ayiti, pou kreyatè yo",
@@ -872,5 +873,28 @@
     "profile": "Pwofil mwen",
     "privacy": "Done pèsonèl mwen",
     "signOut": "Dekonekte"
+  },
+  "helpUi": {
+    "title": "Sipò",
+    "whatsapp": "WhatsApp",
+    "ticket": "Ouvri tikè",
+    "lookup": "Chèche yon kòmand",
+    "lookupPlaceholder": "Egz: 10483",
+    "search": "Chèche",
+    "notFound": "Nou pa jwenn kòmand sa a nan kont ou.",
+    "signIn": "Konekte pou chèche kòmand ou yo.",
+    "statusTitle": "Estati sèvis yo",
+    "ok": "Nòmal",
+    "slow": "Pi dousman",
+    "pause": "Sou pòz",
+    "faqTitle": "Kesyon yo poze souvan",
+    "q1": "Èske kont mwen ka gen pwoblèm?",
+    "a1": "Platfòm yo pa renmen achte angajman. Pifò kliyan pa janm gen pwoblèm, men sa ka rive: yon pati ka tonbe oswa kont lan ka limite. Chwazi sèvis \"Risk feb\" pou plis sekirite. Ou itilize sèvis yo sou pwop responsablite w.",
+    "q2": "Kòmand mwen pa fin rive, kisa k pase?",
+    "a2": "Kèk sèvis pran plizyè èdtan. Gade \"Mwayèn livrezon\" sou kòmand lan. Si founisè a pa ka fini, rès kòb la tounen nan bous ou otomatikman.",
+    "q3": "Èske m bezwen bay modpas mwen?",
+    "a3": "Non, janm. Nou bezwen sèlman lyen piblik la.",
+    "q4": "Kijan pou m mete kòb?",
+    "a4": "Ak MonCash, NatCash oswa transfè labank (voye prèv la). MonCash antre touswit."
   }
 }

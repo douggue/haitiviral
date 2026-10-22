@@ -208,3 +208,18 @@ export async function setMarketing(on: boolean): Promise<R> {
   await prisma.user.update({ where: { id: user.id }, data: { notifyPrefs: { ...current, marketing: !!on } } });
   return { ok: true };
 }
+
+/** Help page: find one of the customer's own orders by its number. */
+export async function lookupOrder(number: number): Promise<{ ok: true; id: string; number: number; status: string; total: number; name: unknown; quantity: string | null; createdAt: string } | { ok: false; error: string }> {
+  let user;
+  try {
+    user = await assertUser();
+  } catch {
+    return { ok: false, error: "signin" };
+  }
+  if (!Number.isInteger(number) || number <= 0) return { ok: false, error: "missing" };
+  const o = await prisma.order.findFirst({ where: { userId: user.id, number }, include: { items: { take: 1 } } });
+  if (!o) return { ok: false, error: "missing" };
+  const fv = (o.items[0]?.fieldValues ?? {}) as Record<string, string>;
+  return { ok: true, id: o.id, number: o.number, status: o.status, total: o.total, name: o.items[0]?.productName ?? null, quantity: fv.quantity ?? null, createdAt: o.createdAt.toISOString() };
+}

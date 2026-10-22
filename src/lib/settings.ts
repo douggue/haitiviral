@@ -57,6 +57,8 @@ export type Settings = {
   /** Paid orders not delivered after this many hours are refunded to the wallet automatically (0 = off) */
   autoRefundHours: number;
   referralEnabled: boolean;
+  /** Services status per platform (category slug) shown on the help page and home bar; missing = normal */
+  serviceStatus: Record<string, "ok" | "slow" | "pause">;
   referralRewardHtg: number;
   referralMinOrderHtg: number;
   heroImageUrl: string;
@@ -159,8 +161,9 @@ export const DEFAULT_SETTINGS: Settings = {
   logoUrl: "",
   logoDarkUrl: "",
   approvalThresholdHtg: 1_000_000,
-  autoRefundHours: 24,
+  autoRefundHours: 96,
   referralEnabled: true,
+  serviceStatus: {},
   referralRewardHtg: 10_000,
   referralMinOrderHtg: 50_000,
   heroImageUrl: "",

@@ -67,7 +67,8 @@
     "tabOrders": "Commandes",
     "statusOk": "Tous les services fonctionnent normalement",
     "balance": "Solde",
-    "otherLanguage": "Changer de langue"
+    "otherLanguage": "Changer de langue",
+    "statusSome": "Certains services sont plus lents en ce moment"
   },
   "home": {
     "eyebrow": "Fait en Haïti, pour les créateurs",
@@ -872,5 +873,28 @@
     "profile": "Mon profil",
     "privacy": "Mes données personnelles",
     "signOut": "Se déconnecter"
+  },
+  "helpUi": {
+    "title": "Aide",
+    "whatsapp": "WhatsApp",
+    "ticket": "Ouvrir un ticket",
+    "lookup": "Rechercher une commande",
+    "lookupPlaceholder": "Ex : 10483",
+    "search": "Rechercher",
+    "notFound": "Commande introuvable dans votre compte.",
+    "signIn": "Connectez-vous pour rechercher vos commandes.",
+    "statusTitle": "État des services",
+    "ok": "Normal",
+    "slow": "Plus lent",
+    "pause": "En pause",
+    "faqTitle": "Questions fréquentes",
+    "q1": "Mon compte peut-il avoir un problème ?",
+    "a1": "Les plateformes n'aiment pas l'engagement acheté. La plupart des clients n'ont jamais de problème, mais cela peut arriver : une partie peut baisser ou le compte peut être limité. Choisissez les services « Risque faible » pour plus de sécurité. Vous utilisez les services à vos propres risques.",
+    "q2": "Ma commande n'est pas terminée, que se passe-t-il ?",
+    "a2": "Certains services prennent plusieurs heures. Regardez le « Délai moyen » de la commande. Si le fournisseur ne peut pas terminer, le reste revient automatiquement dans votre portefeuille.",
+    "q3": "Dois-je donner mon mot de passe ?",
+    "a3": "Non, jamais. Nous avons seulement besoin du lien public.",
+    "q4": "Comment ajouter des fonds ?",
+    "a4": "Avec MonCash, NatCash ou un virement bancaire (envoyez la preuve). MonCash est crédité tout de suite."
   }
 }

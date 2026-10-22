@@ -43,10 +43,17 @@ export default async function HomePage({ params, searchParams }: { params: Promi
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }} />
       {preview && <div className="bg-warning px-4 py-2 text-center text-sm font-semibold text-midnight">Preview of the unpublished homepage draft</div>}
 
-      <Link href="/help" className="flex items-center gap-2 border-b border-[#DCFCE7] bg-[#F0FDF4] px-4 py-[9px] text-xs font-bold text-[#166534] dark:border-success-soft dark:bg-success-soft dark:text-success">
-        <span className="h-2 w-2 rounded-full bg-[#16A34A]" />
-        {tc("statusOk")}
-      </Link>
+      {Object.values(settings.serviceStatus ?? {}).some((s) => s !== "ok") ? (
+        <Link href="/help" className="flex items-center gap-2 border-b border-[#FDE68A] bg-[#FFFBEB] px-4 py-[9px] text-xs font-bold text-[#92400E]">
+          <span className="h-2 w-2 rounded-full bg-[#D97706]" />
+          {tc("statusSome")}
+        </Link>
+      ) : (
+        <Link href="/help" className="flex items-center gap-2 border-b border-[#DCFCE7] bg-[#F0FDF4] px-4 py-[9px] text-xs font-bold text-[#166534] dark:border-success-soft dark:bg-success-soft dark:text-success">
+          <span className="h-2 w-2 rounded-full bg-[#16A34A]" />
+          {tc("statusOk")}
+        </Link>
+      )}
 
       <div className="mx-auto flex max-w-[560px] flex-col gap-5 px-5 py-[18px] md:max-w-3xl">
         <section className="relative flex flex-col gap-2.5 overflow-hidden rounded-[20px] bg-primary p-5 text-white">
