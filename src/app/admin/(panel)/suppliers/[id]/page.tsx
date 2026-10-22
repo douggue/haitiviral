@@ -6,6 +6,7 @@ import { siteUrl } from "@/lib/site-url";
 import { saveSupplier, supplierOrderAction, testSupplier } from "@/actions/suppliers";
 import { secretsOf } from "@/lib/suppliers/engine";
 import { PRESETS } from "@/lib/suppliers/presets";
+import { isSmm } from "@/lib/suppliers/smm-orders";
 import type { SupplierConfig } from "@/lib/suppliers/types";
 import { ActionButton, ActionForm } from "@/components/admin/ActionButton";
 import { PageTitle, Table } from "@/components/admin/ui";
@@ -29,6 +30,7 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
   const s = await prisma.supplier.findUnique({ where: { id } });
   if (!s) notFound();
   const cfg = s.config as unknown as SupplierConfig;
+  const smm = isSmm(s.preset);
   const saved = secretsOf(s);
   const preset = PRESETS[s.preset];
   const [orders, logs, variants] = await Promise.all([
@@ -87,9 +89,9 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
           <section className="card space-y-3 p-5">
             <p className="font-semibold">Test (nothing is ordered)</p>
             <div className="flex flex-wrap gap-2">
-              {cfg.balance && <ActionButton action={testSupplier.bind(null, s.id, "balance")} label="Check balance" />}
-              {cfg.token && <ActionButton action={testSupplier.bind(null, s.id, "token")} label="Test login" />}
-              {cfg.status && <ActionButton action={testSupplier.bind(null, s.id, "status")} label="Check an order" prompt="Our reference (hg-…) to check" />}
+              {(cfg.balance || smm) && <ActionButton action={testSupplier.bind(null, s.id, "balance")} label="Check balance" />}
+              {cfg.token && !smm && <ActionButton action={testSupplier.bind(null, s.id, "token")} label="Test login" />}
+              {(cfg.status || smm) && <ActionButton action={testSupplier.bind(null, s.id, "status")} label="Check an order" prompt="Our reference (hg-…) to check" />}
             </div>
             <div>
               <span className="label">Callback URL (give it to the supplier if it can notify you)</span>

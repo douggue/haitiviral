@@ -5,6 +5,9 @@ import { encrypt, hmac } from "../crypto";
 import { siteUrl } from "../site-url";
 import { callSupplier } from "./engine";
 import type { CallResult, SupplierConfig } from "./types";
+import { isSmm, runSmmChecks, sendSmm, smmInclude } from "./smm-orders";
+
+const SMM_PRESETS = ["smm_panel", "smm_mock"];
 
 /**
  * Supplier orders, step by step:
@@ -24,11 +27,12 @@ const nextCheck = (checks: number) => new Date(Date.now() + BACKOFF_MIN[Math.min
 export async function queueSupplierLines(tx: Tx, orderId: string) {
   const items = await tx.orderItem.findMany({
     where: { orderId, status: "PENDING", supplierOrders: { none: {} }, variant: { supplierId: { not: null }, product: { fulfillmentType: "SUPPLIER_API" } } },
-    select: { id: true, variant: { select: { supplierId: true, supplier: { select: { isEnabled: true } } } } },
+    select: { id: true, variant: { select: { supplierId: true, supplierSku: true, supplier: { select: { isEnabled: true } } } } },
   });
   for (const i of items) {
     if (!i.variant.supplierId || !i.variant.supplier?.isEnabled) continue;
-    await tx.supplierOrder.create({ data: { supplierId: i.variant.supplierId, orderItemId: i.id, ref: `hg-${i.id}` } });
+    // The service id is kept on the attempt, so changing the choice's link later doesn't touch orders already placed.
+    await tx.supplierOrder.create({ data: { supplierId: i.variant.supplierId, orderItemId: i.id, ref: `hg-${i.id}`, sku: i.variant.supplierSku } });
   }
 }
 
@@ -107,6 +111,15 @@ export async function sendQueued(orderId?: string): Promise<string[]> {
   for (const q of queued) {
     const claim = await prisma.supplierOrder.updateMany({ where: { id: q.id, status: "QUEUED" }, data: { status: "SENDING" } });
     if (claim.count !== 1) continue;
+    const smm = await prisma.supplierOrder.findUniqueOrThrow({ where: { id: q.id }, include: smmInclude });
+    if (isSmm(smm.supplier.preset)) {
+      // SMM orders are never delivered on the spot: progress comes from the status checks.
+      await sendSmm(smm).catch(async (e) => {
+        console.error("SMM send failed", q.id, e);
+        await prisma.supplierOrder.updateMany({ where: { id: q.id, status: "SENDING" }, data: { status: "UNKNOWN", nextCheckAt: null, message: "Sending stopped with an error: check on the provider's site, then close or retry here" } });
+      });
+      continue;
+    }
     const so = await prisma.supplierOrder.findUniqueOrThrow({ where: { id: q.id }, include });
     let r: CallResult;
     try {
@@ -123,6 +136,8 @@ export async function sendQueued(orderId?: string): Promise<string[]> {
 
 /** Ask the supplier where an order is. Returns the order id if the line got delivered. */
 export async function checkSupplierOrder(id: string, force = false): Promise<string | null> {
+  const row = await prisma.supplierOrder.findUnique({ where: { id }, select: { supplier: { select: { preset: true } } } });
+  if (row && isSmm(row.supplier.preset)) return (await runSmmChecks([id]))[0] ?? null;
   const claim = await prisma.supplierOrder.updateMany({
     where: { id, status: { in: force ? ["PENDING", "UNKNOWN", "FAILED"] : ["PENDING", "UNKNOWN"] }, OR: [{ lockedUntil: null }, { lockedUntil: { lt: new Date() } }] },
     data: { lockedUntil: new Date(Date.now() + 60_000), checks: { increment: 1 } },
@@ -156,18 +171,25 @@ export async function checkSupplierOrder(id: string, force = false): Promise<str
 export async function runSupplierCron() {
   const now = Date.now();
   // A send interrupted mid-way (server stopped) may or may not have reached the supplier: check, don't re-send.
+  const stale = new Date(now - 2 * 60_000);
   const interrupted = await prisma.supplierOrder.updateMany({
-    where: { status: "SENDING", updatedAt: { lt: new Date(now - 2 * 60_000) } },
+    where: { status: "SENDING", updatedAt: { lt: stale }, supplier: { preset: { notIn: SMM_PRESETS } } },
     data: { status: "UNKNOWN", nextCheckAt: new Date(), message: "Sending was interrupted: checking with the supplier" },
   });
+  // SMM panels can't be asked about an order by our reference: an interrupted send goes to staff.
+  const smmInterrupted = await prisma.supplierOrder.updateMany({
+    where: { status: "SENDING", updatedAt: { lt: stale }, supplier: { preset: { in: SMM_PRESETS } } },
+    data: { status: "UNKNOWN", nextCheckAt: null, message: "Sending was interrupted: check on the provider's site, then close or retry here" },
+  });
   const delivered = await sendQueued();
-  const due = await prisma.supplierOrder.findMany({ where: { status: { in: ["PENDING", "UNKNOWN"] }, nextCheckAt: { lte: new Date() } }, select: { id: true }, orderBy: { nextCheckAt: "asc" }, take: 30 });
+  delivered.push(...(await runSmmChecks().catch((e) => (console.error("SMM checks failed", e), []))));
+  const due = await prisma.supplierOrder.findMany({ where: { status: { in: ["PENDING", "UNKNOWN"] }, nextCheckAt: { lte: new Date() }, supplier: { preset: { notIn: SMM_PRESETS } } }, select: { id: true }, orderBy: { nextCheckAt: "asc" }, take: 30 });
   for (const d of due) {
     const o = await checkSupplierOrder(d.id).catch((e) => (console.error("supplier check failed", d.id, e), null));
     if (o) delivered.push(o);
   }
   await finishOrders(delivered);
-  return { supplierInterrupted: interrupted.count, supplierChecked: due.length, supplierDelivered: delivered.length };
+  return { supplierInterrupted: interrupted.count + smmInterrupted.count, supplierChecked: due.length, supplierDelivered: delivered.length };
 }
 
 /** After lines were delivered: let fulfillOrder close the order and tell the customer. */
@@ -185,7 +207,7 @@ export async function retrySupplierLine(supplierOrderId: string) {
   const attempt = so.orderItem.supplierOrders.length + 1;
   await prisma.$transaction([
     prisma.supplierOrder.update({ where: { id: so.id }, data: { status: "CLOSED" } }),
-    prisma.supplierOrder.create({ data: { supplierId: so.supplierId, orderItemId: so.orderItemId, ref: `hg-${so.orderItemId}-${attempt}` } }),
+    prisma.supplierOrder.create({ data: { supplierId: so.supplierId, orderItemId: so.orderItemId, ref: `hg-${so.orderItemId}-${attempt}`, sku: so.sku } }),
   ]);
   const delivered = await sendQueued(so.orderItem.orderId);
   await finishOrders(delivered);

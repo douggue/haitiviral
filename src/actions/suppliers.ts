@@ -9,6 +9,8 @@ import { PRESETS } from "@/lib/suppliers/presets";
 import { callSupplier, secretsOf } from "@/lib/suppliers/engine";
 import { checkSupplierOrder, closeSupplierLine, finishOrders, retrySupplierLine } from "@/lib/suppliers/orders";
 import { mockSupplierAllowed } from "@/lib/suppliers/mock";
+import { smmBalance, smmStatuses } from "@/lib/suppliers/smm";
+import { isSmm } from "@/lib/suppliers/smm-orders";
 import type { SupplierConfig } from "@/lib/suppliers/types";
 
 type R = { ok: true; message?: string } | { ok: false; error: string };
@@ -94,6 +96,19 @@ export async function saveSupplier(form: FormData): Promise<R> {
 export async function testSupplier(id: string, what: "balance" | "token" | "status", ref = ""): Promise<R> {
   try {
     await assertStaff("settings.manage");
+    const sup = await prisma.supplier.findUniqueOrThrow({ where: { id } });
+    if (isSmm(sup.preset)) {
+      if (what === "balance") {
+        const b = await smmBalance(sup);
+        return b ? { ok: true, message: `Balance: ${b.balance} ${b.currency}` } : { ok: false, error: "No balance in the reply. Check the API address and key, then see the request log." };
+      }
+      if (what === "status") {
+        const so = await prisma.supplierOrder.findFirst({ where: { supplierId: id, OR: [{ ref: ref.trim() }, { supplierOrderId: ref.trim() }] } });
+        const p = (await smmStatuses(sup, [so?.supplierOrderId ?? ref.trim()])).values().next().value;
+        return p ? { ok: true, message: `Status: ${p.status}${p.startCount != null ? ` · start ${p.startCount}` : ""}${p.remains != null ? ` · remains ${p.remains}` : ""}${p.error ? ` · ${p.error}` : ""}` } : { ok: false, error: "No answer for this order" };
+      }
+      return { ok: false, error: "SMM panels use a key, there is no login to test" };
+    }
     if (what === "status") {
       const so = ref.trim() ? await prisma.supplierOrder.findFirst({ where: { supplierId: id, ref: ref.trim() } }) : null;
       const r = await callSupplier(id, "status", { ref: ref.trim(), supplierOrderId: so?.supplierOrderId ?? "", sku: "", skuParts: [], fields: {}, quantity: 1 }, so?.id ?? null);

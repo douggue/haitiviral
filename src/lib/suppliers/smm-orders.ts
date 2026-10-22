@@ -146,7 +146,7 @@ export async function applySmm(so: SmmOrder, p: SmmProgress | undefined): Promis
 /** Cron: one status call per provider for every order that is due (up to 100 per call). */
 export async function runSmmChecks(ids?: string[]): Promise<string[]> {
   const due = await prisma.supplierOrder.findMany({
-    where: ids ? { id: { in: ids } } : { status: "PENDING", nextCheckAt: { lte: new Date() }, supplier: { preset: { in: ["smm_panel", "smm_mock"] } } },
+    where: ids ? { id: { in: ids }, status: { in: ["PENDING", "UNKNOWN"] } } : { status: "PENDING", nextCheckAt: { lte: new Date() }, supplier: { preset: { in: ["smm_panel", "smm_mock"] } } },
     include: smmInclude,
     take: ids ? undefined : 300,
   });
