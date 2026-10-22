@@ -81,6 +81,7 @@ model User {
   reviews        Review[]
 
   @@map("user")
+  trialRequest  TrialRequest?
 }
 
 model Session {
@@ -932,4 +933,32 @@ model SupplierLog {
   createdAt       DateTime       @default(now())
 
   @@index([supplierId, createdAt])
+}
+
+enum TrialStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Free trial requests (one per account, phone number, social profile link and browser). Staff approve them in Admin → Free trials.
+model TrialRequest {
+  id        String      @id @default(cuid())
+  userId    String      @unique
+  user      User        @relation(fields: [userId], references: [id])
+  /// Offer key from the trialOffers setting
+  offer     String
+  /// Link as cleaned by the link check; unique so the same profile/video never gets two trials
+  link      String      @unique
+  phone     String      @unique
+  deviceId  String?
+  ip        String?
+  status    TrialStatus @default(PENDING)
+  orderId   String?
+  note      String?
+  createdAt DateTime    @default(now())
+  decidedAt DateTime?
+
+  @@index([status, createdAt])
+  @@index([ip, createdAt])
 }

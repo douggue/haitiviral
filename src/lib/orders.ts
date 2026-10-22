@@ -252,6 +252,25 @@ export async function createServiceOrder(input: ServiceOrderInput) {
   return order;
 }
 
+/** A free order (approved free trial): nothing is charged; it then follows the normal delivery path. */
+export async function createFreeOrder(input: { userId: string; variantId: string; quantity: number; link: string; note: string; actorId: string }) {
+  const v = await prisma.productVariant.findUniqueOrThrow({ where: { id: input.variantId }, include: { product: true } });
+  const qtyLabel = input.quantity.toLocaleString("en-US");
+  const variantName = Object.fromEntries(Object.entries(v.name as Record<string, string>).map(([l, n]) => [l, `${n} · ${qtyLabel}`]));
+  const order = await prisma.$transaction(async (tx) => {
+    const created = await tx.order.create({
+      data: {
+        userId: input.userId, currency: "HTG", subtotal: 0, total: 0, paymentMethod: "WALLET", status: "PAID", paidAt: new Date(), accessToken: randomToken(),
+        items: { create: [{ variantId: v.id, productName: v.product.name as Prisma.InputJsonValue, variantName, quantity: 1, unitPrice: 0, fieldValues: { link: input.link, quantity: String(input.quantity), trial: "1" } }] },
+      },
+    });
+    await addEvent(tx, created.id, "PAID", input.note, input.actorId);
+    return created;
+  });
+  await fulfillOrder(order.id, input.actorId);
+  return order;
+}
+
 /**
  * Deliver what can be delivered automatically. Code-inventory items get codes assigned, supplier items
  * (options linked to a supplier in Admin) are sent to the supplier; manual items wait in the staff queue.

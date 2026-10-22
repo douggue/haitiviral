@@ -768,3 +768,18 @@ export async function saveMoneyExchange(input: ExchangePricing): Promise<R> {
     return fail(e);
   }
 }
+
+// ───────────── Free trials ─────────────
+
+export async function decideTrialAction(id: string, approve: boolean, note: string): Promise<R> {
+  try {
+    const staff = await assertStaff("orders.manage");
+    const { decideTrial } = await import("@/lib/trials");
+    await decideTrial(id, approve, staff.id, note || undefined);
+    await audit(staff.id, approve ? "trial.approve" : "trial.reject", "TrialRequest", id);
+    revalidatePath("/admin/trials");
+    return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
