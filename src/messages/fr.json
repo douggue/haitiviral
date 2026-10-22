@@ -71,7 +71,7 @@
   },
   "home": {
     "eyebrow": "Fait en Haïti, pour les créateurs",
-    "heroTitle": "Rendez votre compte viral.",
+    "heroTitle": "Rendez votre compte viral",
     "heroSubtitle": "Abonnés, likes, vues et live pour TikTok, Instagram, YouTube et Facebook. Payez avec MonCash ou NatCash.",
     "featured": "Populaire en ce moment",
     "categoriesTitle": "Acheter par catégorie",
@@ -97,7 +97,15 @@
     "walletTitle": "Rechargez votre portefeuille une fois, achetez en un clic",
     "walletBody": "Ajoutez des gourdes à votre portefeuille HaitiViral avec MonCash ou NatCash, puis payez n'importe quelle commande instantanément.",
     "walletCta": "Ouvrir mon portefeuille",
-    "newsTitle": "Dernières actualités"
+    "newsTitle": "Dernières actualités",
+    "heroCta": "Commander maintenant",
+    "trialTitle": "Essai gratuit",
+    "trialBody": "Testez notre qualité avant de payer : 100 vues ou 20 likes.",
+    "choosePlatform": "Choisissez la plateforme",
+    "packsTitle": "Packs de départ",
+    "popularTitle": "Les plus populaires",
+    "avgDelivery": "Délai moyen : {time}",
+    "per1000": "/ 1000"
   },
   "faq": {
     "q1": "Combien de temps prend la livraison ?",

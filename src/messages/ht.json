@@ -71,7 +71,7 @@
   },
   "home": {
     "eyebrow": "Fèt an Ayiti, pou kreyatè yo",
-    "heroTitle": "Fè kont ou vin viral.",
+    "heroTitle": "Fè kont ou vin viral",
     "heroSubtitle": "Abòne, like, vi ak live pou TikTok, Instagram, YouTube ak Facebook. Peye ak MonCash oswa NatCash.",
     "featured": "Sa ki pi popilè kounye a",
     "categoriesTitle": "Achte pa kategori",
@@ -97,7 +97,15 @@
     "walletTitle": "Mete lajan nan bous ou yon fwa, achte nan yon sèl klik",
     "walletBody": "Mete goud nan bous HaitiViral ou ak MonCash oswa NatCash, epi peye nenpòt kòmand touswit.",
     "walletCta": "Ouvri bous mwen",
-    "newsTitle": "Dènye nouvèl"
+    "newsTitle": "Dènye nouvèl",
+    "heroCta": "Kòmande kounye a",
+    "trialTitle": "Eseye gratis",
+    "trialBody": "Teste kalite nou anvan ou peye: 100 vi oswa 20 like.",
+    "choosePlatform": "Chwazi platfòm",
+    "packsTitle": "Pake pou kòmanse",
+    "popularTitle": "Pi popilè",
+    "avgDelivery": "Mwayèn livrezon: {time}",
+    "per1000": "/ 1000"
   },
   "faq": {
     "q1": "Konbyen tan livrezon an pran?",
