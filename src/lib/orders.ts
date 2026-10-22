@@ -12,6 +12,7 @@ import { moncashAvailable } from "./payments/moncash";
 import { maybeRewardReferral } from "./referrals";
 import { amountInRange, isExchangeProduct, quoteAmount } from "./amount";
 import { hasOpenSupplierOrder, queueSupplierLines, sendQueued } from "./suppliers/orders";
+import { checkLink, DRIP_INTERVAL_MIN, DRIP_RUNS, LIVE_DURATIONS, parseComments, parseMeta, productKind, servicePrice, wantsPost } from "./services";
 
 export type FieldDef = {
   key: string;
@@ -151,6 +152,100 @@ export async function createOrder(input: {
     await notify(order.userId, "order_paid", { number: order.number }, `/account/orders/${order.id}`);
     await fulfillOrder(order.id);
   }
+  return order;
+}
+
+export type ServiceOrderInput = {
+  userId: string;
+  variantId: string;
+  link: string;
+  quantity: number;
+  comments?: string;
+  username?: string;
+  durationMin?: number;
+  drip?: boolean;
+  acceptRisk?: boolean;
+};
+
+/**
+ * Order one social media service, paid from the HTG wallet. Everything is checked again here (never trusted from the
+ * browser): link, quantity limits, comments, live duration, high-risk consent; the price is computed on the server.
+ */
+export async function createServiceOrder(input: ServiceOrderInput) {
+  const v = await prisma.productVariant.findFirst({
+    where: { id: input.variantId, isActive: true, product: { isPublished: true } },
+    include: { product: { include: { category: { select: { slug: true } } } } },
+  });
+  const meta = parseMeta(v?.service);
+  if (!v || !meta || v.soldOut) throw new OrderError("unavailable");
+  const kind = productKind(v.product.tags);
+  const link = checkLink(input.link, v.product.category.slug, wantsPost(kind, meta.type));
+  if (!link.ok) throw new OrderError("invalid_link");
+
+  const fieldValues: Record<string, string> = { link: link.url };
+  let quantity = input.quantity;
+  if (meta.type === "comments" || meta.type === "liveComments") {
+    const lines = parseComments(input.comments ?? "");
+    quantity = lines.length;
+    fieldValues.comments = lines.join("\n");
+  }
+  if (!Number.isInteger(quantity) || quantity < meta.min || quantity > meta.max) throw new OrderError("invalid_quantity");
+  if (meta.type === "commentLikes") {
+    const name = (input.username ?? "").trim().replace(/^@/, "");
+    if (!/^[A-Za-z0-9._]{1,40}$/.test(name)) throw new OrderError("missing_field");
+    fieldValues.username = name;
+  }
+  let duration = 30;
+  if (meta.type === "live") {
+    duration = input.durationMin ?? 30;
+    if (!(LIVE_DURATIONS as readonly number[]).includes(duration)) throw new OrderError("invalid_quantity");
+    fieldValues.durationMin = String(duration);
+  }
+  if (input.drip && meta.drip) {
+    fieldValues.drip = `${DRIP_RUNS}x${Math.ceil(quantity / DRIP_RUNS)}/${DRIP_INTERVAL_MIN}min`;
+  }
+  if (meta.risk === "high") {
+    if (!input.acceptRisk) throw new OrderError("risk_not_accepted");
+    fieldValues.riskAcceptedAt = new Date().toISOString();
+  }
+  fieldValues.quantity = String(quantity);
+
+  const unitHtg = servicePrice(v.salePriceHtg ?? v.priceHtg, quantity, meta.type, duration);
+  const settings = await getSettings();
+  const user = await prisma.user.findUniqueOrThrow({ where: { id: input.userId } });
+  if (user.status !== "ACTIVE") throw new OrderError("account_restricted");
+  const qtyLabel = quantity.toLocaleString("en-US");
+  const variantName = Object.fromEntries(
+    Object.entries(v.name as Record<string, string>).map(([l, n]) => [l, `${n} · ${qtyLabel}${meta.type === "live" ? ` · ${duration} min` : ""}`]),
+  );
+
+  const order = await prisma.$transaction(async (tx) => {
+    await assertWithinNewAccountLimit(tx, user, unitHtg, settings);
+    const created = await tx.order.create({
+      data: {
+        userId: input.userId,
+        currency: "HTG",
+        subtotal: unitHtg,
+        total: unitHtg,
+        paymentMethod: "WALLET",
+        accessToken: randomToken(),
+        items: {
+          create: [{ variantId: v.id, productName: v.product.name as Prisma.InputJsonValue, variantName, quantity: 1, unitPrice: unitHtg, fieldValues }],
+        },
+      },
+    });
+    await addEvent(tx, created.id, "AWAITING_PAYMENT", "Payment method: WALLET");
+    if (unitHtg >= settings.reviewOrderThresholdHtg) {
+      await flag(tx, "High-value order: review before release", { userId: input.userId, orderId: created.id });
+    }
+    await chargeOrder(tx, created);
+    await tx.order.update({ where: { id: created.id }, data: { status: "PAID", paidAt: new Date() } });
+    await addEvent(tx, created.id, "PAID", "Paid from wallet");
+    return created;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
+
+  await notify(order.userId, "order_paid", { number: order.number }, `/account/orders/${order.id}`);
+  await fulfillOrder(order.id);
   return order;
 }
 

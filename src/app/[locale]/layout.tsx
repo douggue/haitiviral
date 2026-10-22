@@ -10,7 +10,7 @@ import { CartProvider } from "@/components/cart/CartProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { BottomNav, ThemeKeeper } from "@/components/HeaderClient";
+import { BottomNav, HeaderSlot, PhoneHidden, ThemeKeeper } from "@/components/HeaderClient";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { alternates } from "@/lib/seo";
 import { themeAttrs, themeCss, themeScript, cssGuardScript } from "@/lib/theme-css";
@@ -76,10 +76,16 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         <NextIntlClientProvider>
           <CartProvider currency={currency} htgPerUsd={settings.htgPerUsd} signedIn={!!user}>
             <AnnouncementBar settings={settings} locale={locale} />
-            <Header />
+            <HeaderSlot>
+              <Header />
+            </HeaderSlot>
             <main id="main">{children}</main>
-            <Footer settings={settings} />
-            <WhatsAppButton number={settings.whatsappNumber} />
+            <PhoneHidden>
+              <Footer settings={settings} />
+            </PhoneHidden>
+            <PhoneHidden onHome={false}>
+              <WhatsAppButton number={settings.whatsappNumber} />
+            </PhoneHidden>
             {/* Room for the phone bottom navigation so it never covers the footer */}
             <div className="md:hidden" style={{ height: "calc(4rem + env(safe-area-inset-bottom, 0px))" }} aria-hidden />
             <BottomNav signedIn={!!user} />

@@ -9,12 +9,11 @@ export async function WhatsAppButton({ number, message }: { number: string; mess
       href={`https://wa.me/${number}?text=${text}`}
       target="_blank"
       rel="noopener"
-      style={{ bottom: "calc(5rem + env(safe-area-inset-bottom, 0px))" }}
-      className="kb-hide fixed right-4 z-30 md:!bottom-6 md:right-6 inline-flex h-14 items-center gap-2 rounded-full bg-[#1fa855] px-4 font-semibold text-white shadow-lg shadow-black/20 hover:bg-[#178a45]"
+      style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom, 0px))" }}
+      className="kb-hide fixed right-[18px] z-30 grid h-14 w-14 place-items-center rounded-full bg-[#15803D] text-white shadow-[0_6px_16px_rgba(21,128,61,0.35)] hover:bg-[#166534] md:!bottom-6 md:right-6"
       aria-label={t("whatsappHelp")}
     >
-      <WhatsAppIcon />
-      <span className="hidden sm:inline">{t("help")}</span>
+      <WhatsAppIcon width={26} height={26} />
     </a>
   );
 }

@@ -9,7 +9,7 @@ import { localeNames, locales, type Locale } from "@/i18n/routing";
 import { setCurrency, saveLocalePreference } from "@/actions/prefs";
 import { authClient } from "@/lib/auth-client";
 import { useStore } from "./cart/CartProvider";
-import { BagIcon, BookIcon, CartIcon, CloseIcon, FileIcon, HelpIcon, HomeIcon, LoginIcon, LogoutIcon, MenuIcon, MoonIcon, NewsIcon, StoreIcon, SunIcon, TagIcon, UserIcon, UserPlusIcon, WalletIcon } from "./Icons";
+import { BagIcon, BookIcon, CartIcon, CloseIcon, FileIcon, HelpIcon, HomeIcon, ListIcon, LoginIcon, LogoutIcon, MenuIcon, PlusCircleIcon, MoonIcon, NewsIcon, StoreIcon, SunIcon, TagIcon, UserIcon, UserPlusIcon, WalletIcon } from "./Icons";
 import { Avatar } from "./Avatar";
 
 /**
@@ -136,7 +136,40 @@ function useChangeLocale() {
   return { locale: picked, change, pending, prefetch };
 }
 
-/** Header: the current flag; tapping it opens the four languages. */
+/** Screens with their own top bar (PageBar): on phones the site header is hidden there, as in the mockup. */
+const OWN_BAR = ["/order", "/trial", "/help", "/account", "/auth"];
+export function HeaderSlot({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const own = OWN_BAR.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  return <div className={`sticky top-0 z-40 ${own ? "max-md:hidden" : ""}`}>{children}</div>;
+}
+
+/** On phones the app screens (home and screens with their own top bar) have no footer or floating help button, as in the mockup. */
+export function PhoneHidden({ onHome = true, children }: { onHome?: boolean; children: React.ReactNode }) {
+  const pathname = usePathname();
+  const hide = (onHome && pathname === "/") || OWN_BAR.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  return <div className={hide ? "max-md:hidden" : undefined}>{children}</div>;
+}
+
+/** Header (mockup): "KR" / "FR"; tapping switches to the other language. */
+export function LangToggle() {
+  const t = useTranslations("common");
+  const { locale, change, pending, prefetch } = useChangeLocale();
+  const next = locales.find((l) => l !== locale) ?? locale;
+  return (
+    <button
+      type="button"
+      onClick={() => change(next)}
+      onPointerEnter={prefetch}
+      aria-label={`${t("otherLanguage")}: ${localeNames[next]}`}
+      className={`grid h-11 min-w-11 place-items-center rounded-[10px] text-xs font-extrabold text-text/80 hover:bg-surface-2 ${pending ? "opacity-60" : ""}`}
+    >
+      {locale === "ht" ? "KR" : "FR"}
+    </button>
+  );
+}
+
+/** Header: the current flag; tapping it opens the languages. */
 export function LocaleSwitch() {
   const t = useTranslations("common");
   const { locale, change, pending, prefetch } = useChangeLocale();
@@ -414,39 +447,34 @@ function useKeyboardFlag() {
   }, []);
 }
 
-/** Phone-only bottom navigation: the five places customers go most. */
+/** Phone-only bottom navigation: home, new order, orders, wallet, account (as in the mockup). */
 export function BottomNav({ signedIn }: { signedIn: boolean }) {
   const t = useTranslations("common");
   const pathname = usePathname();
-  const { count, ready } = useStore();
   useKeyboardFlag();
+  const gate = (href: string) => (signedIn ? href : `/auth/login?next=${href}`);
   const items = [
     { href: "/", label: t("home"), icon: HomeIcon, active: pathname === "/" },
-    { href: "/store", label: t("store"), icon: StoreIcon, active: pathname.startsWith("/store") || pathname.startsWith("/categories") || pathname.startsWith("/products") },
-    { href: "/cart", label: t("cart"), icon: CartIcon, active: pathname.startsWith("/cart") || pathname.startsWith("/checkout"), badge: ready ? count : 0 },
-    { href: signedIn ? "/account/wallet" : "/auth/login?next=/account/wallet", label: t("wallet"), icon: WalletIcon, active: pathname.startsWith("/account/wallet") },
-    { href: signedIn ? "/account" : "/auth/login", label: t("tabAccount"), icon: UserIcon, active: (pathname.startsWith("/account") && !pathname.startsWith("/account/wallet")) || pathname.startsWith("/auth") },
+    { href: "/order", label: t("tabOrder"), icon: PlusCircleIcon, active: pathname.startsWith("/order") || pathname.startsWith("/store") || pathname.startsWith("/products") || pathname.startsWith("/categories") },
+    { href: gate("/account/orders"), label: t("tabOrders"), icon: ListIcon, active: pathname.startsWith("/account/orders") },
+    { href: gate("/account/wallet"), label: t("wallet"), icon: WalletIcon, active: pathname.startsWith("/account/wallet") },
+    { href: signedIn ? "/account" : "/auth/login", label: t("tabAccount"), icon: UserIcon, active: (pathname.startsWith("/account") && !pathname.startsWith("/account/wallet") && !pathname.startsWith("/account/orders")) || pathname.startsWith("/auth") },
   ];
   return (
     <nav
       aria-label={t("menu")}
-      className="kb-hide fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur md:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)", paddingLeft: "env(safe-area-inset-left, 0px)", paddingRight: "env(safe-area-inset-right, 0px)" }}
+      className="kb-hide fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface md:hidden"
+      style={{ paddingBottom: "max(10px, env(safe-area-inset-bottom, 0px))", paddingLeft: "env(safe-area-inset-left, 0px)", paddingRight: "env(safe-area-inset-right, 0px)" }}
     >
-      <ul className="mx-auto grid h-16 max-w-md grid-cols-5">
-        {items.map(({ href, label, icon: Icon, active, badge }) => (
+      <ul className="mx-auto grid max-w-md grid-cols-5 px-1 pt-1.5">
+        {items.map(({ href, label, icon: Icon, active }) => (
           <li key={label} className="min-w-0">
             <Link
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-semibold transition-colors ${active ? "text-primary" : "text-muted hover:text-text"}`}
+              className={`flex flex-col items-center gap-[3px] py-2 text-[11px] transition-colors ${active ? "font-bold text-text" : "font-semibold text-muted hover:text-text"}`}
             >
-              <span className={`relative grid h-7 w-12 place-items-center rounded-full transition-colors ${active ? "bg-primary-soft" : ""}`}>
-                <Icon width={20} height={20} />
-                {!!badge && (
-                  <CountBadge count={badge} className="absolute -right-0.5 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-white" />
-                )}
-              </span>
+              <Icon width={22} height={22} strokeWidth={2} />
               <span className="max-w-full truncate px-1">{label}</span>
             </Link>
           </li>

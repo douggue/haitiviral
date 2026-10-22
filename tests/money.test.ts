@@ -13,7 +13,8 @@ describe("money", () => {
   });
   it("converts and formats", () => {
     expect(htgToUsd(131_50, 131.5)).toBe(100);
-    expect(formatMoney(150000, "HTG", "ht")).toMatch(/1.500 HTG/);
+    expect(formatMoney(150000, "HTG", "ht")).toBe("G 1,500");
+    expect(formatMoney(1250, "HTG", "fr")).toBe("G 12.50");
     expect(formatMoney(1050, "USD", "en")).toBe("$10.50");
   });
 });

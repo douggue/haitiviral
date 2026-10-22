@@ -2,74 +2,62 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getUser } from "@/lib/session";
 import { prisma } from "@/lib/db";
+import { getBalances } from "@/lib/ledger";
 import { isStaff } from "@/lib/permissions";
 import { getDisplaySettings } from "@/lib/settings";
-import { t as txt } from "@/lib/text";
+import { formatMoney } from "@/lib/money";
 import { Logo } from "./Logo";
-import { Avatar } from "./Avatar";
-import { PriorityNav } from "./NavMore";
-import { BellIcon, SearchIcon, UserIcon } from "./Icons";
-import { CartButton, CurrencySwitch, LocaleSwitch, MobileMenu, ThemeToggle } from "./HeaderClient";
+import { BellIcon } from "./Icons";
+import { LangToggle } from "./HeaderClient";
 
+/** Top bar as in the mockup: logo · language · notifications · wallet balance (or sign in). Wider screens also get the main links. */
 export async function Header() {
   const t = await getTranslations("common");
   const locale = await getLocale();
   const [user, settings] = await Promise.all([getUser(), getDisplaySettings()]);
-  const unread = user ? await prisma.notification.count({ where: { userId: user.id, readAt: null } }) : 0;
-  const custom = settings.navigation?.header ?? [];
-  const nav = custom.length ? custom.map((l) => ({ href: l.href, label: txt(l.label, locale) })) : [
-    { href: "/store", label: t("store") },
-    { href: "/categories", label: t("categories") },
-    { href: "/guides", label: t("guides") },
-    { href: "/news", label: t("news") },
-    { href: "/faq", label: t("faqShort") },
+  const [unread, balances] = user
+    ? await Promise.all([prisma.notification.count({ where: { userId: user.id, readAt: null } }), getBalances(prisma, user.id)])
+    : [0, null];
+  const links = [
+    { href: "/", label: t("home") },
+    { href: "/order", label: t("tabOrder") },
+    { href: "/account/orders", label: t("tabOrders") },
+    { href: "/account/wallet", label: t("wallet") },
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-bg/85 backdrop-blur-md">
-      <div className="container-page flex h-16 items-center gap-2 sm:gap-3">
+    <header className="border-b border-border bg-surface">
+      <div className="container-page flex h-16 items-center gap-1.5">
         <Link href="/" className="shrink-0">
           <Logo src={settings.logoUrl} darkSrc={settings.logoDarkUrl} alt={settings.businessName} />
         </Link>
-        {/* As many links as fit; the rest go under "More" instead of being cut off */}
-        <PriorityNav items={nav} moreLabel={t("more")} />
-        <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1 md:ml-0">
-          <div className="hidden items-center gap-1.5 md:flex">
-            <LocaleSwitch />
-            <CurrencySwitch />
-            <ThemeToggle />
-          </div>
-          <div className="flex items-center gap-1.5 md:hidden">
-            <LocaleSwitch />
-            <CurrencySwitch compact />
-          </div>
-          <Link href="/store" className="btn-ghost hidden min-h-10 px-2.5 md:inline-flex" aria-label={t("search")}>
-            <SearchIcon />
-          </Link>
+        <nav aria-label={t("menu")} className="ml-6 hidden items-center gap-1 md:flex">
+          {links.map((l) => (
+            <Link key={l.href} href={l.href} className="rounded-[10px] px-3 py-2 text-sm font-semibold text-muted hover:bg-surface-2 hover:text-text">
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="ml-auto flex shrink-0 items-center gap-0.5">
+          <LangToggle />
           {user && (
-            <Link href="/account/notifications" className="btn-ghost relative min-h-10 px-2 sm:px-2.5" aria-label={`${t("notifications")} (${unread})`}>
-              <BellIcon />
-              {unread > 0 && <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-danger ring-2 ring-surface" />}
+            <Link href="/account/notifications" className="relative grid h-11 w-11 place-items-center rounded-[10px] text-text hover:bg-surface-2" aria-label={`${t("notifications")} (${unread})`}>
+              <BellIcon width={21} height={21} strokeWidth={2} />
+              {unread > 0 && <span className="absolute right-2.5 top-2 h-[9px] w-[9px] rounded-full border-2 border-surface bg-[#D21034]" />}
             </Link>
           )}
-          {/* Phones: search and cart live in the bottom bar, leaving room for the currency toggle */}
-          <div className="hidden md:block">
-            <CartButton />
-          </div>
-          {user ? (
-            <Link href="/account" className="btn-ghost hidden min-h-10 px-2.5 md:inline-flex" aria-label={t("account")}>
-              <Avatar name={user.name} image={user.image} size={32} />
+          {balances ? (
+            <Link href="/account/wallet" className="ml-1 inline-flex h-10 items-center rounded-full bg-primary-soft px-3 text-[13px] font-bold text-primary dark:text-text" aria-label={t("balance")}>
+              {formatMoney(balances.HTG.available, "HTG", locale)}
             </Link>
           ) : (
-            <Link href="/auth/login" className="btn-primary glow-btn hidden min-h-10 md:inline-flex">
-              <UserIcon width={18} height={18} />
+            <Link href="/auth/login" className="btn-primary ml-1 min-h-10 rounded-full px-4 text-[13px]">
               {t("signIn")}
             </Link>
           )}
           {user && isStaff(user.role) && (
-            <a href="/admin" className="btn-secondary hidden min-h-10 lg:inline-flex">{t("admin")}</a>
+            <a href="/admin" className="btn-secondary ml-1 hidden min-h-10 lg:inline-flex">{t("admin")}</a>
           )}
-          <MobileMenu nav={nav} signedIn={!!user} name={user?.name} image={user?.image} />
         </div>
       </div>
     </header>

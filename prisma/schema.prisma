@@ -237,6 +237,9 @@ model ProductVariant {
   supplier     Supplier?   @relation(fields: [supplierId], references: [id])
   /// The supplier's product / denomination code for this option
   supplierSku  String?
+  /// Social media service choice (Bon mache / Pi bon kalite / Rapid): priceHtg is the price per 1,000 and this holds
+  /// { type, min, max, avg {ht,fr}, risk, refillDays, drip, desc } (see src/lib/services.ts)
+  service      Json?
   codes        CodeItem[]
   orderItems   OrderItem[]
   createdAt    DateTime    @default(now())
