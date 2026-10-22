@@ -143,9 +143,9 @@ export async function sendTestEmail(to: string): Promise<R> {
     if (!emailEnabled()) return { ok: false, error: "Email is off: set RESEND_API_KEY and EMAIL_FROM in Vercel, then redeploy" };
     const { ok, error } = await sendEmailResult({
       to: addr,
-      subject: "Haiti Gaming test email",
-      html: "<p>This is a test from the Haiti Gaming admin. Email delivery works.</p>",
-      text: "This is a test from the Haiti Gaming admin. Email delivery works.",
+      subject: "HaitiViral test email",
+      html: "<p>This is a test from the HaitiViral admin. Email delivery works.</p>",
+      text: "This is a test from the HaitiViral admin. Email delivery works.",
     });
     await audit(staff.id, "email.test", "EmailLog", null, { to: addr, ok });
     revalidatePath("/admin/email");

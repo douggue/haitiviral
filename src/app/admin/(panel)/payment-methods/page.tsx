@@ -25,7 +25,7 @@ function MethodForm({ m, crypto }: { m?: M; crypto?: boolean }) {
         <div className="grid gap-3 sm:grid-cols-3">
           <label><span className="label">Code</span><input name="code" defaultValue={m?.code ?? "usdt-bep20"} required className="input" /></label>
           <label><span className="label">Network</span><input name="network" defaultValue={m?.network ?? "BEP-20 (BSC)"} required className="input" list="networks" /></label>
-          <label><span className="label">Wallet name (shown to staff)</span><input name="recipientName" defaultValue={m?.recipientName ?? "Haiti Gaming"} required className="input" /></label>
+          <label><span className="label">Wallet name (shown to staff)</span><input name="recipientName" defaultValue={m?.recipientName ?? "HaitiViral"} required className="input" /></label>
           <label className="sm:col-span-3"><span className="label">Wallet address</span><input name="recipientNumber" defaultValue={m?.recipientNumber} required placeholder="0x…" className="input font-mono" spellCheck={false} autoComplete="off" /></label>
           <datalist id="networks"><option value="BEP-20 (BSC)" /><option value="Polygon" /><option value="TRC-20 (Tron)" /><option value="ERC-20 (Ethereum)" /></datalist>
         </div>

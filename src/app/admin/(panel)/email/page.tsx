@@ -32,7 +32,7 @@ export default async function Email({ searchParams }: { searchParams: Promise<{ 
     {
       label: "EMAIL_FROM",
       ok: !!fromDomain && !fromDomain.endsWith("vercel.app"),
-      detail: !from ? "is missing. Example: Haiti Gaming <noreply@yourdomain.com>" : !fromDomain ? `"${from}" has no email address in it. Example: Haiti Gaming <noreply@yourdomain.com>` : fromDomain.endsWith("vercel.app") ? "uses vercel.app, which cannot be verified in Resend. Use your own domain." : fromDomain === "resend.dev" ? "uses resend.dev: test mode, emails only reach your own Resend account email." : `sends from ${fromDomain}. This domain must show "Verified" in Resend → Domains.`,
+      detail: !from ? "is missing. Example: HaitiViral <noreply@yourdomain.com>" : !fromDomain ? `"${from}" has no email address in it. Example: HaitiViral <noreply@yourdomain.com>` : fromDomain.endsWith("vercel.app") ? "uses vercel.app, which cannot be verified in Resend. Use your own domain." : fromDomain === "resend.dev" ? "uses resend.dev: test mode, emails only reach your own Resend account email." : `sends from ${fromDomain}. This domain must show "Verified" in Resend → Domains.`,
     },
   ];
   return (

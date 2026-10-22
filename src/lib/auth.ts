@@ -33,7 +33,7 @@ const trustedOrigins = [
 export const googleEnabled = () => !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET;
 
 export const auth = betterAuth({
-  appName: "Haiti Gaming",
+  appName: "HaitiViral",
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   trustedOrigins,
   emailAndPassword: {
@@ -64,7 +64,7 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     expiresIn: 60 * 60 * 24,
     sendVerificationEmail: async ({ user, url }) => {
-      // The link must open on haitigaming.net even if the customer signed up on the .vercel.app address.
+      // The link must open on haitiviral.com even if the customer signed up on the .vercel.app address.
       await sendVerificationEmail(user as AuthUser, onSiteDomain(url));
     },
   },
@@ -162,7 +162,7 @@ export const auth = betterAuth({
   advanced: {
     ipAddress: { ipAddressHeaders: ["x-forwarded-for", "x-real-ip"] },
   },
-  plugins: [twoFactor({ issuer: "Haiti Gaming" }), nextCookies()],
+  plugins: [twoFactor({ issuer: "HaitiViral" }), nextCookies()],
 });
 
 export type AuthSession = typeof auth.$Infer.Session;

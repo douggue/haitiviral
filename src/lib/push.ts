@@ -37,7 +37,7 @@ export async function sendPush(userId: string, msg: PushMessage) {
     const subs = await prisma.pushSubscription.findMany({ where: { userId } });
     if (!subs.length) return;
     const keys = await vapidKeys();
-    const options = { vapidDetails: { subject: process.env.VAPID_SUBJECT || "mailto:support@haitigaming.net", ...keys }, TTL: 60 * 60 * 24, urgency: "high" as const };
+    const options = { vapidDetails: { subject: process.env.VAPID_SUBJECT || "mailto:support@haitiviral.com", ...keys }, TTL: 60 * 60 * 24, urgency: "high" as const };
     const payload = JSON.stringify(msg);
     await Promise.all(
       subs.map((s) =>

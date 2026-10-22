@@ -52,7 +52,7 @@ export async function reportError(
   try {
     await fetch(dsn.url, {
       method: "POST",
-      headers: { "Content-Type": "application/x-sentry-envelope", "X-Sentry-Auth": `Sentry sentry_version=7, sentry_key=${dsn.key}, sentry_client=haiti-gaming/1.0` },
+      headers: { "Content-Type": "application/x-sentry-envelope", "X-Sentry-Auth": `Sentry sentry_version=7, sentry_key=${dsn.key}, sentry_client=haitiviral/1.0` },
       body: envelope,
       signal: AbortSignal.timeout(3000),
     });

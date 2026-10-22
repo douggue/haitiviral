@@ -4,7 +4,7 @@ import { getDisplaySettings } from "@/lib/settings";
 import { themeCss, themeScript, cssGuardScript } from "@/lib/theme-css";
 import "../globals.css";
 
-export const metadata: Metadata = { title: { default: "Admin", template: "%s · Haiti Gaming Admin" }, robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: { default: "Admin", template: "%s · HaitiViral Admin" }, robots: { index: false, follow: false } };
 
 const sans = Figtree({ subsets: ["latin", "latin-ext"], variable: "--font-body", display: "swap" });
 const display = Chakra_Petch({ subsets: ["latin", "latin-ext"], weight: ["600", "700"], variable: "--font-display-face", display: "optional" });

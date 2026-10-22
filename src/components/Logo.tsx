@@ -1,5 +1,5 @@
-/** Uploaded logo (Settings → Brand images) or the built-in Haiti Gaming logo (blue/red controller + HAITI GAMING). */
-export function Logo({ className = "", src, darkSrc, alt = "Haiti Gaming" }: { className?: string; src?: string; darkSrc?: string; alt?: string }) {
+/** Uploaded logo (Settings → Brand images) or the built-in HaitiViral logo (blue/red controller + HAITI GAMING). */
+export function Logo({ className = "", src, darkSrc, alt = "HaitiViral" }: { className?: string; src?: string; darkSrc?: string; alt?: string }) {
   if (src) {
     return (
       <span className={`inline-flex items-center ${className}`}>

@@ -13,7 +13,7 @@ const TEMPLATES = [
   "Mèsi, nou resevwa demann ou. N ap tcheke sa kounye a.",
   "Kòmand ou livre. Tanpri verifye kont jwèt ou epi fè nou konnen.",
   "Nou bezwen nimewo referans NatCash la pou n ka verifye peman an.",
-  "Nou ranbouse lajan an nan bous Haiti Gaming ou.",
+  "Nou ranbouse lajan an nan bous HaitiViral ou.",
 ];
 
 export default async function TicketAdmin({ params }: { params: Promise<{ id: string }> }) {

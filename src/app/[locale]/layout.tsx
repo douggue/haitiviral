@@ -35,13 +35,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const [t, settings] = await Promise.all([getTranslations({ locale, namespace: "meta" }), getDisplaySettings()]);
   return {
     metadataBase: new URL(siteUrl()),
-    title: { default: t("title"), template: "%s · Haiti Gaming" },
+    title: { default: t("title"), template: "%s · HaitiViral" },
     description: t("description"),
     alternates: alternates(locale, ""),
     openGraph: { siteName: settings.businessName, locale, type: "website", ...(settings.ogImageUrl ? { images: [{ url: settings.ogImageUrl, width: 1200, height: 630 }] } : {}) },
     manifest: "/manifest.webmanifest",
     // Installed on iPhone: full screen, no Safari bar, logo launch screen.
-    appleWebApp: { capable: true, title: "Haiti Gaming", statusBarStyle: "black", startupImage: SPLASH },
+    appleWebApp: { capable: true, title: "HaitiViral", statusBarStyle: "black", startupImage: SPLASH },
     icons: { icon: [{ url: "/favicon-48.png", sizes: "48x48", type: "image/png" }, { url: "/icon-192.png", sizes: "192x192", type: "image/png" }], apple: "/apple-touch-icon.png" },
   };
 }

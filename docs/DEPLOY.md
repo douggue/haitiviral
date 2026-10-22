@@ -1,4 +1,4 @@
-# Deploying Haiti Gaming to Vercel
+# Deploying HaitiViral to Vercel
 
 About 20 minutes. You need a free [Vercel](https://vercel.com) account. Vercel cannot take a zip upload directly: the code goes through **GitHub** (path A, recommended) or the **Vercel command line** on a computer (path B).
 
@@ -8,25 +8,25 @@ About 20 minutes. You need a free [Vercel](https://vercel.com) account. Vercel c
 
 ### Path A: GitHub (works from a phone or computer)
 1. Create a free account at https://github.com if you don't have one.
-2. Create a new **private**, **empty** repository named `haiti-gaming`. Don't add a README.
+2. Create a new **private**, **empty** repository named `haitiviral`. Don't add a README.
 3. Put the code in it:
    - **Easiest:** let Claude push it for you. Connect GitHub to Claude and give it the repository name.
    - **Yourself, on a computer with Git:**
      ```bash
-     unzip haiti-gaming.zip -d haiti-gaming && cd haiti-gaming
-     git init && git add . && git commit -m "Haiti Gaming"
+     unzip haitiviral.zip -d haitiviral && cd haitiviral
+     git init && git add . && git commit -m "HaitiViral"
      git branch -M main
-     git remote add origin https://github.com/YOUR-NAME/haiti-gaming.git
+     git remote add origin https://github.com/YOUR-NAME/haitiviral.git
      git push -u origin main
      ```
-4. In Vercel: **Add New… → Project → Import** the `haiti-gaming` repository. Leave every setting as it is and press **Deploy**.
+4. In Vercel: **Add New… → Project → Import** the `haitiviral` repository. Leave every setting as it is and press **Deploy**.
 5. **The first build will fail with a database error. That is expected:** the database isn't connected yet. Continue with step 2.
 
 ### Path B: Vercel command line (computer, no GitHub)
 ```bash
-unzip haiti-gaming.zip -d haiti-gaming && cd haiti-gaming
+unzip haitiviral.zip -d haitiviral && cd haitiviral
 npx vercel login
-npx vercel link        # answer Y, create a new project called haiti-gaming
+npx vercel link        # answer Y, create a new project called haitiviral
 ```
 Do steps 2 and 3 in the Vercel dashboard, then run `npx vercel --prod` (step 4).
 
@@ -36,7 +36,7 @@ Do steps 2 and 3 in the Vercel dashboard, then run `npx vercel --prod` (step 4).
 1. **Database:** Create Database → **Neon** (Postgres) → region **US East** (Washington, D.C.), the closest to Haiti → Create → connect it to the project (all environments).
 
    This adds `DATABASE_URL` and `DATABASE_URL_UNPOOLED` for you.
-2. **Files:** Create → **Blob** → name it `haiti-gaming-files` → Create → connect it to the project.
+2. **Files:** Create → **Blob** → name it `haitiviral-files` → Create → connect it to the project.
 
    This adds `BLOB_READ_WRITE_TOKEN`. It holds product images and the private payment screenshots.
 

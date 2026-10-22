@@ -18,5 +18,5 @@ export async function GET() {
   ]);
   await audit(u.id, "account.export", "User", u.id);
   const body = JSON.stringify({ exportedAt: new Date().toISOString(), note: "Amounts are in minor units (centimes/cents).", user, orders, payments, wallet: ledger, supportTickets: tickets, notifications, referrals }, null, 2);
-  return new NextResponse(body, { headers: { "content-type": "application/json; charset=utf-8", "content-disposition": `attachment; filename="haiti-gaming-my-data.json"`, "cache-control": "no-store" } });
+  return new NextResponse(body, { headers: { "content-type": "application/json; charset=utf-8", "content-disposition": `attachment; filename="haitiviral-my-data.json"`, "cache-control": "no-store" } });
 }

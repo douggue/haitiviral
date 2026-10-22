@@ -252,7 +252,7 @@ export default async function HomePage({ params, searchParams }: { params: Promi
             <div className="relative hidden h-[400px] lg:block" aria-hidden>
               <div className="animate-rise absolute right-6 top-2 flex h-[340px] w-[280px] rotate-3 flex-col justify-end rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_50%_35%,#ff9a3c,#c2341d_45%,#3a0e18)] p-6 shadow-[0_30px_80px_-30px_rgba(255,120,60,.6)]">
                 <span className="display text-6xl font-bold leading-none">{featured[0] ? t(featured[0].name, locale).slice(0, 2).toUpperCase() : "HG"}</span>
-                <span className="mt-3 font-bold">{featured[0] ? t(featured[0].name, locale) : "Haiti Gaming"}</span>
+                <span className="mt-3 font-bold">{featured[0] ? t(featured[0].name, locale) : "HaitiViral"}</span>
                 <span className="text-sm opacity-80">{th("trustDelivery")}</span>
               </div>
               <div className="animate-rise absolute left-0 top-16 flex w-60 flex-col gap-2 rounded-2xl border border-[#46d8ff]/35 bg-[#0e1830]/90 p-4 shadow-[0_0_40px_-12px_rgba(70,216,255,.6)] backdrop-blur">

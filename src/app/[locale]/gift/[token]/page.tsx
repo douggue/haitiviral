@@ -21,7 +21,7 @@ export default async function GiftPage({ params }: { params: Promise<{ locale: s
   });
   if (!order || order.status !== "FULFILLED") notFound();
   const tg = await getTranslations("gift");
-  const from = order.user.name.trim().split(/\s+/)[0] || "Haiti Gaming";
+  const from = order.user.name.trim().split(/\s+/)[0] || "HaitiViral";
   const items = order.items.map((i) => ({ id: i.id, title: `${t(i.productName, locale)} — ${t(i.variantName, locale)}`, codes: i.codes.map((c) => revealCode(c.codeEncrypted)) }));
   await audit(null, "code.view.gift", "Order", order.id, { codes: items.reduce((n, i) => n + i.codes.length, 0) });
 

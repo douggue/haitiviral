@@ -50,7 +50,7 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
       giftText = `${note}${tg("messageCode", { what, url: `${siteUrl()}/${locale}/gift/${token}` })}`;
     } else {
       const ids = order.items.flatMap((i) => Object.values(i.fieldValues as Record<string, string>)).filter(Boolean).join(", ");
-      giftText = `${note}${tg("messageTopup", { what })}${ids ? ` (${ids})` : ""}\n\n— Haiti Gaming · haitigaming.net`;
+      giftText = `${note}${tg("messageTopup", { what })}${ids ? ` (${ids})` : ""}\n\n— HaitiViral · haitiviral.com`;
     }
   }
   const helpText = encodeURIComponent(`${tc("whatsappMessage")} ${to("title", { number: order.number })} ${statusUrl}`);

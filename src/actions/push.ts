@@ -47,7 +47,7 @@ export async function savePushSubscription(raw: unknown, test = true): Promise<R
     });
     if (test) {
       const t = await getTranslations({ locale: user.locale ?? "ht", namespace: "pwa" });
-      await sendPush(user.id, { title: "Haiti Gaming", body: t("welcome"), url: `/${user.locale ?? "ht"}/account/notifications`, tag: "welcome" });
+      await sendPush(user.id, { title: "HaitiViral", body: t("welcome"), url: `/${user.locale ?? "ht"}/account/notifications`, tag: "welcome" });
     }
     return { ok: true };
   } catch {

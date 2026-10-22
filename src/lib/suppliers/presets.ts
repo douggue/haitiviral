@@ -87,7 +87,7 @@ export const PRESETS: Record<string, Preset> = {
         method: "POST",
         path: "/orders",
         headers: { Authorization: "Bearer {{token}}", Accept: "application/com.reloadly.giftcards-v1+json" },
-        body: { productId: "#{{skuParts.0}}", unitPrice: "#{{skuParts.1}}", quantity: "#{{quantity}}", customIdentifier: "{{ref}}", senderName: "Haiti Gaming", recipientEmail: "{{email}}" },
+        body: { productId: "#{{skuParts.0}}", unitPrice: "#{{skuParts.1}}", quantity: "#{{quantity}}", customIdentifier: "{{ref}}", senderName: "HaitiViral", recipientEmail: "{{email}}" },
         map: { orderId: "transactionId", status: "status", message: "message" },
         statusMap: { successful: "SUCCESS", pending: "PENDING", processing: "PENDING", failed: "FAILED", refunded: "FAILED" },
       },
