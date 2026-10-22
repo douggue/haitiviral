@@ -71,6 +71,23 @@ export async function refundOrder(tx: Tx, order: Order, actorId: string | null, 
   });
 }
 
+/** Give back part of an order (the provider delivered only part of it). Once per order line. */
+export async function refundPart(tx: Tx, order: Order, amount: number, lineId: string, reason: string) {
+  if (amount <= 0) return null;
+  const wallet = await walletAccount(tx, order.userId, order.currency);
+  const revenue = await systemAccount(tx, "revenue", order.currency);
+  return post(tx, {
+    type: "REFUND",
+    idempotencyKey: `order:${order.id}:partial:${lineId}`,
+    description: `Partial refund for order #${order.number}: ${reason}`,
+    metadata: { orderId: order.id, lineId, reason },
+    entries: [
+      { accountId: revenue.id, currency: order.currency, amount: -amount },
+      { accountId: wallet.id, currency: order.currency, amount },
+    ],
+  });
+}
+
 export async function postExchange(
   tx: Tx,
   q: { id: string; userId: string; fromCurrency: Currency; toCurrency: Currency; fromAmount: number; toAmount: number },

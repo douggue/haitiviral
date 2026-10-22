@@ -426,7 +426,8 @@
     "order_refunded": "Kòmand #{number} ranbouse nan bous ou.",
     "exchange_done": "Chanj lajan ou a fèt.",
     "wallet_adjusted": "Ekip nou an ajiste bous ou.",
-    "referral_rewarded": "Ou resevwa {amount} paske yon zanmi ou te achte."
+    "referral_rewarded": "Ou resevwa {amount} paske yon zanmi ou te achte.",
+    "order_partial": "Kòmand #{number}: founisè a pa t ka fini. {amount} tounen nan bous ou otomatikman."
   },
   "pages": {
     "aboutTitle": "Konsènan HaitiViral",
@@ -915,7 +916,8 @@
     "justNow": "Kounye a",
     "minutesAgo": "Gen {n} minit",
     "today": "Jodi a {time}",
-    "yesterday": "Yè"
+    "yesterday": "Yè",
+    "order_partial": "Ranbousman pasyèl"
   },
   "trialUi": {
     "title": "Eseye gratis",

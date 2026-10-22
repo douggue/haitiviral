@@ -13,6 +13,7 @@ export type NotificationType =
   | "order_paid"
   | "order_fulfilled"
   | "order_refunded"
+  | "order_partial"
   | "exchange_done"
   | "wallet_adjusted"
   | "referral_rewarded";

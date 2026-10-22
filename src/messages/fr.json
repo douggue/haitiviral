@@ -426,7 +426,8 @@
     "order_refunded": "La commande n° {number} a été remboursée sur votre portefeuille.",
     "exchange_done": "Votre conversion est effectuée.",
     "wallet_adjusted": "Votre portefeuille a été ajusté par notre équipe.",
-    "referral_rewarded": "Vous avez reçu {amount} grâce à un ami parrainé."
+    "referral_rewarded": "Vous avez reçu {amount} grâce à un ami parrainé.",
+    "order_partial": "Commande n° {number} : le fournisseur n'a pas pu terminer. {amount} sont revenus automatiquement dans votre portefeuille."
   },
   "pages": {
     "aboutTitle": "À propos de HaitiViral",
@@ -915,7 +916,8 @@
     "justNow": "À l'instant",
     "minutesAgo": "Il y a {n} min",
     "today": "Aujourd'hui {time}",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "order_partial": "Remboursement partiel"
   },
   "trialUi": {
     "title": "Essai gratuit",

@@ -194,7 +194,7 @@ export const PRESETS: Record<string, Preset> = {
   },
 
   smm_panel: {
-    label: "Reseller panel (API v2: action=add / status / balance)",
+    label: "SMM panel (standard API v2): paste the API address and your key",
     baseUrl: "https://panel.example/api/v2",
     skuHelp: "Service id",
     config: {
@@ -218,6 +218,17 @@ export const PRESETS: Record<string, Preset> = {
         statusMap: { completed: "SUCCESS", pending: "PENDING", "in progress": "PENDING", processing: "PENDING", canceled: "FAILED", partial: "FAILED" },
       },
       balance: { method: "POST", path: "", encoding: "form", body: { key: "{{secret.apiKey}}", action: "balance" }, map: { balance: "balance", currency: "currency" } },
+    },
+  },
+
+  smm_mock: {
+    label: "Test SMM panel (fake, for trying the setup; key: mock-key)",
+    baseUrl: "/api/suppliers/mock-smm",
+    skuHelp: "Service id (101-109, 199)",
+    config: {
+      secrets: ["apiKey"],
+      notes: "Fake SMM panel built into the site for tests. API key: mock-key. 104 ends Partial, 105 ends Canceled, 199 is refused.",
+      order: { method: "POST", path: "", encoding: "form", body: {} },
     },
   },
 

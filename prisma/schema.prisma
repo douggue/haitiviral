@@ -238,6 +238,10 @@ model ProductVariant {
   supplier     Supplier?   @relation(fields: [supplierId], references: [id])
   /// The supplier's product / denomination code for this option
   supplierSku  String?
+  /// Backup provider, used only when the main one clearly refuses an order
+  backupSupplierId  String?
+  backupSupplier    Supplier?   @relation("BackupSupplier", fields: [backupSupplierId], references: [id])
+  backupSupplierSku String?
   /// Social media service choice (Bon mache / Pi bon kalite / Rapid): priceHtg is the price per 1,000 and this holds
   /// { type, min, max, avg {ht,fr}, risk, refillDays, drip, desc } (see src/lib/services.ts)
   service      Json?
@@ -872,6 +876,8 @@ model Supplier {
   /// Admin dashboard warns when the balance drops under this
   lowBalance     Decimal?        @db.Decimal(18, 4)
   variants       ProductVariant[]
+  backupFor      ProductVariant[] @relation("BackupSupplier")
+  services       ProviderService[]
   orders         SupplierOrder[]
   logs           SupplierLog[]
   createdAt      DateTime        @default(now())
@@ -907,6 +913,17 @@ model SupplierOrder {
   status          SupplierOrderStatus @default(QUEUED)
   message         String?
   checks          Int                 @default(0)
+  /// Provider service id used for this attempt (null = the option's supplierSku); set for backup-provider attempts
+  sku             String?
+  /// SMM panels: progress reported by the provider
+  startCount      Int?
+  remains         Int?
+  /// Amount (HTG centimes) given back for the part not delivered (partial orders)
+  refundedPartial Int?
+  refillId        String?
+  refillStatus    String?
+  refillAt        DateTime?
+  cancelAt        DateTime?
   nextCheckAt     DateTime?
   lockedUntil     DateTime?
   logs            SupplierLog[]
@@ -961,4 +978,29 @@ model TrialRequest {
 
   @@index([status, createdAt])
   @@index([ip, createdAt])
+}
+
+/// A provider's service list (SMM panel "services"), refreshed by "Sync services" and the daily check.
+model ProviderService {
+  id         String    @id @default(cuid())
+  supplierId String
+  supplier   Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  serviceId  String
+  name       String
+  category   String
+  type       String
+  /// Provider price per 1,000, in the provider's currency (usually USD)
+  rate       Decimal   @db.Decimal(18, 6)
+  min        Int
+  max        Int
+  refill     Boolean   @default(false)
+  cancel     Boolean   @default(false)
+  dripfeed   Boolean   @default(false)
+  desc       String?
+  seenAt     DateTime  @default(now())
+  /// Set when the provider no longer lists it
+  removedAt  DateTime?
+
+  @@unique([supplierId, serviceId])
+  @@index([supplierId, category])
 }
