@@ -7,6 +7,7 @@ import { t as txt } from "@/lib/text";
 import { KIND_ORDER, parseMeta, PLATFORMS, productKind } from "@/lib/services";
 import { OrderForm, type OrderCatalog } from "@/components/OrderForm";
 import { PageBar } from "@/components/PageBar";
+import { vipStatus } from "@/lib/vip";
 import { formatMoney } from "@/lib/money";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -29,6 +30,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
     }),
   ]);
   const balance = user ? (await getBalances(prisma, user.id)).HTG.available : null;
+  const vip = user ? await vipStatus(user.id) : null;
 
   const catalog: OrderCatalog = [];
   for (const p of products) {
@@ -59,9 +61,10 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
         right={balance !== null && <span className="rounded-full bg-primary-soft px-3 py-2 text-[13px] font-bold">{formatMoney(balance, "HTG", locale)}</span>}
       />
       <OrderForm
-      catalog={catalog}
-      balance={balance}
-      signedIn={!!user}
+        catalog={catalog}
+        balance={balance}
+        signedIn={!!user}
+        discount={vip?.level.discount ?? 0}
         initial={{ platform: sp.platform, kind: sp.kind, tier: sp.tier ? Number(sp.tier) : undefined }}
       />
     </>

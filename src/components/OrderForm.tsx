@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { placeServiceOrder } from "@/actions/service-order";
 import { formatMoney } from "@/lib/money";
+import { withDiscount } from "@/lib/vip-math";
 import {
   checkLink, DRIP_INTERVAL_MIN, DRIP_RUNS, LIVE_DURATIONS, linkExample, parseComments, servicePrice, wantsPost,
   type Kind, type Risk, type ServiceMeta,
@@ -25,11 +26,13 @@ const num = (n: number) => n.toLocaleString("en-US");
 const pill = (on: boolean) =>
   `min-h-11 rounded-full border px-3.5 text-sm font-bold transition-colors ${on ? "border-text bg-text text-surface" : "border-[#CBD2E1] bg-surface text-text dark:border-border"}`;
 
-export function OrderForm({ catalog, balance, signedIn, initial }: {
+export function OrderForm({ catalog, balance, signedIn, initial, discount = 0 }: {
   catalog: OrderCatalog;
   balance: number | null;
   signedIn: boolean;
   initial: { platform?: string; kind?: string; tier?: number };
+  /** VIP discount in % (applied again on the server) */
+  discount?: number;
 }) {
   const t = useTranslations("orderForm");
   const locale = useLocale();
@@ -62,7 +65,7 @@ export function OrderForm({ catalog, balance, signedIn, initial }: {
   const post = wantsPost(service.kind, meta.type);
   const commentList = parseComments(comments);
   const quantity = hasComments ? commentList.length : Number(qty) || 0;
-  const total = servicePrice(tier.rate, quantity, meta.type, dur);
+  const total = withDiscount(servicePrice(tier.rate, quantity, meta.type, dur), discount);
   const check = link.trim() ? checkLink(link, platform.slug, post) : null;
   const linkError = check && !check.ok ? t(`err_${check.error === "empty" ? "not_platform" : check.error}`, { platform: platform.name, example: linkExample(platform.slug, post) }) : "";
   const linkOk = check?.ok ? (liveAny ? t("okLive") : post ? t("okPost") : t("okProfile")) : "";
@@ -266,6 +269,7 @@ export function OrderForm({ catalog, balance, signedIn, initial }: {
           <div className="flex justify-between gap-2.5 text-sm"><span className="text-muted">{t("service")}</span><span className="text-right font-semibold">{`${platform.name} ${t(`kind_${service.kind}`)} · ${tier.name}`}</span></div>
           <div className="flex justify-between text-sm"><span className="text-muted">{t("quantity")}</span><span className="font-semibold">{hasComments ? t("commentsCount", { n: quantity }) : `${num(quantity)}${isLive ? ` · ${durLabel(dur)}` : ""}`}</span></div>
           <div className="flex justify-between text-sm"><span className="text-muted">{t("avgDelivery")}</span><span className="font-semibold">{meta.avg[locale]}</span></div>
+          {discount > 0 && <div className="flex justify-between text-sm"><span className="text-muted">VIP</span><span className="font-semibold text-[#166534] dark:text-success">-{discount}%</span></div>}
           <div className="my-1 h-px bg-border" />
           <div className="flex items-baseline justify-between"><span className="text-[15px] font-bold">{t("total")}</span><span className="text-2xl font-extrabold">{fmt(total)}</span></div>
           {rangeError && <p className="rounded-[10px] bg-[#FEF3C7] px-3 py-2.5 text-[13px] text-[#92400E]">{rangeError}</p>}

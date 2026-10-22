@@ -17,7 +17,8 @@ async function registration() {
 }
 
 /** "Notifications on this phone": Web Push for payments, codes and deliveries. On iPhone it works once the app is installed. */
-export function PushToggle() {
+/** Push notifications on this device: current state plus turning them on and off. */
+function usePush() {
   const t = useTranslations("pwa");
   const [state, setState] = useState<State>("loading");
   const [busy, setBusy] = useState(false);
@@ -71,7 +72,13 @@ export function PushToggle() {
       setBusy(false);
     }
   };
+  return { state, busy, error, enable, disable };
+}
 
+/** "Notifications on this phone": Web Push for payments and orders. On iPhone it works once the app is installed. */
+export function PushToggle() {
+  const t = useTranslations("pwa");
+  const { state, busy, error, enable, disable } = usePush();
   if (state === "loading") return null;
   return (
     <section className="card p-5" aria-labelledby="push-title">
@@ -96,5 +103,28 @@ export function PushToggle() {
         {error && <p className="mt-3 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger" role="alert">{error}</p>}
       </div>
     </section>
+  );
+}
+
+/** Account screen (mockup): the same setting as an on/off switch in a list row. */
+export function PushSwitch({ label, sub }: { label: string; sub: string }) {
+  const t = useTranslations("pwa");
+  const { state, busy, error, enable, disable } = usePush();
+  const on = state === "on";
+  const blocked = state === "denied" || state === "ios" || state === "unsupported";
+  const note = state === "denied" ? t("pushDenied") : state === "ios" ? t("pushIos") : state === "unsupported" ? t("pushUnsupported") : error;
+  return (
+    <div className="border-b border-border py-2">
+      <div className="flex min-h-[38px] items-center justify-between gap-2">
+        <span className="flex flex-col gap-0.5">
+          <span className="text-sm font-semibold">{label}</span>
+          <span className="text-xs text-muted">{sub}</span>
+        </span>
+        <button type="button" role="switch" aria-checked={on} aria-label={label} disabled={busy || blocked || state === "loading"} onClick={on ? disable : enable} className="flex h-11 w-[60px] flex-none items-center justify-end disabled:opacity-50">
+          <span className={`flex h-7 w-12 rounded-full p-[3px] ${on ? "justify-end bg-text" : "justify-start bg-[#CBD2E1]"}`}><span className="h-[22px] w-[22px] rounded-full bg-white" /></span>
+        </button>
+      </div>
+      {note && <p className="pb-1 text-xs text-muted">{note}</p>}
+    </div>
   );
 }

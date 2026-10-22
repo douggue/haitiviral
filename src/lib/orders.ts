@@ -12,6 +12,7 @@ import { moncashAvailable } from "./payments/moncash";
 import { maybeRewardReferral } from "./referrals";
 import { amountInRange, isExchangeProduct, quoteAmount } from "./amount";
 import { hasOpenSupplierOrder, queueSupplierLines, sendQueued } from "./suppliers/orders";
+import { vipStatus, withDiscount } from "./vip";
 import { checkLink, DRIP_INTERVAL_MIN, DRIP_RUNS, LIVE_DURATIONS, parseComments, parseMeta, productKind, servicePrice, wantsPost } from "./services";
 
 export type FieldDef = {
@@ -210,7 +211,9 @@ export async function createServiceOrder(input: ServiceOrderInput) {
   }
   fieldValues.quantity = String(quantity);
 
-  const unitHtg = servicePrice(v.salePriceHtg ?? v.priceHtg, quantity, meta.type, duration);
+  // VIP discount by total spent (src/lib/vip.ts)
+  const vip = await vipStatus(input.userId);
+  const unitHtg = withDiscount(servicePrice(v.salePriceHtg ?? v.priceHtg, quantity, meta.type, duration), vip.level.discount);
   const settings = await getSettings();
   const user = await prisma.user.findUniqueOrThrow({ where: { id: input.userId } });
   if (user.status !== "ACTIVE") throw new OrderError("account_restricted");

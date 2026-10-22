@@ -200,3 +200,11 @@ export async function requestOrderHelp(orderId: string, kind: "refill" | "cancel
   });
   return { ok: true, id: ticket.id };
 }
+
+/** Account screen switch: promotions on/off (other notification preferences unchanged). */
+export async function setMarketing(on: boolean): Promise<R> {
+  const user = await assertUser();
+  const current = ((await prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { notifyPrefs: true } })).notifyPrefs ?? {}) as Record<string, boolean>;
+  await prisma.user.update({ where: { id: user.id }, data: { notifyPrefs: { ...current, marketing: !!on } } });
+  return { ok: true };
+}

@@ -160,7 +160,7 @@ export const DEFAULT_SETTINGS: Settings = {
   logoDarkUrl: "",
   approvalThresholdHtg: 1_000_000,
   autoRefundHours: 24,
-  referralEnabled: false,
+  referralEnabled: true,
   referralRewardHtg: 10_000,
   referralMinOrderHtg: 50_000,
   heroImageUrl: "",
