@@ -1,4 +1,5 @@
 import { AuthShell } from "@/components/AuthShell";
+import { PageBar } from "@/components/PageBar";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -14,6 +15,7 @@ export default async function ResetPage({ params }: { params: Promise<{ locale: 
   setRequestLocale((await params).locale);
   return (
     <AuthShell>
+      <PageBar title={(await getTranslations("auth"))("resetTitle")} back="/auth/login" backLabel={(await getTranslations("common"))("back")} />
       <Suspense>
         <ResetForm />
       </Suspense>

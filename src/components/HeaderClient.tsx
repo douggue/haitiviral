@@ -136,6 +136,22 @@ function useChangeLocale() {
   return { locale: picked, change, pending, prefetch };
 }
 
+/** Sign-in screen (mockup): KR | FR segmented switch. */
+export function LangSegment() {
+  const t = useTranslations("common");
+  const { locale, change, pending } = useChangeLocale();
+  return (
+    <div role="group" aria-label={t("language")} className={`flex overflow-hidden rounded-[10px] border border-[#CBD2E1] dark:border-border ${pending ? "opacity-60" : ""}`}>
+      {locales.map((l) => (
+        <button key={l} type="button" onClick={() => change(l)} aria-pressed={l === locale}
+          className={`h-9 min-w-11 px-2 text-xs font-extrabold ${l === locale ? "bg-text text-surface" : "bg-surface text-text/80"}`}>
+          {l === "ht" ? "KR" : "FR"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** Screens with their own top bar (PageBar): on phones the site header is hidden there, as in the mockup. */
 const OWN_BAR = ["/order", "/trial", "/help", "/account", "/auth"];
 export function HeaderSlot({ children }: { children: React.ReactNode }) {

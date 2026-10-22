@@ -1,13 +1,12 @@
 "use client";
-import { LoginIcon, UserPlusIcon } from "./Icons";
+import { Logo } from "./Logo";
+import { LangSegment } from "./HeaderClient";
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname as useRawPathname, useSearchParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Turnstile, turnstileOn } from "./Turnstile";
-import { PhoneInput } from "./PhoneInput";
-import { normalizePhone } from "@/lib/phone";
 
 export function AuthForm({ mode: firstMode, google = false }: { mode: "login" | "register"; google?: boolean }) {
   const t = useTranslations("auth");
@@ -64,7 +63,6 @@ export function AuthForm({ mode: firstMode, google = false }: { mode: "login" | 
             email,
             password,
             name: String(f.get("name")).trim(),
-            phone: normalizePhone(String(f.get("phone") ?? "")) ?? (String(f.get("phone") ?? "").trim() || undefined),
             locale,
             fetchOptions,
           } as Parameters<typeof authClient.signUp.email>[0]);
@@ -92,7 +90,7 @@ export function AuthForm({ mode: firstMode, google = false }: { mode: "login" | 
 
   function goNext() {
     const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/account";
-    router.push(safeNext.replace(/^\/(ht|fr|en|es)(?=\/|$)/, "") || "/account");
+    router.push(safeNext.replace(/^\/(ht|fr)(?=\/|$)/, "") || "/account");
     router.refresh();
   }
 
@@ -120,16 +118,23 @@ export function AuthForm({ mode: firstMode, google = false }: { mode: "login" | 
     );
   }
 
+  const [agree, setAgree] = useState(false);
+  const tab = (on: boolean) => `flex min-h-[42px] items-center justify-center rounded-[9px] text-sm font-bold ${on ? "bg-surface text-text shadow-[0_1px_3px_rgba(15,23,42,0.12)]" : "text-muted"}`;
+  const field = "h-[50px] w-full rounded-xl border border-[#CBD2E1] bg-surface px-3.5 text-base dark:border-border";
   return (
-    <form method="post" onSubmit={onSubmit} className="card glow-card mx-auto w-full max-w-md space-y-4 p-6 sm:p-8">
-      <nav className="grid grid-cols-2 rounded-2xl bg-surface-2 p-1" aria-label={t("loginTitle")}>
-        <Link href={`/auth/login${nextQs}`} onClick={(e) => switchTo(e, "login")} aria-current={mode === "login" ? "page" : undefined} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors duration-200 ${mode === "login" ? "bg-surface text-text shadow-sm" : "text-muted"}`}><LoginIcon width={17} height={17} aria-hidden />{tc("signIn")}</Link>
-        <Link href={`/auth/register${nextQs}`} onClick={(e) => switchTo(e, "register")} aria-current={mode === "register" ? "page" : undefined} className={`flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors duration-200 ${mode === "register" ? "bg-surface text-text shadow-sm" : "text-muted"}`}><UserPlusIcon width={17} height={17} aria-hidden />{tc("signUp")}</Link>
-      </nav>
-      <div>
-        <h1 className="display text-3xl font-bold">{mode === "login" ? tu("welcomeBack") : t("registerTitle")}</h1>
-        <p className="mt-1 text-muted">{mode === "login" ? tu("loginSub") : tu("registerSub")}</p>
+    <form method="post" onSubmit={onSubmit} className="mx-auto flex w-full max-w-md flex-col gap-5 px-6 pb-10 pt-7">
+      <div className="flex items-center justify-between">
+        <Logo />
+        <LangSegment />
       </div>
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-[26px] font-extrabold leading-tight">{mode === "login" ? tu("welcomeBack") : tu("registerHeading")}</h1>
+        <p className="text-sm leading-normal text-muted">{mode === "login" ? tu("loginSub") : tu("registerSub")}</p>
+      </div>
+      <nav className="grid grid-cols-2 rounded-xl bg-surface-2 p-1" aria-label={t("loginTitle")}>
+        <Link href={`/auth/register${nextQs}`} onClick={(e) => switchTo(e, "register")} aria-current={mode === "register" ? "page" : undefined} className={tab(mode === "register")}>{tu("tabRegister")}</Link>
+        <Link href={`/auth/login${nextQs}`} onClick={(e) => switchTo(e, "login")} aria-current={mode === "login" ? "page" : undefined} className={tab(mode === "login")}>{tu("tabLogin")}</Link>
+      </nav>
       {google && (
         <>
           <button
@@ -138,89 +143,75 @@ export function AuthForm({ mode: firstMode, google = false }: { mode: "login" | 
             onClick={async () => {
               setError("");
               setLoading(true);
-              const done = `/${locale}${next && next.startsWith("/") && !next.startsWith("//") ? next.replace(/^\/(ht|fr|en|es)(?=\/|$)/, "") || "/account" : "/account"}`;
+              const done = `/${locale}${next && next.startsWith("/") && !next.startsWith("//") ? next.replace(/^\/(ht|fr)(?=\/|$)/, "") || "/account" : "/account"}`;
               const r = await authClient.signIn.social({ provider: "google", callbackURL: done, errorCallbackURL: `/${locale}/auth/login?error=google` });
               if (r?.error) {
                 setLoading(false);
                 setError(tg("error"));
               }
             }}
-            className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-border bg-white px-4 text-sm font-bold text-[#1f1f1f] shadow-sm transition hover:bg-[#f7f8fa] disabled:opacity-60"
+            className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-[14px] border border-[#CBD2E1] bg-white text-[15px] font-bold text-[#0F172A] disabled:opacity-60"
           >
             <GoogleLogo />
             {tg("continue")}
           </button>
-          <div className="flex items-center gap-3 text-xs text-muted" aria-hidden>
+          <div className="flex items-center gap-2.5 text-[13px] text-[#64748B]" aria-hidden>
             <span className="h-px flex-1 bg-border" />
             {tg("or")}
             <span className="h-px flex-1 bg-border" />
           </div>
         </>
       )}
-      {mode === "register" && (
-        <div className="animate-rise">
-          <label htmlFor="name" className="label">{t("name")}</label>
-          <input id="name" name="name" required maxLength={80} autoComplete="name" className="input" />
+      <div className="flex flex-col gap-3">
+        {mode === "register" && (
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="name" className="text-sm font-semibold">{t("name")}</label>
+            <input id="name" name="name" required maxLength={80} autoComplete="name" className={field} />
+          </div>
+        )}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="email" className="text-sm font-semibold">{t("email")}</label>
+          <input id="email" name="email" type="email" required autoComplete="email" placeholder={tu("emailPlaceholder")} className={field} />
         </div>
-      )}
-      <div>
-        <label htmlFor="email" className="label">{t("email")}</label>
-        <input id="email" name="email" type="email" required autoComplete="email" className="input" />
-      </div>
-      {mode === "register" && (
-        <div className="animate-rise">
-          <label htmlFor="phone" className="label">{t("phone")}</label>
-          <PhoneInput id="phone" name="phone" />
-        </div>
-      )}
-      <div>
-        <label htmlFor="password" className="label">{t("password")}</label>
-        <div className="relative">
-          <input
-            id="password"
-            name="password"
-            type={showPw ? "text" : "password"}
-            required
-            minLength={8}
-            maxLength={128}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-            className="input pr-20"
-            onChange={(e) => setPw(e.target.value)}
-          />
-          <button type="button" onClick={() => setShowPw(!showPw)} aria-pressed={showPw} className="absolute right-1 top-1/2 min-h-10 -translate-y-1/2 rounded-lg px-3 text-xs font-bold text-muted hover:text-text">
-            {showPw ? tu("hide") : tu("show")}
-          </button>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-baseline justify-between">
+            <label htmlFor="password" className="text-sm font-semibold">{t("password")}</label>
+            {mode === "login" && <Link href="/auth/forgot" className="text-[13px] font-semibold text-[#00209F] dark:text-primary">{tu("forgotShort")}</Link>}
+          </div>
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPw ? "text" : "password"}
+              required
+              minLength={8}
+              maxLength={128}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              className={`${field} pr-20`}
+              onChange={(e) => setPw(e.target.value)}
+            />
+            <button type="button" onClick={() => setShowPw(!showPw)} aria-pressed={showPw} className="absolute right-1 top-1/2 min-h-10 -translate-y-1/2 rounded-lg px-3 text-xs font-bold text-muted hover:text-text">
+              {showPw ? tu("hide") : tu("show")}
+            </button>
+          </div>
+          {mode === "register" && pw && pw.length < 12 && <p className="text-xs text-muted" aria-live="polite">{scoreLabel}. {t("passwordHint")}</p>}
         </div>
         {mode === "register" && (
-          <>
-            <div className="mt-2 grid grid-cols-4 gap-1.5" aria-hidden>
-              {[1, 2, 3, 4].map((i) => <span key={i} className={`h-1.5 rounded-full ${score >= i ? (score <= 1 ? "bg-danger" : score === 2 ? "bg-warning" : "bg-success") : "bg-border"}`} />)}
-            </div>
-            <p className="mt-1 text-xs text-muted" aria-live="polite">{pw && <b className={score <= 1 ? "text-danger" : score === 2 ? "text-warning" : "text-success"}>{scoreLabel}. </b>}{t("passwordHint")}</p>
-          </>
-        )}
-        {mode === "login" && (
-          <Link href="/auth/forgot" className="mt-2 inline-block text-sm font-semibold text-primary">{t("forgot")}</Link>
+          <label className="flex min-h-11 cursor-pointer items-start gap-2.5 text-[13px] leading-normal text-text/80">
+            <input type="checkbox" checked={agree} onChange={() => setAgree((a) => !a)} required className="m-0 h-[22px] w-[22px] flex-none accent-[#0F172A]" />
+            <span>{tu.rich("terms", { link: (c) => <Link href="/terms" className="font-semibold text-[#00209F] underline dark:text-primary">{c}</Link> })}</span>
+          </label>
         )}
       </div>
       <Turnstile key={captchaKey} onToken={setCaptcha} locale={locale} />
       {error && <p className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger" role="alert">{error}</p>}
-      <button className="btn-primary glow-btn min-h-12 w-full text-base" disabled={loading || !hydrated || (turnstileOn && !captcha)}>
-        {loading ? (
-          tc("loading")
-        ) : (
-          <>
-            {mode === "login" ? <LoginIcon width={20} height={20} aria-hidden /> : <UserPlusIcon width={20} height={20} aria-hidden />}
-            {mode === "login" ? tc("signIn") : tc("signUp")}
-          </>
-        )}
+      <button
+        className="flex h-[54px] w-full items-center justify-center rounded-[14px] bg-text text-base font-bold text-surface disabled:bg-[#CBD5E1] disabled:text-[#475569]"
+        disabled={loading || !hydrated || (turnstileOn && !captcha) || (mode === "register" && !agree)}
+      >
+        {loading ? tc("loading") : mode === "login" ? tu("tabLogin") : tu("tabRegister")}
       </button>
-      <p className="text-center text-sm text-muted">
-        {mode === "login" ? t("noAccount") : t("haveAccount")}{" "}
-        <Link href={`${mode === "login" ? "/auth/register" : "/auth/login"}${nextQs}`} onClick={(e) => switchTo(e, mode === "login" ? "register" : "login")} className="font-semibold text-primary">
-          {mode === "login" ? tc("signUp") : tc("signIn")}
-        </Link>
-      </p>
+      <p className="text-center text-xs leading-normal text-[#64748B]">{tu("secure")}</p>
     </form>
   );
 }

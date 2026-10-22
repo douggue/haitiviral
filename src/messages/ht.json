@@ -602,10 +602,16 @@
     "fair": "Pa mal",
     "good": "Bon",
     "strong": "Fò",
-    "secure": "Koneksyon sekirize",
-    "loginSub": "Konekte pou wè kòmand ou ak bous ou.",
-    "registerSub": "Gratis. Ou ka achte touswit apre.",
-    "welcomeBack": "Bon retou!"
+    "secure": "Pwoteje ak verifikasyon an 2 etap (2FA) si ou vle.",
+    "loginSub": "Konekte pou w kontinye.",
+    "registerSub": "Gratis. Mwens pase 1 minit.",
+    "welcomeBack": "Bon retou!",
+    "registerHeading": "Kreye kont ou",
+    "tabRegister": "Kreye kont",
+    "tabLogin": "Konekte",
+    "terms": "Mwen dakò ak <link>Kondisyon itilizasyon yo</link>. Mwen konprann HaitiViral pa gen okenn lyen ak TikTok, Instagram, Facebook oswa YouTube, e mwen itilize sèvis yo sou pwop responsablite m.",
+    "forgotShort": "Ou bliye l?",
+    "emailPlaceholder": "non@gmail.com"
   },
   "verifyGate": {
     "title": "Konfime imèl ou pou kontinye",

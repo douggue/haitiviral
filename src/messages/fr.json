@@ -602,10 +602,16 @@
     "fair": "Moyen",
     "good": "Bon",
     "strong": "Fort",
-    "secure": "Connexion sécurisée",
-    "loginSub": "Connectez-vous pour voir vos commandes et votre portefeuille.",
-    "registerSub": "Gratuit. Vous pouvez acheter tout de suite après.",
-    "welcomeBack": "Bon retour !"
+    "secure": "Protégé par la vérification en 2 étapes (2FA) si vous le souhaitez.",
+    "loginSub": "Connectez-vous pour continuer.",
+    "registerSub": "Gratuit. Moins d'une minute.",
+    "welcomeBack": "Bon retour !",
+    "registerHeading": "Créez votre compte",
+    "tabRegister": "Créer un compte",
+    "tabLogin": "Connexion",
+    "terms": "J'accepte les <link>Conditions d'utilisation</link>. Je comprends que HaitiViral n'est lié ni à TikTok, ni à Instagram, Facebook ou YouTube, et que j'utilise les services à mes propres risques.",
+    "forgotShort": "Oublié ?",
+    "emailPlaceholder": "nom@gmail.com"
   },
   "verifyGate": {
     "title": "Confirmez votre e-mail pour continuer",

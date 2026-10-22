@@ -1,4 +1,5 @@
 import { AuthShell } from "@/components/AuthShell";
+import { PageBar } from "@/components/PageBar";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { emailEnabled } from "@/lib/email";
@@ -16,6 +17,7 @@ export default async function ForgotPage({ params }: { params: Promise<{ locale:
   const settings = await getDisplaySettings();
   return (
     <AuthShell>
+      <PageBar title={(await getTranslations("auth"))("forgotTitle")} back="/auth/login" backLabel={(await getTranslations("common"))("back")} />
       <ForgotForm emailEnabled={emailEnabled()} whatsappNumber={settings.whatsappNumber} />
     </AuthShell>
   );
