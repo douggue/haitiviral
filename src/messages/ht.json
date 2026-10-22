@@ -808,7 +808,8 @@
     "empty": "Ou poko gen kòmand.",
     "emptyCta": "Fè premye kòmand ou",
     "today": "Jodi a",
-    "yesterday": "Yè"
+    "yesterday": "Yè",
+    "free": "GRATIS"
   },
   "walletUi": {
     "title": "Bous mwen",
@@ -910,7 +911,11 @@
     "exchange_done": "Chanj fèt",
     "wallet_adjusted": "Bous ajiste",
     "referral_rewarded": "Komisyon zanmi",
-    "other": "Notifikasyon"
+    "other": "Notifikasyon",
+    "justNow": "Kounye a",
+    "minutesAgo": "Gen {n} minit",
+    "today": "Jodi a {time}",
+    "yesterday": "Yè"
   },
   "trialUi": {
     "title": "Eseye gratis",

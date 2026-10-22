@@ -98,7 +98,7 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
               <div className="flex justify-between text-xs text-muted">
                 <span>{t("started", { n: "—" })}</span>
                 <span>{qty ? t("delivered", { done: (look === "done" ? qty : 0).toLocaleString("en-US"), total: qty.toLocaleString("en-US") }) : ""}</span>
-                <span className="font-bold text-text">{formatMoney(o.total, o.currency, locale)}</span>
+                <span className="font-bold text-text">{o.total === 0 ? t("free") : formatMoney(o.total, o.currency, locale)}</span>
               </div>
               {refunded && <p className="rounded-[10px] px-3 py-2.5 text-xs leading-normal" style={{ background: bg, color: fg }}>{t("noteRefunded", { amount: formatMoney(o.total, o.currency, locale) })}</p>}
               {look === "done" && (

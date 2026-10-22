@@ -808,7 +808,8 @@
     "empty": "Vous n'avez pas encore de commande.",
     "emptyCta": "Passer ma première commande",
     "today": "Aujourd'hui",
-    "yesterday": "Hier"
+    "yesterday": "Hier",
+    "free": "GRATUIT"
   },
   "walletUi": {
     "title": "Mon portefeuille",
@@ -910,7 +911,11 @@
     "exchange_done": "Change effectué",
     "wallet_adjusted": "Portefeuille ajusté",
     "referral_rewarded": "Commission parrainage",
-    "other": "Notification"
+    "other": "Notification",
+    "justNow": "À l'instant",
+    "minutesAgo": "Il y a {n} min",
+    "today": "Aujourd'hui {time}",
+    "yesterday": "Hier"
   },
   "trialUi": {
     "title": "Essai gratuit",
