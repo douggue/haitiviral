@@ -225,24 +225,83 @@ export async function updateRealAverages() {
   return changed;
 }
 
-/** Dashboard: what needs staff about providers (low balance, losing or vanished services, orders to check by hand). */
+/** Dashboard "Needs attention" (mockup): low balance, stuck orders, losing or vanished services, nothing linked yet. */
 export async function providerAlerts() {
   const [suppliers, choices, s, stuck] = await Promise.all([
     prisma.supplier.findMany({ where: { isEnabled: true, preset: { in: SMM } } }),
     listChoices(),
     getSettings(),
-    prisma.supplierOrder.count({ where: { supplier: { preset: { in: SMM } }, OR: [{ status: "UNKNOWN" }, { status: "PENDING", nextCheckAt: null }] } }),
+    prisma.supplierOrder.count({ where: { supplier: { preset: { in: SMM } }, OR: [{ status: "UNKNOWN" }, { status: "PENDING", nextCheckAt: null }, { status: "PENDING", createdAt: { lt: new Date(Date.now() - 6 * 3_600_000) }, remains: null }] } }),
   ]);
-  const alerts: { text: string; href: string; tone: "warn" | "danger" }[] = [];
+  const alerts: { title: string; text: string; href: string; tone: "red" | "amber" | "blue" }[] = [];
+  if (stuck) alerts.push({ title: `${stuck} stuck order${stuck > 1 ? "s" : ""}`, text: "No clear answer from the provider (or none for over 6 hours). Re-check on the provider's site, then close or refund.", href: "/admin/suppliers", tone: "red" });
   for (const x of suppliers) {
     if (x.lowBalance != null && x.balance != null && Number(x.balance) < Number(x.lowBalance))
-      alerts.push({ text: `${x.name}: balance ${Number(x.balance)} ${x.balanceCurrency ?? ""} is under ${Number(x.lowBalance)}. Top it up.`, href: `/admin/suppliers/${x.id}`, tone: "danger" });
+      alerts.push({ title: `${x.name} balance low`, text: `${Number(x.balance)} ${x.balanceCurrency ?? ""} left (warning under ${Number(x.lowBalance)}). Top up before it runs out: orders it refuses go to the backup or are refunded.`, href: `/admin/suppliers/${x.id}`, tone: "amber" });
   }
   const losing = choices.filter((c) => c.provider && profitOf(c.priceHtg, Number(c.provider.rate), s).status === "loss").length;
-  if (losing) alerts.push({ text: `${losing} choice(s) lose money at today's provider price${s.autoPauseLoss ? " (paused)" : ""}`, href: "/admin/pricing", tone: "danger" });
+  if (losing) alerts.push({ title: `${losing} service${losing > 1 ? "s" : ""} ${s.autoPauseLoss ? "paused" : "losing money"}`, text: "The provider's price is above your selling price. Review prices.", href: "/admin/pricing", tone: "blue" });
   const gone = choices.filter((c) => c.provider?.removedAt).length;
-  if (gone) alerts.push({ text: `${gone} choice(s) are linked to a service the provider removed`, href: "/admin/services", tone: "danger" });
-  if (stuck) alerts.push({ text: `${stuck} provider order(s) need a check on the provider's site`, href: "/admin/suppliers", tone: "warn" });
-  if (suppliers.length && !choices.some((c) => c.provider)) alerts.push({ text: "No choice is linked to a provider yet: orders stay manual", href: "/admin/services", tone: "warn" });
+  if (gone) alerts.push({ title: `${gone} service${gone > 1 ? "s" : ""} removed by the provider`, text: "Link these choices to another provider service.", href: "/admin/services", tone: "red" });
+  if (suppliers.length && !choices.some((c) => c.provider)) alerts.push({ title: "Nothing linked yet", text: "No choice points to a provider service, so orders stay manual. Link them in Services.", href: "/admin/services", tone: "amber" });
   return alerts;
+}
+
+/** A starter pack's contents, kept on the pack's choice: which service choices and how many of each. */
+export type PackItem = { variantId: string; quantity: number };
+export function packItems(service: unknown): PackItem[] {
+  const p = (service as { pack?: unknown } | null)?.pack;
+  return Array.isArray(p) ? p.filter((x): x is PackItem => !!x && typeof x.variantId === "string" && Number.isInteger(x.quantity) && x.quantity > 0) : [];
+}
+
+/** Packs with their contents, price and real profit (worst case, like the single services). */
+export async function listPacks(choices?: Choice[]) {
+  const all = choices ?? (await listChoices());
+  const s = await getSettings();
+  const packs = await prisma.productVariant.findMany({ where: { product: { category: { slug: "pake" } } }, include: { product: true }, orderBy: { product: { sortOrder: "asc" } } });
+  return packs.map((v) => {
+    const items = packItems(v.service).map((it) => ({ ...it, choice: all.find((c) => c.id === it.variantId) ?? null }));
+    const price = v.salePriceHtg ?? v.priceHtg;
+    const missing = !items.length || items.some((i) => !i.choice?.provider);
+    const costUsd = items.reduce((a, i) => a + (i.choice?.provider ? (Number(i.choice.provider.rate) * i.quantity) / 1000 : 0), 0);
+    const p = profitOf(price, missing ? null : costUsd, s);
+    // Discount against buying the same things one by one at today's prices.
+    const separate = items.reduce((a, i) => a + (i.choice ? Math.round((i.choice.priceHtg * i.quantity) / 1000) : 0), 0);
+    return { v, items, price, separate, profit: p };
+  });
+}
+
+const NEXT_LEVEL = { low: "med", med: "high", high: "high" } as const;
+
+/**
+ * "Learned from real orders": choices whose orders often needed a refill or ended partly delivered this month
+ * (at least 10 orders, 15 %+ refills or 20 %+ partial) get a suggestion to raise their risk one level.
+ */
+export async function learnedSuggestions() {
+  const since = new Date(Date.now() - 30 * 86_400_000);
+  const rows = await prisma.$queryRaw<{ variantId: string; done: bigint; refills: bigint; partial: bigint }[]>`
+    SELECT oi."variantId", COUNT(*) FILTER (WHERE so.status = 'SUCCESS') AS done,
+      COUNT(*) FILTER (WHERE so."refillAt" IS NOT NULL) AS refills,
+      COUNT(*) FILTER (WHERE COALESCE(so."refundedPartial", 0) > 0) AS partial
+    FROM "SupplierOrder" so JOIN "OrderItem" oi ON oi.id = so."orderItemId"
+    WHERE so."createdAt" > ${since} AND so."supplierOrderId" IS NOT NULL
+    GROUP BY oi."variantId"`;
+  const s = await getSettings();
+  const choices = await listChoices();
+  const out: { choice: Choice; text: string; from: string; to: "med" | "high" }[] = [];
+  for (const r of rows) {
+    const done = Number(r.done);
+    const c = choices.find((x) => x.id === r.variantId);
+    if (!c || done < 10 || c.meta.blocked || c.meta.risk === "high") continue;
+    const ignored = s.riskLearnIgnored[c.id];
+    if (ignored && Date.now() - new Date(ignored).getTime() < 30 * 86_400_000) continue;
+    const refillPct = Math.round((Number(r.refills) / done) * 100);
+    const partialPct = Math.round((Number(r.partial) / done) * 100);
+    if (refillPct < 15 && partialPct < 20) continue;
+    const to = NEXT_LEVEL[c.meta.risk];
+    const name = { low: "Low", med: "Medium", high: "High" };
+    const why = refillPct >= 15 ? `${refillPct}% of orders needed a refill this month.` : `${partialPct}% of orders were only partly delivered this month.`;
+    out.push({ choice: c, from: c.meta.risk, to, text: `${why} Suggest: ${name[c.meta.risk]} → ${name[to]}.` });
+  }
+  return out;
 }

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { Logo } from "../Logo";
 import { AdminIcon } from "./AdminIcons";
 import { MenuIcon, CloseIcon, HomeIcon, CartIcon, WalletIcon, ChatIcon, StoreIcon, UserIcon } from "../Icons";
 
@@ -22,9 +21,21 @@ function useAdminTheme() {
   return { dark, toggle };
 }
 
-const footerBtn = "group flex flex-1 flex-col items-center gap-1 rounded-xl border border-border bg-surface-2 px-2 py-2.5 text-[11px] font-semibold text-muted transition-colors hover:border-primary hover:text-primary";
+const footerBtn = "group flex flex-1 flex-col items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2 py-2.5 text-[11px] font-semibold text-[#CBD5E1] transition-colors hover:border-white/30 hover:text-white";
 
-export function AdminNav({ items, user, logo }: { items: { href: string; label: string; group?: string; badge?: number }[]; user: { name: string; role: string }; logo?: string }) {
+/** Mockup logo: blue tile with the rising arrow, "HaitiViral" with the red "Viral", and an ADMIN tag. */
+function AdminLogo() {
+  return (
+    <span className="flex items-center gap-2 px-2">
+      <span className="grid h-[30px] w-[30px] place-items-center rounded-lg bg-[#00209F]">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="3 17 9 11 13 15 21 7" /><polyline points="15 7 21 7 21 13" /></svg>
+      </span>
+      <span className="text-[17px] font-extrabold text-white">Haiti<span className="text-[#FF6B7D]">Viral</span> <span className="text-[11px] font-bold text-[#94A3B8]">ADMIN</span></span>
+    </span>
+  );
+}
+
+export function AdminNav({ items, user }: { items: { href: string; label: string; group?: string; badge?: number }[]; user: { name: string; role: string } }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -34,18 +45,18 @@ export function AdminNav({ items, user, logo }: { items: { href: string; label: 
     <nav className="flex flex-col gap-0.5" aria-label="Admin">
       {items.map((i, n) => (
         <div key={i.href}>
-        {i.group && i.group !== items[n - 1]?.group && <p className="mb-1 mt-3 px-3 text-[11px] font-bold uppercase tracking-wider text-muted">{i.group}</p>}
+        {i.group && i.group !== items[n - 1]?.group && <p className="mb-1 mt-3 px-3 text-[11px] font-bold uppercase tracking-wider text-[#64748B]">{i.group}</p>}
         <Link
           href={i.href}
           onClick={() => setOpen(false)}
           aria-current={active(i.href) ? "page" : undefined}
-          className={`group flex min-h-10 items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-semibold transition-colors ${active(i.href) ? "bg-primary text-white shadow-[0_8px_20px_-10px_var(--primary)]" : "text-muted hover:bg-surface-2 hover:text-text"}`}
+          className={`group flex min-h-10 items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm transition-colors ${active(i.href) ? "bg-[#1E293B] font-bold text-white" : "font-medium text-[#CBD5E1] hover:bg-white/5 hover:text-white"}`}
         >
-          <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${active(i.href) ? "bg-white/15" : "bg-surface-2 text-primary group-hover:bg-primary-soft"}`}>
-            <AdminIcon name={i.href} />
+          <span className={`grid h-6 w-6 shrink-0 place-items-center ${active(i.href) ? "text-white" : "text-[#94A3B8] group-hover:text-white"}`}>
+            <AdminIcon name={i.href} width={18} height={18} />
           </span>
           <span className="min-w-0 flex-1 truncate">{i.label}</span>
-          {!!i.badge && <span className={`rounded-full px-2 text-xs font-bold ${active(i.href) ? "bg-white text-primary" : "bg-warning-soft text-warning"}`}>{i.badge}</span>}
+          {!!i.badge && <span className="rounded-full bg-[#FEF3C7] px-2 text-xs font-bold text-[#92400E]">{i.badge}</span>}
         </Link>
         </div>
       ))}
@@ -53,12 +64,12 @@ export function AdminNav({ items, user, logo }: { items: { href: string; label: 
   );
   const initials = user.name.split(/\s+/).map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
   const footer = (
-    <div className="mt-auto space-y-3 border-t border-border pt-4">
+    <div className="mt-auto space-y-3 border-t border-white/10 pt-4">
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary text-sm font-black text-white">{initials || "HG"}</span>
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#00209F] text-sm font-black text-white">{initials || "HG"}</span>
         <span className="min-w-0">
-          <span className="block truncate text-sm font-bold text-text">{user.name}</span>
-          <span className="block text-[11px] font-semibold uppercase tracking-wider text-muted">{user.role.replace("_", " ")}</span>
+          <span className="block truncate text-sm font-bold text-white">{user.name}</span>
+          <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">{user.role.replace("_", " ")}</span>
         </span>
       </div>
       <div className="flex gap-2">
@@ -72,7 +83,7 @@ export function AdminNav({ items, user, logo }: { items: { href: string; label: 
         </a>
         <button
           type="button"
-          className={`${footerBtn} hover:border-danger hover:text-danger`}
+          className={`${footerBtn} hover:border-[#FCA5A5] hover:text-[#FCA5A5]`}
           onClick={async () => {
             await authClient.signOut();
             router.push("/admin/login");
@@ -89,20 +100,20 @@ export function AdminNav({ items, user, logo }: { items: { href: string; label: 
   const quick = items.filter((i) => i.href in shortcuts).slice(0, 4).map((i) => ({ ...i, short: shortcuts[i.href], label: i.label === "Dashboard" ? "Home" : i.label }));
   return (
     <>
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-6 overflow-y-auto border-r border-border bg-surface p-4 lg:flex">
-        <Link href="/admin" className="text-text"><Logo src={logo} /></Link>
+      <aside className="sticky top-0 hidden h-dvh w-[240px] shrink-0 flex-col gap-[18px] overflow-y-auto bg-[#0F172A] px-3.5 py-5 text-[#E2E8F0] lg:flex">
+        <Link href="/admin"><AdminLogo /></Link>
         {nav}
         {footer}
       </aside>
-      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-surface px-4 py-3 text-text lg:hidden">
-        <Link href="/admin"><Logo src={logo} /></Link>
+      <div className="sticky top-0 z-30 flex items-center justify-between bg-[#0F172A] px-3 py-3 text-white lg:hidden">
+        <Link href="/admin"><AdminLogo /></Link>
         <button type="button" onClick={() => setOpen(true)} aria-label="Menu" className="p-2"><MenuIcon /></button>
       </div>
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
           <button type="button" className="absolute inset-0 bg-black/50" aria-label="Close" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-72 flex-col gap-6 overflow-y-auto bg-surface p-4">
-            <button type="button" onClick={() => setOpen(false)} className="self-end p-2 text-text" aria-label="Close"><CloseIcon /></button>
+          <div className="absolute inset-y-0 left-0 flex w-72 flex-col gap-[18px] overflow-y-auto bg-[#0F172A] px-3.5 py-4 text-[#E2E8F0]">
+            <div className="flex items-center justify-between"><AdminLogo /><button type="button" onClick={() => setOpen(false)} className="p-2 text-white" aria-label="Close"><CloseIcon /></button></div>
             {nav}
             {footer}
           </div>

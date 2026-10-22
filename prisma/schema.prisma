@@ -924,6 +924,10 @@ model SupplierOrder {
   refillStatus    String?
   refillAt        DateTime?
   cancelAt        DateTime?
+  /// What the provider charges for this order (its currency, usually USD): estimated when sent, then the provider's own figure
+  costUsd         Decimal?  @db.Decimal(18, 6)
+  /// Same in HTG centimes, at the exchange rate of the day
+  costHtg         Int?
   nextCheckAt     DateTime?
   lockedUntil     DateTime?
   logs            SupplierLog[]

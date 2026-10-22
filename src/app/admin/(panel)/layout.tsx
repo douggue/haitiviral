@@ -2,14 +2,12 @@ import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
 import { can, type Permission } from "@/lib/permissions";
 import { AdminNav } from "@/components/admin/AdminNav";
-import { getSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const user = await requireStaff();
-  const [settings, reviews, risks, processing, approvals, tickets, newReviews, supplierIssues] = await Promise.all([
-    getSettings(),
+  const [reviews, risks, processing, approvals, tickets, newReviews, supplierIssues] = await Promise.all([
     prisma.paymentIntent.count({ where: { status: "REVIEW" } }),
     prisma.riskFlag.count({ where: { status: "OPEN" } }),
     prisma.order.count({ where: { status: "PROCESSING" } }),
@@ -17,7 +15,8 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     prisma.supportTicket.count({ where: { status: "OPEN" } }),
     prisma.review.count({ where: { status: "pending" } }),
     // Supplier orders staff must look at: failed, or no longer checked automatically
-    prisma.supplierOrder.count({ where: { OR: [{ status: "FAILED" }, { status: { in: ["PENDING", "UNKNOWN"] }, nextCheckAt: null }] } }),
+    // (a failed attempt only counts while its line is still undelivered and not refunded)
+    prisma.supplierOrder.count({ where: { OR: [{ status: "FAILED", orderItem: { status: "PENDING", order: { status: { in: ["PAID", "PROCESSING"] } } } }, { status: { in: ["PENDING", "UNKNOWN"] }, nextCheckAt: null }] } }),
   ]);
   const all: { href: string; label: string; group: string; perm: Permission; badge?: number }[] = [
     { href: "/admin", label: "Dashboard", group: "", perm: "dashboard.view" },
@@ -31,7 +30,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     { href: "/admin/services", label: "Services & risk", group: "Catalog", perm: "catalog.manage" },
     { href: "/admin/pricing", label: "Pricing & profit", group: "Catalog", perm: "settings.manage" },
     { href: "/admin/codes", label: "Code inventory", group: "Catalog", perm: "codes.manage" },
-    { href: "/admin/suppliers", label: "Suppliers", group: "Catalog", perm: "settings.manage", badge: supplierIssues },
+    { href: "/admin/suppliers", label: "Providers", group: "Catalog", perm: "settings.manage", badge: supplierIssues },
     { href: "/admin/media", label: "Media", group: "Catalog", perm: "catalog.manage" },
     { href: "/admin/trust", label: "Trust", group: "Catalog", perm: "catalog.manage", badge: newReviews },
     { href: "/admin/customers", label: "Customers", group: "Customers", perm: "customers.view" },
@@ -57,7 +56,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   ];
   return (
     <div className="lg:flex">
-      <AdminNav items={all.filter((i) => can(user, i.perm))} user={{ name: user.name, role: user.role }} logo={settings.logoDarkUrl || settings.logoUrl} />
+      <AdminNav items={all.filter((i) => can(user, i.perm))} user={{ name: user.name, role: user.role }}/>
       <main className="admin-main min-w-0 flex-1 p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8">{children}</main>
     </div>
   );

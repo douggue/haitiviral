@@ -25,10 +25,12 @@ function state(id: string) {
   if (!s || !at) return { error: "Incorrect order ID" };
   const elapsed = (Date.now() - at * 1000) / 1000;
   const start = 1000;
-  if (elapsed < s.seconds) return { charge: "0.10", start_count: String(start), status: elapsed < 3 ? "Pending" : "In progress", remains: String(Math.max(0, Math.round(qty * (1 - elapsed / s.seconds)))), currency: "USD" };
-  if (svc === 104) return { charge: "0.10", start_count: String(start), status: "Partial", remains: String(Math.round(qty * 0.3)), currency: "USD" };
+  // Like real panels: the charge is the full price while running, then only what was delivered.
+  const charge = (n: number) => ((Number(s.rate) * n) / 1000).toFixed(4);
+  if (elapsed < s.seconds) return { charge: charge(qty), start_count: String(start), status: elapsed < 3 ? "Pending" : "In progress", remains: String(Math.max(0, Math.round(qty * (1 - elapsed / s.seconds)))), currency: "USD" };
+  if (svc === 104) return { charge: charge(qty - Math.round(qty * 0.3)), start_count: String(start), status: "Partial", remains: String(Math.round(qty * 0.3)), currency: "USD" };
   if (svc === 105) return { charge: "0", start_count: String(start), status: "Canceled", remains: String(qty), currency: "USD" };
-  return { charge: "0.10", start_count: String(start), status: "Completed", remains: "0", currency: "USD" };
+  return { charge: charge(qty), start_count: String(start), status: "Completed", remains: "0", currency: "USD" };
 }
 
 export async function POST(req: NextRequest) {

@@ -69,6 +69,8 @@ export type Settings = {
   /** Risk analysis (Admin → Services & risk): clue rules and words that block a provider service */
   riskRules: RiskRule[];
   riskBlocked: string[];
+  /** "Learned from real orders" suggestions staff ignored: choice id → date (hidden for 30 days) */
+  riskLearnIgnored: Record<string, string>;
   /** Pricing (Admin → Pricing & profit): payment fee %, warning under this profit %, pause choices that lose money */
   paymentFeePct: number;
   minProfitPct: number;
@@ -180,6 +182,7 @@ export const DEFAULT_SETTINGS: Settings = {
   serviceStatus: {},
   riskRules: DEFAULT_RISK_RULES,
   riskBlocked: DEFAULT_BLOCKED,
+  riskLearnIgnored: {},
   paymentFeePct: 3,
   minProfitPct: 15,
   autoPauseLoss: true,

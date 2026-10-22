@@ -4,7 +4,9 @@ import { prisma } from "@/lib/db";
 import { assertStaff } from "@/lib/session";
 import { audit } from "@/lib/audit";
 import { getSettings, setSetting } from "@/lib/settings";
+import { parseMeta } from "@/lib/services";
 import { rulesFromText } from "@/lib/service-risk";
+import { runSupplierCron } from "@/lib/suppliers/orders";
 import { applyProfitRules, applyRisk, linkChoice, setChoiceRisk, syncAllProviders, syncProviderServices } from "@/lib/suppliers/catalog";
 
 type R = { ok: true; message?: string } | { ok: false; error: string };
@@ -148,6 +150,78 @@ export async function saveServiceStatus(form: FormData): Promise<R> {
     await audit(staff.id, "services.status", "SiteSetting", "serviceStatus", next);
     refresh();
     return { ok: true, message: "Saved" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Dashboard "Check orders now": send what's waiting and ask the providers about every order that's due. */
+export async function checkOrdersNow(): Promise<R> {
+  try {
+    const staff = await assertStaff("orders.manage");
+    await prisma.supplierOrder.updateMany({ where: { status: "PENDING", nextCheckAt: { not: null } }, data: { nextCheckAt: new Date() } });
+    const r = await runSupplierCron();
+    await audit(staff.id, "orders.check", "SupplierOrder", "all", r);
+    refresh();
+    return { ok: true, message: `${r.supplierDelivered} delivered` };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Starter pack contents (Pricing page): up to 5 rows of choice + quantity. */
+export async function savePackItems(variantId: string, form: FormData): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const v = await prisma.productVariant.findUniqueOrThrow({ where: { id: variantId }, include: { product: { include: { category: true } } } });
+    if (v.product.category.slug !== "pake") return { ok: false, error: "Not a pack" };
+    const items: { variantId: string; quantity: number }[] = [];
+    for (let i = 0; i < 5; i++) {
+      const id = String(form.get(`v${i}`) ?? "");
+      const q = Number(String(form.get(`q${i}`) ?? "").replace(/[^\d]/g, ""));
+      if (!id) continue;
+      if (!Number.isInteger(q) || q <= 0) return { ok: false, error: `Row ${i + 1}: write a quantity` };
+      items.push({ variantId: id, quantity: q });
+    }
+    const base = v.service && typeof v.service === "object" ? (v.service as Record<string, unknown>) : {};
+    await prisma.productVariant.update({ where: { id: variantId }, data: { service: { ...base, pack: items } } });
+    await audit(staff.id, "pack.items", "ProductVariant", variantId, { items });
+    refresh();
+    return { ok: true, message: "Saved" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Lock button: keep the current level (Re-analyze leaves it alone), or unlock it. */
+export async function toggleRiskLock(variantId: string): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const v = await prisma.productVariant.findUniqueOrThrow({ where: { id: variantId } });
+    const meta = parseMeta(v.service);
+    if (!meta) return { ok: false, error: "Not a service choice" };
+    await prisma.productVariant.update({ where: { id: variantId }, data: { service: { ...meta, riskLocked: !meta.riskLocked } } });
+    if (meta.riskLocked) await applyRisk();
+    await audit(staff.id, "risk.lock", "ProductVariant", variantId, { locked: !meta.riskLocked });
+    refresh();
+    return { ok: true, message: meta.riskLocked ? "Unlocked" : "Locked" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** "Learned from real orders": accept raises the level (and locks it); ignore hides the suggestion for 30 days. */
+export async function decideLearned(variantId: string, accept: boolean, level: "med" | "high"): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    if (accept) await setChoiceRisk(variantId, level);
+    else {
+      const s = await getSettings();
+      await setSetting("riskLearnIgnored", { ...s.riskLearnIgnored, [variantId]: new Date().toISOString() });
+    }
+    await audit(staff.id, accept ? "risk.learn.accept" : "risk.learn.ignore", "ProductVariant", variantId, { level });
+    refresh();
+    return { ok: true, message: accept ? "Level raised" : "Hidden for 30 days" };
   } catch (e) {
     return fail(e);
   }

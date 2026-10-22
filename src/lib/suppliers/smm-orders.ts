@@ -4,6 +4,7 @@ import { prisma } from "../db";
 import { refundPart } from "../wallet";
 import { notify } from "../notify";
 import { formatMoney } from "../money";
+import { getSettings } from "../settings";
 import { smmAdd, smmCancel, smmOutcome, smmRefill, smmRefillStatus, smmStatuses, type SmmProgress } from "./smm";
 
 /**
@@ -68,7 +69,11 @@ export async function sendSmm(so: SmmOrder): Promise<void> {
     : ({ result: "refused", message: "No provider service linked to this choice" } as const);
 
   if (r.result === "ok") {
-    await prisma.supplierOrder.update({ where: { id: so.id }, data: { status: "PENDING", supplierOrderId: r.orderId, message: null, lockedUntil: null, nextCheckAt: nextCheck(0) } });
+    // Estimated cost from the provider's price list; replaced by the provider's own "charge" on status checks.
+    const ps = await prisma.providerService.findUnique({ where: { supplierId_serviceId: { supplierId: so.supplierId, serviceId: service } }, select: { rate: true } });
+    const units = drip ? Number(drip[1]) * Number(drip[2]) : qty;
+    const costUsd = ps ? (Number(ps.rate) * units) / 1000 : null;
+    await prisma.supplierOrder.update({ where: { id: so.id }, data: { status: "PENDING", supplierOrderId: r.orderId, message: null, lockedUntil: null, nextCheckAt: nextCheck(0), ...(costUsd !== null ? await costData(costUsd) : {}) } });
     return;
   }
   if (r.result === "unknown") {
@@ -91,6 +96,12 @@ export async function sendSmm(so: SmmOrder): Promise<void> {
     return;
   }
   await refundUndelivered(so, lineQuantity(fields), `Provider refused: ${r.message}`);
+}
+
+/** Cost in the provider's currency and in HTG centimes at today's rate. */
+async function costData(usd: number) {
+  const { htgPerUsd } = await getSettings();
+  return { costUsd: usd, costHtg: Math.round(usd * htgPerUsd * 100) };
 }
 
 /** Everything (or the rest) goes back to the wallet; the order is closed as refunded or partly delivered. */
@@ -121,7 +132,7 @@ export async function applySmm(so: SmmOrder, p: SmmProgress | undefined): Promis
     await prisma.supplierOrder.update({ where: { id: so.id }, data: { ...base, message: (p?.error ?? "No answer for this order").slice(0, 500), nextCheckAt: tooOld ? null : nextCheck(so.checks) } });
     return null;
   }
-  const progress = { startCount: p.startCount, remains: p.remains };
+  const progress = { startCount: p.startCount, remains: p.remains, ...(p.charge !== null && Number.isFinite(p.charge) && p.charge >= 0 ? await costData(p.charge) : {}) };
   const outcome = smmOutcome(p.status);
   const fields = (so.orderItem.fieldValues ?? {}) as Record<string, string>;
   const qty = lineQuantity(fields);
@@ -134,7 +145,7 @@ export async function applySmm(so: SmmOrder, p: SmmProgress | undefined): Promis
   }
   if (outcome === "partial" || outcome === "canceled") {
     const remains = outcome === "canceled" && p.remains === null ? qty : Math.max(0, p.remains ?? 0);
-    const claim = await prisma.supplierOrder.updateMany({ where: { id: so.id, status: { in: ["PENDING", "UNKNOWN", "SENDING"] } }, data: { status: remains >= qty ? "FAILED" : "SUCCESS", startCount: p.startCount, remains, lockedUntil: null, nextCheckAt: null, message: `Provider: ${p.status}` } });
+    const claim = await prisma.supplierOrder.updateMany({ where: { id: so.id, status: { in: ["PENDING", "UNKNOWN", "SENDING"] } }, data: { status: remains >= qty ? "FAILED" : "SUCCESS", ...progress, remains, lockedUntil: null, nextCheckAt: null, message: `Provider: ${p.status}` } });
     if (claim.count !== 1) return null; // already handled
     await refundUndelivered(so, remains, outcome === "canceled" ? "Canceled by the provider" : "Partly delivered by the provider");
     return remains >= qty ? null : so.orderItem.orderId;

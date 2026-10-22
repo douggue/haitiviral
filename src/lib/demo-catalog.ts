@@ -142,9 +142,10 @@ const linkField = (post: boolean) => ({
   required: true,
 });
 
-const PACKS = [
-  { slug: "tiktok-starter", name: L("TikTok Starter", "TikTok Starter"), items: L("500 abòne\n1,000 like\n5,000 vi", "500 abonnés\n1 000 likes\n5 000 vues"), price: 405, old: 450, accent: "#111111" },
-  { slug: "insta-starter", name: L("Insta Starter", "Insta Starter"), items: L("500 abòne\n1,000 like\n2,000 vi reels", "500 abonnés\n1 000 likes\n2 000 vues reels"), price: 360, old: 400, accent: "#C13584" },
+// Contents use each service's first choice (Bon mache); staff change them in Admin → Pricing & profit.
+const PACKS: { slug: string; name: Record<string, string>; items: Record<string, string>; price: number; old: number; accent: string; contents: [string, number][] }[] = [
+  { slug: "tiktok-starter", name: L("TikTok Starter", "TikTok Starter"), items: L("500 abòne\n1,000 like\n5,000 vi", "500 abonnés\n1 000 likes\n5 000 vues"), price: 405, old: 450, accent: "#111111", contents: [["tiktok-followers", 500], ["tiktok-likes", 1000], ["tiktok-views", 5000]] },
+  { slug: "insta-starter", name: L("Insta Starter", "Insta Starter"), items: L("500 abòne\n1,000 like\n2,000 vi reels", "500 abonnés\n1 000 likes\n2 000 vues reels"), price: 360, old: 400, accent: "#C13584", contents: [["instagram-followers", 500], ["instagram-likes", 1000], ["instagram-views", 2000]] },
 ];
 
 export async function seedDemoCatalog(prisma: PrismaClient): Promise<{ categories: number; products: number }> {
@@ -187,6 +188,11 @@ export async function seedDemoCatalog(prisma: PrismaClient): Promise<{ categorie
   }
   for (const p of PACKS) {
     if (await prisma.product.findUnique({ where: { slug: p.slug } })) continue;
+    const pack = [];
+    for (const [slug, quantity] of p.contents) {
+      const v = await prisma.productVariant.findFirst({ where: { product: { slug } }, orderBy: { sortOrder: "asc" } });
+      if (v) pack.push({ variantId: v.id, quantity });
+    }
     await prisma.product.create({
       data: {
         slug: p.slug,
@@ -198,7 +204,7 @@ export async function seedDemoCatalog(prisma: PrismaClient): Promise<{ categorie
         fulfillmentType: "MANUAL",
         fields: [linkField(false)],
         sortOrder: order++,
-        variants: { create: [{ name: L("Pake a", "Le pack"), priceHtg: htg(p.old), salePriceHtg: htg(p.price), sortOrder: 0 }] },
+        variants: { create: [{ name: L("Pake a", "Le pack"), priceHtg: htg(p.old), salePriceHtg: htg(p.price), sortOrder: 0, service: { pack } }] },
       },
     });
   }
