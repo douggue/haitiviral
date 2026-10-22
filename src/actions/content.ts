@@ -187,7 +187,7 @@ export async function saveTheme(input: ThemeConfig): Promise<R> {
       defaultMode: theme.defaultMode === "light" ? "light" : "dark",
       motion: (["calm", "lively", "neon"] as const).includes(theme.motion) ? theme.motion : "lively",
       glow: Math.max(0, Math.min(100, Math.round(Number(theme.glow) || 0))),
-      displayFont: theme.displayFont === "plain" ? "plain" : "gaming",
+      displayFont: theme.displayFont === "plain" ? "plain" : "bold",
       heroGrid: !!theme.heroGrid,
       marquee,
     };

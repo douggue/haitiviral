@@ -1,4 +1,4 @@
-/** Uploaded logo (Settings → Brand images) or the built-in HaitiViral logo (blue/red controller + HAITI GAMING). */
+/** Uploaded logo (Settings → Brand images) or the built-in HaitiViral logo (navy mark + "HaitiViral" word). */
 export function Logo({ className = "", src, darkSrc, alt = "HaitiViral" }: { className?: string; src?: string; darkSrc?: string; alt?: string }) {
   if (src) {
     return (
@@ -12,13 +12,15 @@ export function Logo({ className = "", src, darkSrc, alt = "HaitiViral" }: { cla
       </span>
     );
   }
-  // Built-in logo (public/brand): full logo, or the controller alone on very narrow phones.
+  // Built-in logo: the mark (public/brand/mark.png) + the word "HaitiViral" in the site font, so it reads in light and dark mode.
   return (
-    <span className={`inline-flex items-center ${className}`}>
+    <span className={`inline-flex items-center gap-2 ${className}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand/logo.webp" alt={alt} width={151} height={36} className="h-8 w-auto max-[349px]:hidden min-[400px]:h-9" />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand/mark.webp" alt={alt} width={49} height={32} className="hidden h-8 w-auto max-[349px]:block" />
+      <img src="/brand/mark.png" alt="" width={32} height={32} className="h-8 w-8 rounded-[9px]" />
+      <span className="display text-lg font-extrabold tracking-tight text-text max-[349px]:sr-only">
+        Haiti<span className="text-[#D21034] dark:text-[#FF5A73]">Viral</span>
+      </span>
+      <span className="sr-only">{alt === "HaitiViral" ? "" : alt}</span>
     </span>
   );
 }

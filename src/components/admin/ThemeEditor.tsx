@@ -44,7 +44,7 @@ export function ThemeEditor({ initial, defaults, history }: { initial: ThemeConf
       router.refresh();
     });
   const glowA = (th.glow / 100) * 0.55;
-  const displayFont = th.displayFont === "gaming" ? "var(--font-display)" : "inherit";
+  const displayFont = th.displayFont === "bold" ? "var(--font-display)" : "inherit";
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -98,10 +98,10 @@ export function ThemeEditor({ initial, defaults, history }: { initial: ThemeConf
           <fieldset className="space-y-2">
             <legend className="label">Headings font</legend>
             <div className="grid grid-cols-2 gap-2">
-              {(["gaming", "plain"] as const).map((f) => (
+              {(["bold", "plain"] as const).map((f) => (
                 <label key={f} className={`flex min-h-12 cursor-pointer items-center gap-2 rounded-xl border-2 px-3 text-sm ${th.displayFont === f ? "border-primary bg-primary-soft" : "border-border"}`}>
                   <input type="radio" name="displayFont" checked={th.displayFont === f} onChange={() => set("displayFont", f)} />
-                  <span style={{ fontFamily: f === "gaming" ? "var(--font-display)" : "inherit", fontWeight: 700 }}>{f === "gaming" ? "Gaming" : "Plain"}</span>
+                  <span style={{ fontFamily: f === "bold" ? "var(--font-display)" : "inherit", fontWeight: f === "bold" ? 800 : 600 }}>{f === "bold" ? "Bold" : "Plain"}</span>
                 </label>
               ))}
             </div>

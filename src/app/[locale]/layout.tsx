@@ -15,7 +15,7 @@ import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { alternates } from "@/lib/seo";
 import { themeAttrs, themeCss, themeScript, cssGuardScript } from "@/lib/theme-css";
 import { fullTheme } from "@/lib/settings";
-import { Chakra_Petch, Figtree } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { cookies, headers } from "next/headers";
 import { getUser } from "@/lib/session";
 import { ServiceWorker } from "@/components/ServiceWorker";
@@ -25,8 +25,8 @@ import "../globals.css";
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#060B1A" },
-    { media: "(prefers-color-scheme: dark)", color: "#060B1A" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0F1C" },
   ],
 };
 
@@ -41,14 +41,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     openGraph: { siteName: settings.businessName, locale, type: "website", ...(settings.ogImageUrl ? { images: [{ url: settings.ogImageUrl, width: 1200, height: 630 }] } : {}) },
     manifest: "/manifest.webmanifest",
     // Installed on iPhone: full screen, no Safari bar, logo launch screen.
-    appleWebApp: { capable: true, title: "HaitiViral", statusBarStyle: "black", startupImage: SPLASH },
+    appleWebApp: { capable: true, title: "HaitiViral", statusBarStyle: "default", startupImage: SPLASH },
     icons: { icon: [{ url: "/favicon-48.png", sizes: "48x48", type: "image/png" }, { url: "/icon-192.png", sizes: "192x192", type: "image/png" }], apple: "/apple-touch-icon.png" },
   };
 }
 
 // Self-hosted at build time by Next.js (no request to Google from visitors' phones).
-const sans = Figtree({ subsets: ["latin", "latin-ext"], variable: "--font-body", display: "swap" });
-const display = Chakra_Petch({ subsets: ["latin", "latin-ext"], weight: ["600", "700"], variable: "--font-display-face", display: "optional" });
+const sans = Plus_Jakarta_Sans({ subsets: ["latin", "latin-ext"], variable: "--font-body", display: "swap" });
+const display = Plus_Jakarta_Sans({ subsets: ["latin", "latin-ext"], weight: ["700", "800"], variable: "--font-display-face", display: "swap" });
 
 export default async function LocaleLayout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;

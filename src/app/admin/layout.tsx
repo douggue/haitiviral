@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { Chakra_Petch, Figtree } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { getDisplaySettings } from "@/lib/settings";
 import { themeCss, themeScript, cssGuardScript } from "@/lib/theme-css";
 import "../globals.css";
 
 export const metadata: Metadata = { title: { default: "Admin", template: "%s · HaitiViral Admin" }, robots: { index: false, follow: false } };
 
-const sans = Figtree({ subsets: ["latin", "latin-ext"], variable: "--font-body", display: "swap" });
-const display = Chakra_Petch({ subsets: ["latin", "latin-ext"], weight: ["600", "700"], variable: "--font-display-face", display: "optional" });
+const sans = Plus_Jakarta_Sans({ subsets: ["latin", "latin-ext"], variable: "--font-body", display: "swap" });
+const display = Plus_Jakarta_Sans({ subsets: ["latin", "latin-ext"], weight: ["700", "800"], variable: "--font-display-face", display: "swap" });
 
 /** The back office uses the store's colors but starts light; staff can switch to dark (remembered separately from the store). */
 export default async function AdminRootLayout({ children }: { children: React.ReactNode }) {

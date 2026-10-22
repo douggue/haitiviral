@@ -26,16 +26,16 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 
-/** Gaming icons between the words of the scrolling band (drawn, so they look the same on every phone). */
+/** Social icons between the words of the scrolling band (drawn, so they look the same on every phone). */
 const MARQUEE_ICONS = [
-  // gamepad
-  "M6 9h4M8 7v4M15 10h.01M18 12h.01M7.5 5h9A5.5 5.5 0 0 1 22 10.5v3a3.5 3.5 0 0 1-6.3 2.1L14.5 14h-5l-1.2 1.6A3.5 3.5 0 0 1 2 13.5v-3A5.5 5.5 0 0 1 7.5 5Z",
-  // diamond
-  "M6 3h12l4 6-10 12L2 9Z M2 9h20 M12 21 8 9l4-6 4 6Z",
-  // trophy
-  "M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0Z M17 6h3a3 3 0 0 1-3 4 M7 6H4a3 3 0 0 0 3 4",
-  // lightning
-  "M13 2 4 14h7l-1 8 9-12h-7Z",
+  // heart (likes)
+  "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8Z",
+  // person + plus (followers)
+  "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M19 8v6 M22 11h-6",
+  // eye (views)
+  "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
+  // play (live)
+  "M6 4l14 8-14 8Z",
 ];
 const MARQUEE_COLORS = ["#FFB020", "#2EE6A8", "#FF5DA2", "#46D8FF"];
 function MarqueeIcon({ n }: { n: number }) {

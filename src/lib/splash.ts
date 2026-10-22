@@ -1,4 +1,4 @@
-// iPhone/iPad launch screens (logo on the dark background) for the installed app. Made from public/brand/logo-full.png.
+// iPhone/iPad launch screens (logo on the light background) for the installed app. Made by tools/make-brand-assets.py.
 export const SPLASH = [
   { url: "/splash/1320x2868.png", media: "(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },
   { url: "/splash/1206x2622.png", media: "(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" },

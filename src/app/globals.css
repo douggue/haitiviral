@@ -2,51 +2,51 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Brand palette: midnight blue ground, one blue accent. Admin → Appearance overrides these per store (theme-css.ts). */
+/* Brand palette: light ground, navy accent, Haitian red for the brand word. Admin → Appearance overrides these per store (theme-css.ts). */
 :root {
   --hg-css: 1; /* checked by cssGuardScript: proves the stylesheet loaded */
-  --bg: #f3f6fd;
+  --bg: #f5f6fb;
   --surface: #ffffff;
-  --surface-2: #eef2fa;
-  --text: #0b1426;
-  --muted: #52648a;
-  --border: #dbe3f1;
-  --primary: #1467f5;
-  --primary-hover: #0f56d6;
-  --primary-soft: #e4edff;
-  --navy: #0e1830;
-  --midnight: #060b1a;
-  --steel: #7b92b8;
-  --cyan: #0b8fc4;
-  --success: #138a52;
-  --success-soft: #e3f6ec;
-  --warning: #a35f00;
-  --warning-soft: #fff1d6;
-  --danger: #c62f3c;
-  --danger-soft: #fde8ea;
-  --glow: rgba(20, 103, 245, 0.27);
-  --glow-strength: 0.6;
+  --surface-2: #eef0f6;
+  --text: #0f172a;
+  --muted: #5b6478;
+  --border: #e3e6ef;
+  --primary: #0f172a;
+  --primary-hover: #1e293b;
+  --primary-soft: #eef1ff;
+  --navy: #111a2e;
+  --midnight: #0a0f1c;
+  --steel: #7b8aa8;
+  --cyan: #00209f;
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --warning: #92400e;
+  --warning-soft: #fef3c7;
+  --danger: #b91c1c;
+  --danger-soft: #fee2e2;
+  --glow: rgba(15, 23, 42, 0);
+  --glow-strength: 0;
   color-scheme: light;
 }
 
 .dark {
-  --bg: #060b1a;
-  --surface: #0e1830;
-  --surface-2: #142243;
-  --text: #eef3ff;
-  --muted: #8fa3c8;
-  --border: #1f2f57;
-  --primary: #2f74ff;
-  --primary-hover: #5a92ff;
-  --primary-soft: #102a5e;
-  --cyan: #46d8ff;
-  --success: #2fd27f;
+  --bg: #0a0f1c;
+  --surface: #111a2e;
+  --surface-2: #182339;
+  --text: #eef2fb;
+  --muted: #94a3c0;
+  --border: #233049;
+  --primary: #5470f0;
+  --primary-hover: #7a8ff5;
+  --primary-soft: #1b2650;
+  --cyan: #8ea2ff;
+  --success: #4ade80;
   --success-soft: #0f3326;
-  --warning: #ffb547;
+  --warning: #fbbf24;
   --warning-soft: #3a2a0c;
   --danger: #ff6b78;
   --danger-soft: #3d1419;
-  --glow: rgba(47, 116, 255, 0.33);
+  --glow: rgba(142, 162, 255, 0);
   color-scheme: dark;
 }
 
@@ -131,9 +131,10 @@ body {
   }
 
 /* ── Look: display font, glow, hero ── */
-[data-font="gaming"] .display {
+[data-font="bold"] .display {
   font-family: var(--font-display);
-  letter-spacing: -0.005em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 .display {
   text-wrap: balance;

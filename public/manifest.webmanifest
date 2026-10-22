@@ -2,7 +2,7 @@
   "id": "/",
   "name": "HaitiViral",
   "short_name": "HaitiViral",
-  "description": "Game top-ups, gift cards and subscriptions, paid with MonCash or NatCash.",
+  "description": "Abòne, like, vi ak live pou rezo sosyal ou, peye ak MonCash oswa NatCash.",
   "start_url": "/?source=app",
   "scope": "/",
   "display": "standalone",
@@ -11,14 +11,14 @@
     "minimal-ui"
   ],
   "orientation": "portrait",
-  "background_color": "#050B18",
-  "theme_color": "#060B1A",
+  "background_color": "#F5F6FB",
+  "theme_color": "#FFFFFF",
   "lang": "ht",
   "dir": "ltr",
   "categories": [
+    "social",
     "shopping",
-    "games",
-    "entertainment"
+    "business"
   ],
   "icons": [
     {
@@ -42,8 +42,8 @@
   ],
   "shortcuts": [
     {
-      "name": "Boutik / Store",
-      "short_name": "Boutik",
+      "name": "Nouvo kòmand / Nouvelle commande",
+      "short_name": "Kòmande",
       "url": "/store?source=app",
       "icons": [
         {
@@ -53,9 +53,9 @@
       ]
     },
     {
-      "name": "Pòtfèy / Wallet",
-      "short_name": "Pòtfèy",
-      "url": "/account/wallet?source=app",
+      "name": "Kòmand mwen yo / Mes commandes",
+      "short_name": "Kòmand",
+      "url": "/account/orders?source=app",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -64,9 +64,9 @@
       ]
     },
     {
-      "name": "Kòmand / Orders",
-      "short_name": "Kòmand",
-      "url": "/account/orders?source=app",
+      "name": "Ajoute kòb / Ajouter des fonds",
+      "short_name": "Bous",
+      "url": "/account/wallet?source=app",
       "icons": [
         {
           "src": "/icon-192.png",
