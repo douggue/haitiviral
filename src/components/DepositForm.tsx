@@ -8,10 +8,9 @@ import { compressImage } from "@/lib/compress-image";
 import type { ManualMethodView } from "@/lib/manual-methods";
 import { CopyButton } from "./CopyButton";
 import { Turnstile } from "./Turnstile";
-import { PayLogo } from "./PayLogo";
 import { PhoneInput } from "./PhoneInput";
 
-const HTG_PRESETS = [500, 1000, 2500, 5000];
+const HTG_PRESETS = [250, 500, 1000, 2500];
 const USD_PRESETS = [10, 25, 50, 100];
 
 type Method = {
@@ -49,18 +48,19 @@ export function DepositForm(p: Props) {
   const to = useTranslations("order");
   const tc = useTranslations("common");
   const tco = useTranslations("checkout");
+  const tu = useTranslations("walletUi");
   const locale = useLocale();
   const router = useRouter();
 
   const methods: Method[] = [
-    ...(p.moncash ? [{ key: "MONCASH", kind: "moncash" as const, name: "MonCash", brand: "moncash" as const, mark: "MC", markBg: "#e30613", markFg: "#fff", recipientName: "", recipientNumber: "" }] : []),
-    ...(p.natcash ? [{ key: "NATCASH", kind: "mobile" as const, name: "NatCash", brand: "natcash" as const, mark: "NC", markBg: "#f7a400", markFg: "#060b1a", recipientName: p.natcashName, recipientNumber: p.natcashPhone, qr: p.natcashQr || null }] : []),
+    ...(p.moncash ? [{ key: "MONCASH", kind: "moncash" as const, name: "MonCash", brand: "moncash" as const, mark: "MC", markBg: "#E30613", markFg: "#fff", recipientName: "", recipientNumber: "" }] : []),
+    ...(p.natcash ? [{ key: "NATCASH", kind: "mobile" as const, name: "NatCash", brand: "natcash" as const, mark: "NC", markBg: "#F27A1A", markFg: "#fff", recipientName: p.natcashName, recipientNumber: p.natcashPhone, qr: p.natcashQr || null }] : []),
     ...p.manual.map((m) => ({
       key: `MANUAL:${m.id}`,
       kind: m.kind,
       name: m.name,
       mark: m.kind === "crypto" ? "₮" : m.name.slice(0, 2).toUpperCase(),
-      markBg: m.kind === "crypto" ? "#26a17b" : "var(--primary)",
+      markBg: m.kind === "crypto" ? "#26a17b" : "#334155",
       markFg: "#fff",
       logo: m.logo,
       recipientName: m.recipientName,
@@ -166,7 +166,7 @@ export function DepositForm(p: Props) {
 
   return (
     <form
-      className="space-y-5"
+      className="flex flex-col gap-[18px]"
       action={(fd) =>
         start(async () => {
           setError("");
@@ -184,45 +184,56 @@ export function DepositForm(p: Props) {
         })
       }
     >
-      {/* Method picker */}
-      <fieldset>
-        <legend className="label">{tw("chooseMethod")}</legend>
-        <div role="tablist" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {/* Amount (mockup: four quick amounts, another amount below) */}
+      <section className="flex flex-col gap-2.5">
+        <h2 className="text-base font-bold">{tu("addFunds")}</h2>
+        <div className="grid grid-cols-4 gap-2">
+          {(crypto ? USD_PRESETS : HTG_PRESETS).map((v) => (
+            <button key={v} type="button" onClick={() => setAmount(String(v))}
+              className={`min-h-[46px] rounded-xl border text-sm font-bold ${minor === v * 100 ? "border-text bg-text text-surface" : "border-[#CBD2E1] bg-surface text-text dark:border-border"}`}>
+              {crypto ? `$${v}` : v.toLocaleString("en-US")}
+            </button>
+          ))}
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <span className="text-muted">{tu("otherAmount")}</span>
+          <span className="relative flex-1">
+            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-muted">{crypto ? "$" : "G"}</span>
+            <input id="amount" name="amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(",", "."))} required
+              className="h-11 w-full rounded-xl border border-[#CBD2E1] bg-surface pl-8 pr-3 text-base font-bold dark:border-border" />
+          </span>
+        </label>
+        <p className="text-xs text-muted">{hint}</p>
+      </section>
+
+      {/* Payment method (mockup: one card per method with a radio dot) */}
+      <section className="flex flex-col gap-2.5">
+        <h2 className="text-base font-bold">{tu("method")}</h2>
+        <div role="radiogroup" aria-label={tu("method")} className="flex flex-col gap-2.5">
           {methods.map((x) => {
             const on = x.key === m.key;
+            const meta = x.kind === "moncash" ? tu("metaAuto") : x.kind === "crypto" ? tu("metaCrypto", { network: x.network ?? "" }) : tu("metaManual");
             return (
-              <button
-                key={x.key}
-                type="button"
-                role="tab"
-                aria-selected={on}
-                onClick={() => switchTo(x.key)}
-                className={`flex min-w-0 items-center gap-2.5 rounded-2xl border-2 p-2.5 text-left transition-colors ${on ? "border-primary bg-primary-soft" : "border-border bg-surface hover:border-primary/50"}`}
-              >
-                {x.brand ? (
-                  <span className="flex min-w-0 flex-col gap-1">
-                    <PayLogo brand={x.brand} height={24} className="max-w-full object-contain object-left" />
-                    <span className="block text-[11px] text-muted">{x.kind === "moncash" ? tw("methodAuto") : "HTG"}</span>
-                  </span>
+              <button key={x.key} type="button" role="radio" aria-checked={on} onClick={() => switchTo(x.key)}
+                className={`flex items-center gap-3 rounded-[14px] border-2 bg-surface px-3.5 py-3 text-left ${on ? "border-text" : "border-border"}`}>
+                {x.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={x.logo} alt="" className="h-[42px] w-[42px] flex-none rounded-xl bg-white object-contain p-1" />
                 ) : (
-                  <>
-                    {x.logo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={x.logo} alt="" className="h-10 w-10 shrink-0 rounded-xl bg-white object-contain p-1" />
-                    ) : (
-                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-sm font-black" style={{ background: x.markBg, color: x.markFg }}>{x.mark}</span>
-                    )}
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-bold">{x.name}</span>
-                      <span className="block text-[11px] text-muted">{x.kind === "crypto" ? `USD · ${x.network ?? ""}` : "HTG"}</span>
-                    </span>
-                  </>
+                  <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-xl text-[13px] font-extrabold" style={{ background: x.markBg, color: x.markFg }}>{x.mark}</span>
                 )}
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="text-[15px] font-bold">{x.name}</span>
+                  <span className="text-xs text-muted">{meta}</span>
+                </span>
+                <span className={`grid h-[22px] w-[22px] flex-none place-items-center rounded-full border-2 ${on ? "border-text" : "border-[#94A3B8]"}`}>
+                  <span className={`h-2.5 w-2.5 rounded-full ${on ? "bg-text" : ""}`} />
+                </span>
               </button>
             );
           })}
         </div>
-      </fieldset>
+      </section>
 
       {/* Where to send */}
       {m.kind !== "moncash" && (
@@ -257,7 +268,6 @@ export function DepositForm(p: Props) {
         </section>
       )}
 
-      {m.kind === "moncash" && <p className="card p-4 text-sm">{tw("moncashInfo")}</p>}
 
       {steps.length > 0 && (
         <ol className="space-y-2">
@@ -270,29 +280,7 @@ export function DepositForm(p: Props) {
         </ol>
       )}
 
-      <div className="card space-y-5 p-4 sm:p-5">
-        {/* Amount */}
-        <div>
-          <label htmlFor="amount" className="label">{crypto ? tw("cryptoAmount") : tw("amount")}</label>
-          <div className="relative">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 font-semibold text-muted">{crypto ? "$" : "HTG"}</span>
-            <input id="amount" name="amount" inputMode="decimal" className={`input h-14 text-xl font-bold ${crypto ? "pl-9" : "pl-14"}`} value={amount} onChange={(e) => setAmount(e.target.value.replace(",", "."))} required />
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {(crypto ? USD_PRESETS : HTG_PRESETS).map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setAmount(String(v))}
-                className={`min-h-10 rounded-xl border px-3.5 text-sm font-semibold ${minor === v * 100 ? "border-primary bg-primary-soft text-primary" : "border-border bg-surface"}`}
-              >
-                {crypto ? `$${v}` : `${v.toLocaleString(locale)} HTG`}
-              </button>
-            ))}
-          </div>
-          <p className="mt-1.5 text-xs text-muted">{hint}</p>
-        </div>
-
+      <div className="flex flex-col gap-4">
         {m.kind !== "moncash" && (
           <>
             {/* Reference / transaction hash */}
@@ -362,8 +350,8 @@ export function DepositForm(p: Props) {
 
         {error && <p className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger" role="alert">{error}</p>}
         <Turnstile key={captchaKey} locale={locale} />
-        <button className="btn-primary min-h-14 w-full text-base" disabled={pending || !minor || shotBusy}>
-          {pending ? tc("loading") : m.kind === "moncash" ? to("payMoncash") : `${tw("submitDeposit")}${minor ? ` · ${formatMoney(minor, currency, locale)}` : ""}`}
+        <button className="h-[54px] w-full rounded-[14px] bg-text text-base font-bold text-surface disabled:bg-[#CBD5E1] disabled:text-[#475569]" disabled={pending || !minor || shotBusy}>
+          {pending ? tc("loading") : m.kind === "moncash" ? tu("pay", { amount: formatMoney(minor ?? 0, currency, locale), method: m.name }) : tu("send", { amount: minor ? formatMoney(minor, currency, locale) : "" })}
         </button>
       </div>
 

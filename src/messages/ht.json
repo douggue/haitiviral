@@ -808,5 +808,24 @@
     "emptyCta": "Fè premye kòmand ou",
     "today": "Jodi a",
     "yesterday": "Yè"
+  },
+  "walletUi": {
+    "title": "Bous mwen",
+    "balance": "Balans",
+    "held": "{amount} bloke pou kòmand k ap trete",
+    "heldDeposit": "{amount} an atant (gwo depo)",
+    "addFunds": "Ajoute kòb",
+    "otherAmount": "Lòt montan",
+    "method": "Metòd peman",
+    "metaAuto": "Otomatik · kòb la antre touswit",
+    "metaManual": "Voye prèv la · verifye nan 30 minit",
+    "metaCrypto": "USDT · {network}",
+    "pay": "Peye {amount} ak {method}",
+    "send": "Voye prèv la · {amount}",
+    "recent": "Dènye mouvman",
+    "noHistory": "Poko gen mouvman.",
+    "pending": "Depo an atant",
+    "orderN": "Kòmand #{n}",
+    "refundN": "Ranbousman #{n}"
   }
 }

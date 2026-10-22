@@ -808,5 +808,24 @@
     "emptyCta": "Passer ma première commande",
     "today": "Aujourd'hui",
     "yesterday": "Hier"
+  },
+  "walletUi": {
+    "title": "Mon portefeuille",
+    "balance": "Solde",
+    "held": "{amount} bloqués pour des commandes en cours",
+    "heldDeposit": "{amount} en attente (gros dépôt)",
+    "addFunds": "Ajouter des fonds",
+    "otherAmount": "Autre montant",
+    "method": "Moyen de paiement",
+    "metaAuto": "Automatique · crédité tout de suite",
+    "metaManual": "Envoyez la preuve · vérifié sous 30 minutes",
+    "metaCrypto": "USDT · {network}",
+    "pay": "Payer {amount} avec {method}",
+    "send": "Envoyer la preuve · {amount}",
+    "recent": "Derniers mouvements",
+    "noHistory": "Aucun mouvement pour l'instant.",
+    "pending": "Dépôts en attente",
+    "orderN": "Commande #{n}",
+    "refundN": "Remboursement #{n}"
   }
 }
