@@ -5,7 +5,7 @@ import { getSettings } from "@/lib/settings";
 import { t as txt } from "@/lib/text";
 import { analyzeRisk, rulesToText, type RiskLevel } from "@/lib/service-risk";
 import { learnedSuggestions, listChoices, suggestRisk } from "@/lib/suppliers/catalog";
-import { decideLearned, linkChoiceAction, reanalyzeAction, saveRiskRules, saveServiceStatus, setRiskAction, syncProvidersAction, toggleRiskLock } from "@/actions/catalog";
+import { decideLearned, deleteUpdate, linkChoiceAction, postUpdateNote, saveChoiceDetails, reanalyzeAction, saveRiskRules, saveServiceStatus, setRiskAction, syncProvidersAction, toggleRiskLock } from "@/actions/catalog";
 import { ActionButton, ActionForm } from "@/components/admin/ActionButton";
 
 export const metadata = { title: "Services & risk" };
@@ -41,6 +41,7 @@ export default async function ServicesAdmin({ searchParams }: { searchParams: Pr
     prisma.providerService.findMany({ where: { removedAt: null }, select: { name: true, desc: true, category: true, supplierId: true, seenAt: true } }),
     learnedSuggestions().catch(() => []),
   ]);
+  const updates = await prisma.serviceUpdate.findMany({ orderBy: { createdAt: "desc" }, take: 15 });
   // Counts over every provider service we know (like the mockup's real test), then over what's on sale.
   const tally: Record<RiskLevel, number> = { low: 0, med: 0, high: 0, blocked: 0 };
   for (const x of known) tally[analyzeRisk(x, settings.riskRules, settings.riskBlocked).level]++;
@@ -123,6 +124,33 @@ export default async function ServicesAdmin({ searchParams }: { searchParams: Pr
                         </select>
                         <input name="backupSku" defaultValue={c.backupSupplierSku ?? ""} placeholder="Backup service id" className={`${field} font-mono`} aria-label="Backup service id" />
                         <button className="h-9 rounded-lg bg-[#00209F] px-3 text-xs font-bold text-white sm:col-span-2">Save link</button>
+                      </ActionForm>
+                    </details>
+                    <details className="mt-1">
+                      <summary className="cursor-pointer text-xs font-semibold text-[#00209F] dark:text-primary">Customer details (what customers see)</summary>
+                      <ActionForm action={saveChoiceDetails.bind(null, c.id)} className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                        <label className="text-[11px] font-bold text-muted sm:col-span-2">Short description · Kreyòl
+                          <textarea name="about_ht" rows={2} defaultValue={c.meta.about?.ht ?? ""} className={`${field} mt-0.5 h-auto w-full py-1.5`} placeholder="Abòne reyèl, yo rive vit, refill 30 jou." />
+                        </label>
+                        <label className="text-[11px] font-bold text-muted sm:col-span-2">Short description · Français
+                          <textarea name="about_fr" rows={2} defaultValue={c.meta.about?.fr ?? ""} className={`${field} mt-0.5 h-auto w-full py-1.5`} />
+                        </label>
+                        <select name="quality" defaultValue={c.meta.info?.quality ?? ""} className={field} aria-label="Quality">
+                          <option value="">Quality: not shown</option><option value="real">Real</option><option value="mixed">Real + mixed</option><option value="hq">High quality</option><option value="bot">Bot</option>
+                        </select>
+                        <select name="drop" defaultValue={c.meta.info?.drop ?? ""} className={field} aria-label="Drop">
+                          <option value="">Drop: not shown</option><option value="none">Non drop</option><option value="low">Low drop</option><option value="yes">Can drop</option>
+                        </select>
+                        <input name="speed" defaultValue={c.meta.info?.speed ?? ""} placeholder="Speed per day, e.g. 300K" className={field} aria-label="Speed per day" />
+                        <input name="start" defaultValue={c.meta.info?.start ?? ""} placeholder="Start: instant, 0-5 min, 12-24 h" className={field} aria-label="Start time" />
+                        <input name="location" defaultValue={c.meta.info?.location ?? ""} placeholder="Location: Global, USA…" className={field} aria-label="Location" />
+                        <select name="cancel" defaultValue={c.meta.info?.cancel === true ? "yes" : c.meta.info?.cancel === false ? "no" : ""} className={field} aria-label="Cancel button">
+                          <option value="">Cancel button: not shown</option><option value="yes">Cancel button: yes</option><option value="no">Cancel button: no</option>
+                        </select>
+                        <input name="refillDays" defaultValue={c.meta.refillDays} inputMode="numeric" placeholder="Refill days (0 = none)" className={field} aria-label="Refill days" />
+                        <input name="avg_ht" defaultValue={c.meta.avg.ht ?? ""} placeholder="Average time · Kreyòl" className={field} aria-label="Average time Kreyòl" />
+                        <input name="avg_fr" defaultValue={c.meta.avg.fr ?? ""} placeholder="Average time · Français" className={field} aria-label="Average time French" />
+                        <button className="h-9 rounded-lg bg-[#00209F] px-3 text-xs font-bold text-white sm:col-span-2">Save customer details</button>
                       </ActionForm>
                     </details>
                   </td>
@@ -221,6 +249,25 @@ export default async function ServicesAdmin({ searchParams }: { searchParams: Pr
             <button className="h-10 rounded-[10px] bg-[#00209F] px-4 text-sm font-bold text-white">Save status</button>
           </ActionForm>
         </div>
+      </section>
+
+      <section className={`${card} flex flex-col gap-3`}>
+        <h2 className="text-base font-bold">Service updates (customers see them on the order screen)</h2>
+        <p className="text-xs text-muted">Written automatically for new services, price changes and pauses. Add your own note here.</p>
+        <ActionForm action={postUpdateNote} resetOnSuccess className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+          <input name="ht" placeholder="Nòt an Kreyòl" className="h-10 rounded-[10px] border border-[#CBD2E1] bg-surface px-3 text-sm dark:border-border" aria-label="Note in Kreyòl" />
+          <input name="fr" placeholder="Note en français (optionnel)" className="h-10 rounded-[10px] border border-[#CBD2E1] bg-surface px-3 text-sm dark:border-border" aria-label="Note in French" />
+          <button className="h-10 rounded-[10px] bg-[#00209F] px-4 text-sm font-bold text-white">Post</button>
+        </ActionForm>
+        <ul className="divide-y divide-[#EEF0F5] dark:divide-border">
+          {updates.map((u) => (
+            <li key={u.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+              <span><span className="mr-2 rounded bg-[#F1F5F9] px-1.5 text-[11px] font-bold uppercase text-[#475569]">{u.kind}</span>{txt(u.text, "ht")}<span className="ml-2 text-xs text-muted">{u.createdAt.toLocaleDateString("en-CA")}</span></span>
+              <ActionButton label="Remove" className="text-xs font-bold text-danger" action={deleteUpdate.bind(null, u.id)} />
+            </li>
+          ))}
+          {!updates.length && <li className="py-2 text-sm text-muted">No updates yet.</li>}
+        </ul>
       </section>
 
       <section className={`${card} flex flex-col gap-3`}>

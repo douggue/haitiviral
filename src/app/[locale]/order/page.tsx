@@ -30,6 +30,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
     }),
   ]);
   const balance = user ? (await getBalances(prisma, user.id)).HTG.available : null;
+  const updates = (await prisma.serviceUpdate.findMany({ orderBy: { createdAt: "desc" }, take: 8 })).map((u) => ({ id: u.id, kind: u.kind, text: txt(u.text, locale), at: u.createdAt.toISOString() }));
   const vip = user ? await vipStatus(user.id) : null;
 
   const catalog: OrderCatalog = [];
@@ -39,7 +40,12 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
     const tiers = p.variants
       .map((v) => ({ v, meta: parseMeta(v.service) }))
       .filter((x) => x.meta)
-      .map(({ v, meta }) => ({ id: v.id, name: txt(v.name, locale), rate: v.salePriceHtg ?? v.priceHtg, soldOut: v.soldOut, meta: { ...meta!, avg: { [locale]: txt(meta!.avg, locale) } } }));
+      // Only what customers may see: never the provider's own text (desc), and the admin flags stay on the server.
+      .map(({ v, meta }) => {
+        const { desc: _desc, riskLocked: _l, blocked: _b, pausedLoss: _p, ...shown } = meta!;
+        const about = meta!.about ? txt(meta!.about, locale) : "";
+        return { id: v.id, name: txt(v.name, locale), rate: v.salePriceHtg ?? v.priceHtg, soldOut: v.soldOut, meta: { ...shown, avg: { [locale]: txt(meta!.avg, locale) }, about: about ? { [locale]: about } : undefined } };
+      });
     if (!tiers.length) continue;
     let platform = catalog.find((c) => c.slug === p.category.slug);
     if (!platform) {
@@ -65,6 +71,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
         balance={balance}
         signedIn={!!user}
         discount={vip?.level.discount ?? 0}
+        updates={updates}
         initial={{ platform: sp.platform, kind: sp.kind, tier: sp.tier ? Number(sp.tier) : undefined }}
       />
     </>

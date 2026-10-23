@@ -6,6 +6,7 @@
  */
 import type { PrismaClient } from "@prisma/client";
 import type { Kind, Risk, ServiceMeta, ServiceType } from "./services";
+import { infoFromProvider } from "./service-info";
 
 const L = (ht: string, fr: string) => ({ ht, fr });
 const htg = (n: number) => Math.round(n * 100);
@@ -180,7 +181,7 @@ export async function seedDemoCatalog(prisma: PrismaClient): Promise<{ categorie
             name,
             priceHtg: htg(rate),
             sortOrder: i,
-            service: { type, min, max, avg, risk, refillDays, drip, desc } satisfies ServiceMeta,
+            service: { type, min, max, avg, risk, refillDays, drip, desc, info: infoFromProvider(name.fr ?? "", desc) } satisfies ServiceMeta,
           })),
         },
       },

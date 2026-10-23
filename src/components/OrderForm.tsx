@@ -26,8 +26,11 @@ const num = (n: number) => n.toLocaleString("en-US");
 const pill = (on: boolean) =>
   `min-h-11 rounded-full border px-3.5 text-sm font-bold transition-colors ${on ? "border-text bg-text text-surface" : "border-[#CBD2E1] bg-surface text-text dark:border-border"}`;
 
-export function OrderForm({ catalog, balance, signedIn, initial, discount = 0 }: {
+export type ServiceUpdateView = { id: string; kind: string; text: string; at: string };
+
+export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, updates = [] }: {
   catalog: OrderCatalog;
+  updates?: ServiceUpdateView[];
   balance: number | null;
   signedIn: boolean;
   initial: { platform?: string; kind?: string; tier?: number };
@@ -51,7 +54,8 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0 }:
   const [accepted, setAccepted] = useState(false);
   const [comments, setComments] = useState("");
   const [username, setUsername] = useState("");
-  const [sheet, setSheet] = useState<null | "drip" | "risk" | "detail">(null);
+  const [sheet, setSheet] = useState<null | "drip" | "risk">(null);
+  const [tab, setTab] = useState<"info" | "read" | "updates">("info");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
@@ -104,11 +108,6 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0 }:
   const sheets = {
     drip: { title: t("dripSheetTitle"), text: t("dripSheetText"), example: t("dripSheetExample") },
     risk: { title: t("riskSheetTitle"), text: t("riskSheetText"), example: t("riskSheetExample") },
-    detail: {
-      title: `${platform.name} ${t(`kind_${service.kind}`)}: ${tier.name}`,
-      text: [t("detailAvg", { time: meta.avg[locale] ?? "" }), t("detailRefill", { value: meta.refillDays ? `${meta.refillDays}` : t("no") }), t("detailLimits", { min: num(meta.min), max: num(meta.max) }), t(`risk_${meta.risk}`)].join("\n"),
-      example: meta.desc ? t("detailProvider", { desc: meta.desc }) : "",
-    },
   };
   const info = sheet ? sheets[sheet] : null;
 
@@ -174,13 +173,16 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0 }:
                   <span className="whitespace-nowrap text-[15px] font-extrabold">{price}</span>
                   <span className="whitespace-nowrap text-[11px] text-muted">{per}</span>
                 </button>
-                <button type="button" onClick={() => { pickTier(i); setSheet("detail"); }} aria-label={t("details", { name: x.name })} className="grid w-11 flex-none place-items-center text-[#64748B]">
+                <button type="button" onClick={() => { pickTier(i); setTab("info"); document.getElementById("service-details")?.scrollIntoView({ behavior: "smooth", block: "start" }); }} aria-label={t("details", { name: x.name })} className="grid w-11 flex-none place-items-center text-[#64748B]">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
                 </button>
               </div>
             );
           })}
         </section>
+
+        {/* Before ordering: the choice's details, what to know, and service news (tabs) */}
+        <ServiceDetails id="service-details" tab={tab} setTab={setTab} meta={meta} post={post} live={liveAny} locale={locale} updates={updates} />
 
         {/* 3 · Details */}
         <section className="flex flex-col gap-2.5">
@@ -312,5 +314,93 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0 }:
         </div>
       )}
     </div>
+  );
+}
+
+const TILE_TONE = { good: "bg-[#DCFCE7] text-[#166534]", warn: "bg-[#FEF3C7] text-[#92400E]", bad: "bg-[#FEE2E2] text-[#991B1B]", info: "bg-[#DBEAFE] text-[#1E40AF]" } as const;
+type Tone = keyof typeof TILE_TONE;
+
+/** Details card (as on big SMM panels): tiles for the selected choice, then "read before ordering" and service news. */
+function ServiceDetails({ id, tab, setTab, meta, post, live, locale, updates }: {
+  id: string;
+  tab: "info" | "read" | "updates";
+  setTab: (t: "info" | "read" | "updates") => void;
+  meta: ServiceMeta;
+  post: boolean;
+  live: boolean;
+  locale: string;
+  updates: ServiceUpdateView[];
+}) {
+  const t = useTranslations("orderForm");
+  const info = meta.info ?? {};
+  const tiles: { label: string; value: string; tone: Tone; icon: string }[] = [];
+  if (info.quality) tiles.push({ label: t("tQuality"), value: t(`q_${info.quality}`), tone: info.quality === "bot" ? "bad" : info.quality === "mixed" ? "warn" : "good", icon: "M12 2.5l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.3l-5.8 3.1 1.1-6.5L2.6 9.3l6.5-.9z" });
+  if (info.speed) tiles.push({ label: t("tSpeed"), value: t("speedVal", { speed: info.speed }), tone: "info", icon: "M13 2 3 14h9l-1 8 10-12h-9z" });
+  if (info.start) tiles.push({ label: t("tStart"), value: info.start === "instant" ? t("startInstant") : info.start, tone: "info", icon: "M12 6v6l4 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z" });
+  tiles.push({ label: t("tGuarantee"), value: meta.refillDays ? t("refillYes", { days: meta.refillDays }) : t("refillNo"), tone: meta.refillDays ? "good" : "bad", icon: "M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" });
+  if (info.drop) tiles.push({ label: t("tDrop"), value: t(`drop_${info.drop}`), tone: info.drop === "none" ? "good" : info.drop === "low" ? "warn" : "bad", icon: "M3 7l6 6 4-4 8 8M21 11v6h-6" });
+  tiles.push({ label: t("tLink"), value: live ? t("linkLiveShort") : post ? t("linkPostShort") : t("linkProfileShort"), tone: "info", icon: "M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" });
+  if (info.cancel !== undefined) tiles.push({ label: t("tCancel"), value: info.cancel ? t("yes") : t("no"), tone: info.cancel ? "good" : "bad", icon: "M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0" });
+  tiles.push({ label: t("tRefillBtn"), value: meta.refillDays ? t("yes") : t("no"), tone: meta.refillDays ? "good" : "bad", icon: "M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5" });
+  if (info.location) tiles.push({ label: t("tLocation"), value: info.location, tone: "info", icon: "M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12zM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" });
+  const tabs = [["info", t("tabInfo")], ["read", t("tabRead")], ["updates", t("tabUpdates")]] as const;
+  const about = meta.about?.[locale];
+  const when = (iso: string) => new Date(iso).toLocaleDateString(locale === "fr" ? "fr-FR" : "fr-HT", { day: "numeric", month: "short" });
+  return (
+    <section id={id} className="scroll-mt-20 overflow-hidden rounded-2xl border border-border bg-surface">
+      <div role="tablist" aria-label={t("tabInfo")} className="flex gap-1 overflow-x-auto border-b border-border p-1.5 [scrollbar-width:none]">
+        {tabs.map(([k, label]) => (
+          <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+            className={`min-h-10 flex-none rounded-[10px] px-3 text-[13px] font-bold ${tab === k ? "bg-text text-surface" : "text-text/80"}`}>{label}</button>
+        ))}
+      </div>
+      {tab === "info" && (
+        <div className="flex flex-col gap-2.5 p-3">
+          {about && <p className="text-sm leading-normal">{about}</p>}
+          <div className="grid grid-cols-2 gap-2">
+            {tiles.map((x) => (
+              <div key={x.label} className="flex items-center gap-2.5 rounded-xl border border-border p-2.5">
+                <span className={`grid h-9 w-9 flex-none place-items-center rounded-[10px] ${TILE_TONE[x.tone]}`}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={x.icon} /></svg>
+                </span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.4px] text-muted">{x.label}</span>
+                  <span className="text-[13px] font-bold leading-tight">{x.value}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted">{t("detailLimits", { min: num(meta.min), max: num(meta.max) })} · {t(`risk_${meta.risk}`)}</p>
+        </div>
+      )}
+      {tab === "read" && (
+        <div className="flex flex-col gap-3 p-3.5 text-[13px] leading-normal">
+          <p className="font-bold">{t("readStatusTitle")}</p>
+          <ul className="flex flex-col gap-1.5">
+            {([["pending", "#B45309"], ["running", "#1E40AF"], ["done", "#166534"], ["partial", "#B45309"], ["canceled", "#B91C1C"]] as const).map(([k, c]) => (
+              <li key={k}><b style={{ color: c }}>{t(`readS_${k}`)}</b> {t(`readS_${k}_text`)}</li>
+            ))}
+          </ul>
+          <p className="font-bold">{t("readRefundTitle")}</p>
+          <p>{t("readRefund")}</p>
+          <p className="font-bold">{t("readHowTitle")}</p>
+          <ul className="flex list-disc flex-col gap-1 pl-5">
+            {[1, 2, 3, 4].map((i) => <li key={i}>{t(`readHow${i}`)}</li>)}
+          </ul>
+          <p className="text-muted">{t("readTicket")}</p>
+        </div>
+      )}
+      {tab === "updates" && (
+        <ul className="flex flex-col p-3">
+          {updates.map((u) => (
+            <li key={u.id} className="flex items-start justify-between gap-3 border-b border-border py-2 text-[13px] last:border-0">
+              <span>{u.text}</span>
+              <span className="flex-none text-xs text-muted">{when(u.at)}</span>
+            </li>
+          ))}
+          {!updates.length && <li className="py-2 text-[13px] text-muted">{t("noUpdates")}</li>}
+        </ul>
+      )}
+    </section>
   );
 }

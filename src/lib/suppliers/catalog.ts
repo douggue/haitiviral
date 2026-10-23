@@ -4,6 +4,8 @@ import { prisma } from "../db";
 import { getSettings, type Settings } from "../settings";
 import { parseMeta, productKind, type ServiceMeta } from "../services";
 import { analyzeRisk, type RiskResult } from "../service-risk";
+import { infoFromProvider } from "../service-info";
+import { formatMoney } from "../money";
 import { VIP_LEVELS } from "../vip";
 import { smmBalance, smmServices } from "./smm";
 import { isSmm, serviceIdFor } from "./smm-orders";
@@ -146,9 +148,11 @@ export async function applyProfitRules() {
     const losing = p.status === "loss" || !!c.provider.removedAt;
     if (losing && s.autoPauseLoss && !c.meta.pausedLoss) {
       await prisma.productVariant.update({ where: { id: c.id }, data: { isActive: false, service: { ...c.meta, pausedLoss: true } } });
+      await postServiceUpdate("paused", c.id);
       paused++;
     } else if ((!losing || !s.autoPauseLoss) && c.meta.pausedLoss) {
       await prisma.productVariant.update({ where: { id: c.id }, data: { isActive: !c.meta.blocked, service: { ...c.meta, pausedLoss: false } } });
+      if (!c.meta.blocked) await postServiceUpdate("resumed", c.id);
       resumed++;
     }
   }
@@ -178,11 +182,14 @@ export async function linkChoice(variantId: string, input: { supplierId: string 
   }
   const main = found[0];
   const refillDays = main.refill ? meta.refillDays || Number(/(\d+)\s*(?:days?|d)\b/i.exec(`${main.name} ${main.desc ?? ""}`)?.[1] ?? 30) : 0;
-  const next: ServiceMeta = { ...meta, min: Math.max(...found.map((f) => f.min)), max: Math.min(...found.map((f) => f.max)), refillDays, drip: meta.drip && main.dripfeed, desc: [main.name, main.desc].filter(Boolean).join(" · ").slice(0, 500) };
+  // The details card is refilled from the new provider service (the customer description, "about", is kept).
+  const info = infoFromProvider(main.name, main.desc, main.cancel);
+  const next: ServiceMeta = { ...meta, min: Math.max(...found.map((f) => f.min)), max: Math.min(...found.map((f) => f.max)), refillDays, drip: meta.drip && main.dripfeed, desc: [main.name, main.desc].filter(Boolean).join(" · ").slice(0, 500), info };
   await prisma.$transaction([
     prisma.productVariant.update({ where: { id: variantId }, data: { supplierId: input.supplierId, supplierSku: sku, backupSupplierId: input.backupSupplierId && backupSku ? input.backupSupplierId : null, backupSupplierSku: input.backupSupplierId && backupSku ? backupSku : null, service: next } }),
     prisma.product.update({ where: { id: v.productId }, data: { fulfillmentType: "SUPPLIER_API" } }),
   ]);
+  if (!v.supplierId && v.isActive) await postServiceUpdate("new", v.id);
   return main;
 }
 
@@ -304,4 +311,20 @@ export async function learnedSuggestions() {
     out.push({ choice: c, from: c.meta.risk, to, text: `${why} Suggest: ${name[c.meta.risk]} → ${name[to]}.` });
   }
   return out;
+}
+
+/**
+ * "Nouvèl sèvis" (service updates) tab: a short line per change customers care about, written automatically.
+ * new = a choice is now delivered by a provider · price_up/price_down · paused (sells at a loss or removed) · resumed.
+ */
+export async function postServiceUpdate(kind: "new" | "price_up" | "price_down" | "paused" | "resumed", variantId: string, price?: number) {
+  const v = await prisma.productVariant.findUnique({ where: { id: variantId }, include: { product: true } });
+  if (!v) return;
+  const name = (l: string) => `${(v.product.name as Record<string, string>)[l] ?? ""} · ${(v.name as Record<string, string>)[l] ?? ""}`;
+  const p = price !== undefined ? (l: string) => formatMoney(price, "HTG", l) : () => "";
+  const text = {
+    ht: { new: `Nouvo: ${name("ht")}`, price_up: `Pri a monte: ${name("ht")} (${p("ht")} pou 1,000)`, price_down: `Pri a bese: ${name("ht")} (${p("ht")} pou 1,000)`, paused: `Poze pou kounye a: ${name("ht")}`, resumed: `Disponib ankò: ${name("ht")}` }[kind],
+    fr: { new: `Nouveau : ${name("fr")}`, price_up: `Prix en hausse : ${name("fr")} (${p("fr")} pour 1 000)`, price_down: `Prix en baisse : ${name("fr")} (${p("fr")} pour 1 000)`, paused: `En pause pour le moment : ${name("fr")}`, resumed: `De nouveau disponible : ${name("fr")}` }[kind],
+  };
+  await prisma.serviceUpdate.create({ data: { kind, text, productId: v.productId } }).catch((e) => console.error("service update failed", e));
 }

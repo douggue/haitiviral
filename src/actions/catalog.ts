@@ -6,8 +6,9 @@ import { audit } from "@/lib/audit";
 import { getSettings, setSetting } from "@/lib/settings";
 import { parseMeta } from "@/lib/services";
 import { rulesFromText } from "@/lib/service-risk";
+import { cleanInfo } from "@/lib/service-info";
 import { runSupplierCron } from "@/lib/suppliers/orders";
-import { applyProfitRules, applyRisk, linkChoice, setChoiceRisk, syncAllProviders, syncProviderServices } from "@/lib/suppliers/catalog";
+import { postServiceUpdate, applyProfitRules, applyRisk, linkChoice, setChoiceRisk, syncAllProviders, syncProviderServices } from "@/lib/suppliers/catalog";
 
 type R = { ok: true; message?: string } | { ok: false; error: string };
 const fail = (e: unknown): R => ({ ok: false, error: e instanceof Error ? e.message : "Unexpected error" });
@@ -125,6 +126,7 @@ export async function setChoicePrice(variantId: string, gourdes: string): Promis
     if (!Number.isFinite(v) || v <= 0) return { ok: false, error: "Write a price in gourdes, like 420" };
     const before = await prisma.productVariant.findUniqueOrThrow({ where: { id: variantId }, select: { priceHtg: true } });
     await prisma.productVariant.update({ where: { id: variantId }, data: { priceHtg: v } });
+    if (v !== before.priceHtg) await postServiceUpdate(v > before.priceHtg ? "price_up" : "price_down", variantId, v);
     const r = await applyProfitRules();
     await audit(staff.id, "choice.price", "ProductVariant", variantId, { from: before.priceHtg, to: v });
     refresh();
@@ -222,6 +224,61 @@ export async function decideLearned(variantId: string, accept: boolean, level: "
     await audit(staff.id, accept ? "risk.learn.accept" : "risk.learn.ignore", "ProductVariant", variantId, { level });
     refresh();
     return { ok: true, message: accept ? "Level raised" : "Hidden for 30 days" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Services & risk → "Customer details": the short description and the details card customers see before ordering. */
+export async function saveChoiceDetails(variantId: string, form: FormData): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const v = await prisma.productVariant.findUniqueOrThrow({ where: { id: variantId } });
+    const meta = parseMeta(v.service);
+    if (!meta) return { ok: false, error: "Not a service choice" };
+    const str = (k: string, max = 300) => String(form.get(k) ?? "").trim().slice(0, max);
+    const cancel = str("cancel");
+    const info = cleanInfo({ quality: str("quality"), speed: str("speed"), start: str("start"), drop: str("drop"), location: str("location"), cancel: cancel === "yes" ? true : cancel === "no" ? false : undefined });
+    const refill = Number(str("refillDays"));
+    const next = {
+      ...meta,
+      about: { ht: str("about_ht", 400), fr: str("about_fr", 400) },
+      avg: { ht: str("avg_ht", 40) || meta.avg.ht, fr: str("avg_fr", 40) || meta.avg.fr },
+      refillDays: Number.isInteger(refill) && refill >= 0 && refill <= 365 ? refill : meta.refillDays,
+      info,
+    };
+    await prisma.productVariant.update({ where: { id: variantId }, data: { service: next } });
+    await audit(staff.id, "choice.details", "ProductVariant", variantId, { info, refillDays: next.refillDays });
+    refresh();
+    return { ok: true, message: "Saved" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Services & risk → "Service updates": a note staff write for customers (shown in the order screen's updates tab). */
+export async function postUpdateNote(form: FormData): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const ht = String(form.get("ht") ?? "").trim().slice(0, 300);
+    const fr = String(form.get("fr") ?? "").trim().slice(0, 300);
+    if (!ht) return { ok: false, error: "Write the note in Kreyòl (French is optional)" };
+    const u = await prisma.serviceUpdate.create({ data: { kind: "note", text: { ht, fr: fr || ht } } });
+    await audit(staff.id, "update.note", "ServiceUpdate", u.id, {});
+    refresh();
+    return { ok: true, message: "Posted" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function deleteUpdate(id: string): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    await prisma.serviceUpdate.delete({ where: { id } });
+    await audit(staff.id, "update.delete", "ServiceUpdate", id, {});
+    refresh();
+    return { ok: true, message: "Removed" };
   } catch (e) {
     return fail(e);
   }

@@ -1008,3 +1008,16 @@ model ProviderService {
   @@unique([supplierId, serviceId])
   @@index([supplierId, category])
 }
+
+/// "Nouvèl sèvis" tab on the order screen: new services, price changes, pauses (written automatically) and staff notes.
+model ServiceUpdate {
+  id        String   @id @default(cuid())
+  /// new | price_up | price_down | paused | resumed | note
+  kind      String
+  /// Shown text per language ({ ht, fr })
+  text      Json
+  productId String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

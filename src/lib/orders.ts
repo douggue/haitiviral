@@ -184,6 +184,11 @@ export async function createServiceOrder(input: ServiceOrderInput) {
   const kind = productKind(v.product.tags);
   const link = checkLink(input.link, v.product.category.slug, wantsPost(kind, meta.type));
   if (!link.ok) throw new OrderError("invalid_link");
+  // One order at a time per link and service: providers count from one start number, so two at once get mixed up.
+  const running = await prisma.orderItem.count({
+    where: { variant: { productId: v.productId }, fieldValues: { path: ["link"], equals: link.url }, order: { status: { in: ["PAID", "PROCESSING"] } } },
+  });
+  if (running) throw new OrderError("same_link");
 
   const fieldValues: Record<string, string> = { link: link.url };
   let quantity = input.quantity;

@@ -1,3 +1,5 @@
+import { cleanInfo, type ServiceInfo } from "./service-info";
+
 /**
  * Social media services: shared by the order screen (browser) and the server, so both apply the same rules.
  * A product is one platform + service kind (e.g. TikTok followers); each option is a choice
@@ -18,8 +20,12 @@ export type ServiceMeta = {
   /** 0 = no refill */
   refillDays: number;
   drip: boolean;
-  /** The provider's own description (shown in the details sheet) */
+  /** The provider's own description: admin only (customers never see the provider's words, name or number) */
   desc?: string;
+  /** Short description for customers, per language (editable in Admin → Services & risk) */
+  about?: Record<string, string>;
+  /** Details card on the order screen: quality, speed, start, drop, location, cancel */
+  info?: ServiceInfo;
   /** Staff set the risk level by hand: "Re-analyze all" leaves it alone */
   riskLocked?: boolean;
   /** Turned off by the risk analysis (blocked words) or because it sold at a loss: turned back on automatically when fixed */
@@ -45,6 +51,8 @@ export function parseMeta(v: unknown): ServiceMeta | null {
     refillDays: m.refillDays ?? 0,
     drip: !!m.drip,
     desc: m.desc,
+    about: m.about && typeof m.about === "object" ? m.about : undefined,
+    info: cleanInfo(m.info),
     riskLocked: !!m.riskLocked,
     blocked: !!m.blocked,
     pausedLoss: !!m.pausedLoss,
