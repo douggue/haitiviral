@@ -92,7 +92,13 @@ Status: **noted only**. Nothing here is built. The owner decides the order befor
       7. **Risk score:** each signal adds points. Low = automatic approval, medium = staff review, high = refused with a polite Kreyòl message. Strict mode stays as a switch.
       8. **Admin view:** for each request, the accounts sharing the same phone, device, IP or social account, with ban/allow buttons.
     - **The same signals protect the referral program (#10):** no commission between linked accounts.
-    - **To decide:** WhatsApp or SMS for the code (cost per message), and whether low-risk trials are approved automatically.
+    - **Services:**
+      - **Phone code (recommended):** the customer *sends* a code to our WhatsApp Business number (a "click to WhatsApp" message with the code pre-filled), received through Meta's WhatsApp Cloud API. Messages customers send are normally free on Meta's platform, and it proves they own the number. Needs a Meta business account and a dedicated number.
+      - **Alternatives:** we send the code by WhatsApp (Meta authentication rate for Haiti; Twilio Verify adds about $0.05 per verification). SMS to Haiti is expensive (about $0.29 per message listed by one provider): avoid.
+      - **Bot check:** Cloudflare Turnstile (free, already in the code).
+      - **VPN / proxy check:** proxycheck.io, VPNAPI.io or IPQualityScore (free tiers, about 1,000 lookups a month for IPQS). Confirm current prices before signing up.
+      - **Device ID and disposable-email list:** built in, free.
+    - **To decide:** a phone number for WhatsApp Business, and whether low-risk trials are approved automatically.
 
 ## Waiting on preview (not on `main` yet)
 - One Private Blob store for every upload (public images served through `/media/…`).
