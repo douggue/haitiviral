@@ -11,6 +11,7 @@ import { prisma } from "@/lib/db";
 import { t as txt } from "@/lib/text";
 import { getLocale } from "next-intl/server";
 import { PayBadges } from "./PayLogo";
+import { CommunityBar } from "./CommunityBar";
 
 const footerPages = unstable_cache(
   () => prisma.page.findMany({ where: { isPublished: true, showInFooter: true }, select: { slug: true, title: true }, orderBy: { createdAt: "asc" } }),
@@ -24,11 +25,6 @@ export async function Footer({ settings }: { settings: Settings }) {
   const locale = await getLocale();
   const pages = await footerPages();
   const extra = settings.navigation?.footer ?? [];
-  const socials = [
-    ["Facebook", settings.socialFacebook],
-    ["Instagram", settings.socialInstagram],
-    ["TikTok", settings.socialTiktok],
-  ].filter(([, url]) => url);
 
   return (
     <footer className="mt-20 border-t border-border bg-surface">
@@ -77,14 +73,10 @@ export async function Footer({ settings }: { settings: Settings }) {
             {pages.map((p) => <li key={p.slug}><Link href={`/p/${p.slug}`} className="hover:text-text">{txt(p.title, locale)}</Link></li>)}
             {extra.map((l) => <li key={l.href}>{l.href.startsWith("https://") ? <a href={l.href} rel="noopener" target="_blank" className="hover:text-text">{txt(l.label, locale)}</a> : <Link href={l.href} className="hover:text-text">{txt(l.label, locale)}</Link>}</li>)}
           </ul>
-          {socials.length > 0 && (
+          {[settings.socialWhatsappChannel, settings.socialTelegram, settings.socialFacebook, settings.socialTiktok, settings.socialInstagram, settings.socialYoutube, settings.reviewsGoogle, settings.reviewsTrustpilot].some(Boolean) && (
             <>
               <h2 className="mb-2 mt-5 text-sm font-semibold">{t("followUs")}</h2>
-              <ul className="flex gap-3 text-sm text-muted">
-                {socials.map(([name, url]) => (
-                  <li key={name}><a href={url} rel="noopener" target="_blank" className="hover:text-text">{name}</a></li>
-                ))}
-              </ul>
+              <CommunityBar settings={settings} label={t("community")} className="justify-start" />
             </>
           )}
         </div>

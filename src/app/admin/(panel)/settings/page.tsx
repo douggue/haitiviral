@@ -101,6 +101,11 @@ export default async function SettingsPage() {
             <Field name="socialFacebook" label="Facebook URL" value={s.socialFacebook} />
             <Field name="socialInstagram" label="Instagram URL" value={s.socialInstagram} />
             <Field name="socialTiktok" label="TikTok URL" value={s.socialTiktok} />
+            <Field name="socialYoutube" label="YouTube URL" value={s.socialYoutube} />
+            <Field name="socialWhatsappChannel" label="WhatsApp channel or group link" value={s.socialWhatsappChannel} />
+            <Field name="socialTelegram" label="Telegram channel link" value={s.socialTelegram} />
+            <Field name="reviewsGoogle" label="Google reviews link" value={s.reviewsGoogle} />
+            <Field name="reviewsTrustpilot" label="Trustpilot link" value={s.reviewsTrustpilot} />
           </div>
         </section>
         <section className="card space-y-4 p-5">

@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { getUser } from "@/lib/session";
 import { getDisplaySettings } from "@/lib/settings";
+import { CommunityBar } from "@/components/CommunityBar";
 import { prisma } from "@/lib/db";
 import { t as txt } from "@/lib/text";
 import { PLATFORMS } from "@/lib/services";
@@ -64,6 +65,7 @@ export default async function HelpPage({ params }: { params: Promise<{ locale: s
           <h2 className="text-[15px] font-bold">{t("faqTitle")}</h2>
           <Faq items={[1, 2, 3, 4].map((i) => ({ q: t(`q${i}`), a: t(`a${i}`) }))} />
         </section>
+        <CommunityBar settings={settings} label={tc("community")} />
       </div>
     </>
   );

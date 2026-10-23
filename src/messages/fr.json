@@ -69,7 +69,8 @@
     "balance": "Solde",
     "otherLanguage": "Changer de langue",
     "statusSome": "Certains services sont plus lents en ce moment",
-    "themeAuto": "Auto"
+    "themeAuto": "Auto",
+    "community": "Rejoignez la communauté"
   },
   "home": {
     "eyebrow": "Fait en Haïti, pour les créateurs",
@@ -868,7 +869,8 @@
     "profile": "Mon profil",
     "privacy": "Mes données personnelles",
     "signOut": "Se déconnecter",
-    "theme": "Thème"
+    "theme": "Thème",
+    "community": "Rejoignez la communauté"
   },
   "helpUi": {
     "title": "Aide",

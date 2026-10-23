@@ -69,7 +69,8 @@
     "balance": "Balans",
     "otherLanguage": "Chanje lang",
     "statusSome": "Kèk sèvis pi dousman kounye a",
-    "themeAuto": "Otomatik"
+    "themeAuto": "Otomatik",
+    "community": "Rejwenn kominote a"
   },
   "home": {
     "eyebrow": "Fèt an Ayiti, pou kreyatè yo",
@@ -868,7 +869,8 @@
     "profile": "Pwofil mwen",
     "privacy": "Done pèsonèl mwen",
     "signOut": "Dekonekte",
-    "theme": "Koulè ekran"
+    "theme": "Koulè ekran",
+    "community": "Rejwenn kominote a"
   },
   "helpUi": {
     "title": "Sipò",

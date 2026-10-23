@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { formatMoney } from "@/lib/money";
 import { getSettings } from "@/lib/settings";
+import { CommunityBar } from "@/components/CommunityBar";
 import { t as txt } from "@/lib/text";
 import { vipStatus } from "@/lib/vip";
 import { emailEnabled } from "@/lib/email";
@@ -106,6 +107,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           ))}
           <SignOutButton className="flex min-h-[54px] w-full items-center gap-2 text-sm font-bold text-[#B91C1C]" />
         </section>
+        <CommunityBar settings={settings} label={t("community")} />
       </div>
     </>
   );

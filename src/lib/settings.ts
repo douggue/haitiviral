@@ -42,6 +42,12 @@ export type Settings = {
   socialFacebook: string;
   socialInstagram: string;
   socialTiktok: string;
+  /** Community links bar (Account, Help, footer): each icon shows only when its link is set */
+  socialWhatsappChannel: string;
+  socialTelegram: string;
+  socialYoutube: string;
+  reviewsGoogle: string;
+  reviewsTrustpilot: string;
   announcement: { enabled: boolean; text: Record<string, string>; link: string; startsAt?: string; endsAt?: string };
   /** Header and footer links (Admin → Navigation). Empty = built-in links. */
   navigation: { header: NavLink[]; footer: NavLink[] };
@@ -173,6 +179,11 @@ export const DEFAULT_SETTINGS: Settings = {
   socialFacebook: "",
   socialInstagram: "",
   socialTiktok: "",
+  socialWhatsappChannel: "",
+  socialTelegram: "",
+  socialYoutube: "",
+  reviewsGoogle: "",
+  reviewsTrustpilot: "",
   announcement: { enabled: false, text: {}, link: "" },
   logoUrl: "",
   logoDarkUrl: "",

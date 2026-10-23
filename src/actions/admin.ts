@@ -439,6 +439,11 @@ export async function saveSettings(form: FormData): Promise<R> {
       socialFacebook: str("socialFacebook"),
       socialInstagram: str("socialInstagram"),
       socialTiktok: str("socialTiktok"),
+      socialWhatsappChannel: str("socialWhatsappChannel"),
+      socialTelegram: str("socialTelegram"),
+      socialYoutube: str("socialYoutube"),
+      reviewsGoogle: str("reviewsGoogle"),
+      reviewsTrustpilot: str("reviewsTrustpilot"),
       announcement: {
         startsAt: String(form.get("announcementStartsAt") ?? "") || undefined,
         endsAt: String(form.get("announcementEndsAt") ?? "") || undefined,
@@ -456,7 +461,7 @@ export async function saveSettings(form: FormData): Promise<R> {
     next.heroImageUrl = img("heroImageUrl");
     next.ogImageUrl = img("ogImageUrl");
     next.natcashQrUrl = img("natcashQrUrl");
-    for (const url of [next.socialFacebook, next.socialInstagram, next.socialTiktok, next.announcement?.link]) {
+    for (const url of [next.socialFacebook, next.socialInstagram, next.socialTiktok, next.socialWhatsappChannel, next.socialTelegram, next.socialYoutube, next.reviewsGoogle, next.reviewsTrustpilot, next.announcement?.link]) {
       if (url && !/^https:\/\//.test(url) && !url.startsWith("/")) return { ok: false, error: "Links must start with https:// or /" };
     }
     for (const [k, v] of Object.entries(next)) await setSetting(k as keyof Settings, v as never);
