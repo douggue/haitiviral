@@ -82,7 +82,8 @@ describe("suggested selling price", () => {
     const p = suggestPrice(1.8, s);
     expect(p % 1000).toBe(0);
     expect(profitOf(p, 1.8, s).pct).toBeGreaterThanOrEqual(40);
-    expect(suggestPrice(0.03, s)).toBe(500); // never under 5 HTG per 1,000
+    expect(suggestPrice(0.03, s)).toBe(1000); // 3.95 HTG of cost → 10 HTG per 1,000
+    expect(suggestPrice(0.001, s)).toBe(500); // never under 5 HTG per 1,000
     expect(speedPerDay("5-10K")).toBe(10_000);
     expect(speedPerDay("1M")).toBe(1_000_000);
     expect(speedPerDay(undefined)).toBe(0);
