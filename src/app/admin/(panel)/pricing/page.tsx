@@ -52,6 +52,7 @@ export default async function PricingAdmin({ searchParams }: { searchParams: Pro
           ["htgPerUsd", "Exchange rate (HTG per $1)", s.htgPerUsd, "Provider prices are in dollars"],
           ["paymentFeePct", "Payment fee %", s.paymentFeePct, "MonCash / NatCash"],
           ["minProfitPct", "Minimum profit %", s.minProfitPct, "Below = warning"],
+          ["targetProfitPct", "Target profit %", s.targetProfitPct, "Used for suggested prices"],
         ].map(([name, label, value, hint]) => (
           <label key={name as string} className="flex flex-col gap-1.5">
             <span className="text-xs font-bold text-muted">{label}</span>

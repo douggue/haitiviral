@@ -80,6 +80,8 @@ export type Settings = {
   /** Pricing (Admin → Pricing & profit): payment fee %, warning under this profit %, pause choices that lose money */
   paymentFeePct: number;
   minProfitPct: number;
+  /** Profit % aimed for when a price is suggested (worst case, like the profit table) */
+  targetProfitPct: number;
   autoPauseLoss: boolean;
   referralRewardHtg: number;
   referralMinOrderHtg: number;
@@ -196,6 +198,7 @@ export const DEFAULT_SETTINGS: Settings = {
   riskLearnIgnored: {},
   paymentFeePct: 3,
   minProfitPct: 15,
+  targetProfitPct: 40,
   autoPauseLoss: true,
   trialEnabled: true,
   trialStrict: false,

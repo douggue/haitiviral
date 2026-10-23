@@ -74,3 +74,17 @@ describe("risk analysis", () => {
     expect(rulesFromText("−2 real, organic\nnonsense\n+3 bot")).toEqual([{ points: -2, words: ["real", "organic"] }, { points: 3, words: ["bot"] }]);
   });
 });
+
+describe("suggested selling price", () => {
+  it("leaves the target profit in the worst case, rounded to a clean amount", async () => {
+    const { suggestPrice, speedPerDay, profitOf } = await import("@/lib/suppliers/catalog");
+    const s = { htgPerUsd: 131.5, paymentFeePct: 3, targetProfitPct: 40, minProfitPct: 15 };
+    const p = suggestPrice(1.8, s);
+    expect(p % 1000).toBe(0);
+    expect(profitOf(p, 1.8, s).pct).toBeGreaterThanOrEqual(40);
+    expect(suggestPrice(0.03, s)).toBe(500); // never under 5 HTG per 1,000
+    expect(speedPerDay("5-10K")).toBe(10_000);
+    expect(speedPerDay("1M")).toBe(1_000_000);
+    expect(speedPerDay(undefined)).toBe(0);
+  });
+});

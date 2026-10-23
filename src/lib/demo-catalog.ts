@@ -19,7 +19,7 @@ const categories = [
   { slug: "pake", icon: "🎁", name: L("Pake pou kòmanse", "Packs de départ"), sortOrder: 9 },
 ];
 
-const KIND_NAMES: Record<Kind, ReturnType<typeof L>> = {
+export const KIND_NAMES: Record<Kind, ReturnType<typeof L>> = {
   followers: L("Abòne", "Abonnés"),
   likes: L("Like", "Likes"),
   views: L("Vi", "Vues"),
@@ -28,9 +28,9 @@ const KIND_NAMES: Record<Kind, ReturnType<typeof L>> = {
 };
 
 type Tier = [name: ReturnType<typeof L>, type: ServiceType, ratePer1000: number, avg: ReturnType<typeof L>, risk: Risk, refillDays: number, min: number, max: number, drip: boolean, desc: string];
-const CHEAP = L("Bon mache", "Économique");
-const BEST = L("Pi bon kalite", "Meilleure qualité");
-const FAST = L("Rapid", "Rapide");
+export const CHEAP = L("Bon mache", "Économique");
+export const BEST = L("Pi bon kalite", "Meilleure qualité");
+export const FAST = L("Rapid", "Rapide");
 const MIN = (n: number) => L(`${n} minit`, `${n} minutes`);
 const HR = (n: number) => L(`${n} èdtan`, `${n} heure${n > 1 ? "s" : ""}`);
 const DAY = (n: number) => L(`${n} jou`, `${n} jour${n > 1 ? "s" : ""}`);
@@ -136,7 +136,7 @@ const PICTURES: Record<string, string> = {
   "facebook-followers": "facebook-page-likes", "facebook-views": "facebook-video-views",
 };
 
-const linkField = (post: boolean) => ({
+export const linkField = (post: boolean) => ({
   key: "link",
   label: post ? L("Lyen videyo a oswa piblikasyon an", "Lien de la vidéo ou de la publication") : L("Lyen pwofil ou", "Lien de votre profil"),
   type: "text",

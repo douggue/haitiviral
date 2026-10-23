@@ -7,6 +7,8 @@ import { analyzeRisk, rulesToText, type RiskLevel } from "@/lib/service-risk";
 import { learnedSuggestions, listChoices, suggestRisk } from "@/lib/suppliers/catalog";
 import { decideLearned, deleteUpdate, linkChoiceAction, postUpdateNote, saveChoiceDetails, reanalyzeAction, saveRiskRules, saveServiceStatus, setRiskAction, syncProvidersAction, toggleRiskLock } from "@/actions/catalog";
 import { ActionButton, ActionForm } from "@/components/admin/ActionButton";
+import { NewServiceBuilder, ProviderPicker } from "@/components/admin/ProviderPicker";
+import { PLATFORMS } from "@/lib/services";
 
 export const metadata = { title: "Services & risk" };
 
@@ -42,6 +44,7 @@ export default async function ServicesAdmin({ searchParams }: { searchParams: Pr
     learnedSuggestions().catch(() => []),
   ]);
   const updates = await prisma.serviceUpdate.findMany({ orderBy: { createdAt: "desc" }, take: 15 });
+  const allPlatforms = await prisma.category.findMany({ where: { slug: { in: Object.keys(PLATFORMS) } }, orderBy: { sortOrder: "asc" } });
   // Counts over every provider service we know (like the mockup's real test), then over what's on sale.
   const tally: Record<RiskLevel, number> = { low: 0, med: 0, high: 0, blocked: 0 };
   for (const x of known) tally[analyzeRisk(x, settings.riskRules, settings.riskBlocked).level]++;
@@ -112,7 +115,9 @@ export default async function ServicesAdmin({ searchParams }: { searchParams: Pr
                     )}
                     <details className="mt-1.5">
                       <summary className="cursor-pointer text-xs font-semibold text-[#00209F] dark:text-primary">{c.provider ? "Change provider service" : "Link a provider service"}</summary>
-                      <ActionForm action={linkChoiceAction.bind(null, c.id)} className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                      <ProviderPicker variantId={c.id} />
+                      <p className="mt-2 text-[11px] font-bold text-muted">Or type the service id</p>
+                      <ActionForm action={linkChoiceAction.bind(null, c.id)} className="mt-1 grid gap-1.5 sm:grid-cols-2">
                         <select name="supplierId" defaultValue={c.supplierId ?? ""} className={field} aria-label="Provider">
                           <option value="">— none —</option>
                           {suppliers.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
@@ -252,6 +257,12 @@ export default async function ServicesAdmin({ searchParams }: { searchParams: Pr
             <button className="h-10 rounded-[10px] bg-[#00209F] px-4 text-sm font-bold text-white">Save status</button>
           </ActionForm>
         </div>
+      </section>
+
+      <section className={`${card} flex flex-col gap-3`}>
+        <h2 className="text-base font-bold">Add a new service in one go</h2>
+        <p className="text-xs text-muted">Pick the platform and the kind, then one provider service for each choice. The details, limits, risk level and a selling price (for {settings.targetProfitPct}% real profit) are filled in for you; change them afterwards if you want.</p>
+        <NewServiceBuilder platforms={allPlatforms.map((c) => ({ slug: c.slug, name: txt(c.name, "fr") }))} />
       </section>
 
       <section className={`${card} flex flex-col gap-3`}>

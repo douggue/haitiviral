@@ -8,7 +8,7 @@ import { parseMeta } from "@/lib/services";
 import { rulesFromText } from "@/lib/service-risk";
 import { cleanInfo } from "@/lib/service-info";
 import { runSupplierCron } from "@/lib/suppliers/orders";
-import { postServiceUpdate, applyProfitRules, applyRisk, linkChoice, setChoiceRisk, syncAllProviders, syncProviderServices } from "@/lib/suppliers/catalog";
+import { candidatesFor, candidatesForSpec, createServiceFromProviders, pickProviderService, type Candidate, postServiceUpdate, applyProfitRules, applyRisk, linkChoice, setChoiceRisk, syncAllProviders, syncProviderServices } from "@/lib/suppliers/catalog";
 
 type R = { ok: true; message?: string } | { ok: false; error: string };
 const fail = (e: unknown): R => ({ ok: false, error: e instanceof Error ? e.message : "Unexpected error" });
@@ -107,7 +107,7 @@ export async function savePricing(form: FormData): Promise<R> {
       if (!Number.isFinite(v) || v < min || v > max) throw new Error(`${k}: must be between ${min} and ${max}`);
       return v;
     };
-    const values = { htgPerUsd: num("htgPerUsd", 1, 10_000), paymentFeePct: num("paymentFeePct", 0, 50), minProfitPct: num("minProfitPct", 0, 95), autoPauseLoss: form.get("autoPauseLoss") === "on" };
+    const values = { htgPerUsd: num("htgPerUsd", 1, 10_000), paymentFeePct: num("paymentFeePct", 0, 50), minProfitPct: num("minProfitPct", 0, 95), targetProfitPct: num("targetProfitPct", 0, 90), autoPauseLoss: form.get("autoPauseLoss") === "on" };
     for (const [k, v] of Object.entries(values)) await setSetting(k as "htgPerUsd", v as number);
     const r = await applyProfitRules();
     await audit(staff.id, "pricing.save", "SiteSetting", "pricing", values);
@@ -280,6 +280,51 @@ export async function deleteUpdate(id: string): Promise<R> {
     await audit(staff.id, "update.delete", "ServiceUpdate", id, {});
     refresh();
     return { ok: true, message: "Removed" };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Provider service cards for a choice (or for a new service: platform + kind + tier). */
+export async function providerCandidates(input: { variantId?: string; platform?: string; kind?: string; tier?: number; q?: string }): Promise<{ ok: true; list: Candidate[] } | { ok: false; error: string }> {
+  try {
+    await assertStaff("catalog.manage");
+    const q = (input.q ?? "").slice(0, 80);
+    if (input.variantId) return { ok: true, list: await candidatesFor(input.variantId, q) };
+    if (!input.platform) return { ok: false, error: "Pick a platform" };
+    const kind = (["followers", "likes", "views", "comments", "live"] as const).find((k) => k === input.kind) ?? null;
+    return { ok: true, list: await candidatesForSpec({ platform: input.platform, kind, tier: Math.max(0, Math.min(2, Number(input.tier) || 0)), q }) };
+  } catch (e) {
+    return fail(e) as { ok: false; error: string };
+  }
+}
+
+export async function pickProviderAction(variantId: string, providerServiceId: string, role: "main" | "backup", setPrice: boolean): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const ps = await pickProviderService(variantId, providerServiceId, role === "backup" ? "backup" : "main", !!setPrice);
+    await applyRisk();
+    await applyProfitRules();
+    await audit(staff.id, "choice.pick", "ProductVariant", variantId, { providerServiceId, role, setPrice });
+    refresh();
+    return { ok: true, message: `${role === "backup" ? "Backup" : "Main"}: #${ps.serviceId} ${ps.name.slice(0, 60)}` };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function createServiceAction(input: { platform: string; kind: string; picks: (string | null)[] }): Promise<R> {
+  try {
+    const staff = await assertStaff("catalog.manage");
+    const kind = (["followers", "likes", "views", "comments", "live"] as const).find((k) => k === input.kind);
+    if (!kind) return { ok: false, error: "Pick the kind of service" };
+    const picks = (input.picks ?? []).slice(0, 3).map((x) => (x ? String(x) : null));
+    if (!picks.some(Boolean)) return { ok: false, error: "Pick at least one provider service" };
+    const r = await createServiceFromProviders({ platform: String(input.platform), kind, picks });
+    await audit(staff.id, "service.create", "Product", r.productId, { picks });
+    refresh();
+    revalidatePath("/[locale]/order", "page");
+    return { ok: true, message: `${r.made} choice(s) added and on sale` };
   } catch (e) {
     return fail(e);
   }

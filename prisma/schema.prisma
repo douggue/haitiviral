@@ -1002,6 +1002,11 @@ model ProviderService {
   dripfeed   Boolean   @default(false)
   desc       String?
   seenAt     DateTime  @default(now())
+  /// First time a sync saw it ("new services" alert)
+  firstSeenAt DateTime @default(now())
+  /// Price before the last change, and when it changed ("price changed" alert)
+  prevRate    Decimal? @db.Decimal(18, 6)
+  rateChangedAt DateTime?
   /// Set when the provider no longer lists it
   removedAt  DateTime?
 
