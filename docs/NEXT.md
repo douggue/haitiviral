@@ -117,12 +117,10 @@ Status: **noted only**. Nothing here is built. The owner decides the order befor
       - **Device ID and disposable-email list:** built in, free.
     - **To decide:** the phone number dedicated to WhatsApp Business, and whether low-risk trials are approved automatically.
 
-14. **Ideas seen on smmresellershub.com (to decide, not agreed yet).**
-    - **Subscription / auto orders:** likes or views sent automatically to each new post for X days.
-    - **Mass order:** many links in one go (useful for resellers).
-    - **"Ask AI" helper button:** answers customer questions in Kreyòl/French.
-    - **Community links bar** at the bottom of the menu: Telegram, WhatsApp channel, review sites (Trustpilot, Google).
-    - **Refills / Refunds pages:** list of the customer's refill and refund requests.
+14. **Community links bar** (seen on smmresellershub.com; the other ideas there were declined: subscriptions, mass order, "Ask AI", refill/refund pages).
+    - A row of icons at the bottom of the menu (and in the footer on computer): WhatsApp channel, Telegram, Facebook, TikTok, Instagram, Google reviews…
+    - Links and on/off for each set in the admin; icons hidden when no link is set.
+    - Opens in the app (WhatsApp, Telegram) on phones.
 
 ## Waiting on preview (not on `main` yet)
 - One Private Blob store for every upload (public images served through `/media/…`).
