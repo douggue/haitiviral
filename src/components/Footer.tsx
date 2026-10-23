@@ -43,8 +43,8 @@ export async function Footer({ settings }: { settings: Settings }) {
         <div>
           <h2 className="mb-3 text-sm font-semibold">{t("store")}</h2>
           <ul className="space-y-2 text-sm text-muted">
-            <li><Link href="/store" className="hover:text-text">{t("store")}</Link></li>
-            <li><Link href="/categories" className="hover:text-text">{t("categories")}</Link></li>
+            <li><Link href="/order" className="hover:text-text">{t("tabOrder")}</Link></li>
+            <li><Link href="/trial" className="hover:text-text">{t("freeTrial")}</Link></li>
             <li><Link href="/guides" className="hover:text-text">{t("guides")}</Link></li>
             <li><Link href="/news" className="hover:text-text">{t("news")}</Link></li>
             <li><Link href="/account/wallet" className="hover:text-text">{t("wallet")}</Link></li>

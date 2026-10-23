@@ -14,7 +14,7 @@ function newBlock(type: PageBlock["type"]): PageBlock {
     case "heading": return { type, text: {} };
     case "text": return { type, body: {} };
     case "image": return { type, url: "", caption: {} };
-    case "button": return { type, label: {}, href: "/store" };
+    case "button": return { type, label: {}, href: "/order" };
     case "faq": return { type, items: [{ q: {}, a: {} }] };
     case "products": return { type, category: "" };
   }
@@ -78,7 +78,7 @@ export function PageEditor({ page, categories }: { page?: PageData; categories: 
           {b.type === "button" && (
             <div className="grid gap-2 sm:grid-cols-2">
               <input className="input" placeholder="Button text" value={lv(b.label)} onChange={(e) => setBlock(i, { ...b, label: ls(b.label, e.target.value) })} />
-              <input className="input" placeholder="/store or https://…" value={b.href} onChange={(e) => setBlock(i, { ...b, href: e.target.value })} />
+              <input className="input" placeholder="/order or https://…" value={b.href} onChange={(e) => setBlock(i, { ...b, href: e.target.value })} />
             </div>
           )}
           {b.type === "faq" && (

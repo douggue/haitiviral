@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/db";
 import { t } from "@/lib/text";
 import { alternates } from "@/lib/seo";
 import { blocksSchema, safeHref } from "@/lib/pages";
 import { searchProducts } from "@/lib/catalog";
 import { Link } from "@/i18n/navigation";
-import { ProductCard } from "@/components/ProductCard";
 
 type P = Promise<{ locale: string; slug: string }>;
 const load = (slug: string) => prisma.page.findFirst({ where: { slug, isPublished: true } });
@@ -28,6 +27,7 @@ export default async function CustomPage({ params }: { params: P }) {
   if (!page) notFound();
   const parsed = blocksSchema.safeParse(page.blocks);
   const blocks = parsed.success ? parsed.data : [];
+  const tc = await getTranslations("common");
   const productLists = await Promise.all(blocks.map((b) => (b.type === "products" ? searchProducts({ category: b.category, take: 8 }) : Promise.resolve(null))));
   return (
     <div className="container-page max-w-4xl space-y-6 py-10 sm:py-14">
@@ -56,7 +56,8 @@ export default async function CustomPage({ params }: { params: P }) {
               </div>
             );
           case "products":
-            return <div key={i} className="grid grid-cols-2 gap-3 md:grid-cols-4">{productLists[i]?.map((p) => <ProductCard key={p.id} product={p} />)}</div>;
+            // HaitiViral has no shop grid: a "products" block on a custom page links to the order screen.
+            return productLists[i]?.length ? <Link key={i} href="/order" className="btn-primary inline-flex min-h-11 px-5">{tc("tabOrder")}</Link> : null;
         }
       })}
     </div>

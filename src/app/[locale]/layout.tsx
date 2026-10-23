@@ -5,8 +5,6 @@ import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { getDisplaySettings } from "@/lib/settings";
-import { getDisplayCurrency } from "@/lib/prefs";
-import { CartProvider } from "@/components/cart/CartProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
@@ -54,7 +52,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const [settings, currency, t, user, hdrs, jar] = await Promise.all([getDisplaySettings(), getDisplayCurrency(), getTranslations("common"), getUser(), headers(), cookies()]);
+  const [settings, t, user, hdrs, jar] = await Promise.all([getDisplaySettings(), getTranslations("common"), getUser(), headers(), cookies()]);
   // Data saver: the visitor's toggle, or the browser's Save-Data signal.
   const dataSaver = jar.get("hv_ds")?.value === "1" || (jar.get("hv_ds")?.value !== "0" && hdrs.get("save-data") === "on");
   // Light/dark: the visitor's saved choice (cookie), else the store default. Rendered by the server, so it never flashes.
@@ -74,7 +72,6 @@ export default async function LocaleLayout({ children, params }: { children: Rea
           {t("skipToContent")}
         </a>
         <NextIntlClientProvider>
-          <CartProvider currency={currency} htgPerUsd={settings.htgPerUsd} signedIn={!!user}>
             <AnnouncementBar settings={settings} locale={locale} />
             <HeaderSlot>
               <Header />
@@ -92,7 +89,6 @@ export default async function LocaleLayout({ children, params }: { children: Rea
             <ThemeKeeper defaultMode={fullTheme(settings.theme).defaultMode} />
             <ServiceWorker />
             <InstallPrompt />
-          </CartProvider>
         </NextIntlClientProvider>
       </body>
     </html>

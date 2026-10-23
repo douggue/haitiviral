@@ -22,7 +22,7 @@ export type HomepageConfig = {
 export const DEFAULT_HOMEPAGE: HomepageConfig = {
   sections: HOME_SECTIONS.map((id) => ({ id, visible: true })),
   hero: { eyebrow: {}, title: {}, subtitle: {} },
-  ctaHref: "/store",
+  ctaHref: "/order",
 };
 
 /** Accepts stored JSON of any age and returns a complete, valid config (unknown sections dropped, new ones placed after their usual neighbour). */
@@ -41,6 +41,6 @@ export function normalizeHomepage(raw: unknown): HomepageConfig {
   return {
     sections,
     hero: { eyebrow: r.hero?.eyebrow ?? {}, title: r.hero?.title ?? {}, subtitle: r.hero?.subtitle ?? {} },
-    ctaHref: typeof r.ctaHref === "string" && r.ctaHref.startsWith("/") ? r.ctaHref : "/store",
+    ctaHref: typeof r.ctaHref === "string" && r.ctaHref.startsWith("/") ? r.ctaHref : "/order",
   };
 }
