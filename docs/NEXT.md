@@ -47,7 +47,7 @@ Status: **noted only**. Nothing here is built. The owner decides the order befor
     - **Earnings balance:** separate from the wallet, the only money that can be withdrawn. Commissions are held until the order is completed + 3 days, and canceled on refund.
     - **Withdrawals:** to MonCash/NatCash, to the number in the account (same name), approved by staff, paid within 24 h. Or moved into the wallet straight away.
     - **Minimum payout (required):**
-      - Set in the admin (proposal: 500 HTG), and shown on both referral pages and in the withdrawal panel.
+      - Set in the admin (decided: **1,000 HTG**), and shown on both referral pages and in the withdrawal panel.
       - The "Retire lajan" (withdraw) button stays off below it, with "X HTG ankò pou w ka retire" (X HTG more before you can withdraw).
       - Optionally a different minimum for MonCash and NatCash, if their transfer fees differ.
       - No minimum for moving earnings into the wallet.
@@ -62,7 +62,7 @@ Status: **noted only**. Nothing here is built. The owner decides the order befor
 
     - **Anti-cheat:** the free-trial checks (same phone, device, IP).
     - **Profit check:** the highest tier is counted in Pricing & profit.
-    - **To confirm:** the percentages, the minimum payout amount, the hold, the payout time.
+    - **To confirm:** the percentages, the hold, the payout time. (Minimum payout decided: 1,000 HTG.)
 11. **Dark theme for the customer app.**
     - Today a dark mode exists underneath (from the old foundations: a `hg_theme` switch, dark colors), but the new screens built from the mockup use fixed light colors (white cards, light grey backgrounds) in about 14 files, so they would look broken in dark.
     - **Switch** in Kont (Account): Klè / Fonse / Otomatik (follows the phone). Remembered per person; light stays the default.
