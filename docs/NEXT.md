@@ -74,6 +74,25 @@ Status: **noted only**. Nothing here is built. The owner decides the order befor
     - The new screens show red "MC" / orange "NC" letter tiles or text labels instead: Wallet (top-up picker), referral pages, the withdrawal panel, home.
     - Use the real logos on every screen where a payment method appears, including the bank-transfer logo set in Admin → Payment methods.
     - Keep them sharp and readable in dark theme (#11): a white rounded background behind each logo.
+13. **Secure anti-cheat for the free trial.**
+    - **Today:**
+      - One trial per account, phone, exact link and browser cookie (`hg_dev`); daily limits per IP and in total; strict mode (first top-up required); staff approve each one.
+      - **Weak points:**
+        - The phone isn't verified: any number can be typed.
+        - The cookie is erased by a private tab.
+        - The link check is per exact URL, so another video of the same account passes.
+        - Mobile internet in Haiti puts many people behind the same IP (risk of blocking honest people), while a VPN changes IP easily.
+    - **Planned layers:**
+      1. **Verified phone:** a code by WhatsApp (or SMS) before the trial; one trial per verified number. Lowest-cost option: WhatsApp Cloud API authentication messages.
+      2. **One trial per social account,** not per link: links are reduced to the account (TikTok @name, Instagram username, YouTube channel) after following short links (#6), so a second video of the same account is refused.
+      3. **Stronger device ID:** the same ID kept in a cookie, local storage and IndexedDB, plus a light browser fingerprint (screen, time zone, language, graphics); clearing one isn't enough.
+      4. **Network checks:** VPN/proxy/datacenter IPs refused for the trial; ordinary IPs used as a signal only (shared mobile IPs aren't blocked outright).
+      5. **Bot check:** Cloudflare Turnstile on the trial form (already in the code, off until keys are added).
+      6. **Account checks:** verified email or Google login required; very new disposable email domains refused.
+      7. **Risk score:** each signal adds points. Low = automatic approval, medium = staff review, high = refused with a polite Kreyòl message. Strict mode stays as a switch.
+      8. **Admin view:** for each request, the accounts sharing the same phone, device, IP or social account, with ban/allow buttons.
+    - **The same signals protect the referral program (#10):** no commission between linked accounts.
+    - **To decide:** WhatsApp or SMS for the code (cost per message), and whether low-risk trials are approved automatically.
 
 ## Waiting on preview (not on `main` yet)
 - One Private Blob store for every upload (public images served through `/media/…`).
