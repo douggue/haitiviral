@@ -688,21 +688,6 @@
   "phone": {
     "bad": "Numéro incomplet. Exemple : +509 3456 7890 (ou +1 809… pour un autre pays)."
   },
-  "gift": {
-    "shareTitle": "C'est un cadeau ? Envoyez-le à la personne",
-    "shareBody": "Touchez le bouton, choisissez la personne dans WhatsApp et envoyez le message.",
-    "shareBodyNote": "Votre message est prêt. Touchez le bouton, choisissez la personne dans WhatsApp et envoyez-le.",
-    "shareButton": "Envoyer sur WhatsApp",
-    "copy": "Copier le message",
-    "copied": "Copié !",
-    "messageCode": "🎁 Je t'offre {what} ! Ouvre ce lien pour voir le code :\n{url}",
-    "messageTopup": "🎁 Je t'ai envoyé {what} ! C'est déjà sur ton compte, regarde dans le jeu",
-    "pageTitle": "{name} vous a envoyé un cadeau !",
-    "reveal": "Afficher le code",
-    "deliveredToAccount": "Déjà livré sur votre compte.",
-    "privateNote": "Ce lien est privé : ne le partagez pas. Le code ne peut être utilisé qu'une fois.",
-    "shopToo": "Rendez votre compte viral aussi sur HaitiViral"
-  },
   "google": {
     "continue": "Continuer avec Google",
     "or": "ou",

@@ -91,7 +91,7 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
             <div className="flex flex-wrap gap-2">
               {(cfg.balance || smm) && <ActionButton action={testSupplier.bind(null, s.id, "balance")} label="Check balance" />}
               {cfg.token && !smm && <ActionButton action={testSupplier.bind(null, s.id, "token")} label="Test login" />}
-              {(cfg.status || smm) && <ActionButton action={testSupplier.bind(null, s.id, "status")} label="Check an order" prompt="Our reference (hg-…) to check" />}
+              {(cfg.status || smm) && <ActionButton action={testSupplier.bind(null, s.id, "status")} label="Check an order" prompt="Our reference (hv-…) to check" />}
             </div>
             <div>
               <span className="label">Callback URL (give it to the supplier if it can notify you)</span>

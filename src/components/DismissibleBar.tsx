@@ -11,7 +11,7 @@ function hash(s: string) {
 
 export function DismissibleBar({ id, text, link }: { id: string; text: string; link: string }) {
   const tc = useTranslations("common");
-  const key = `hg_ann_${hash(id)}`;
+  const key = `hv_ann_${hash(id)}`;
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
     try {

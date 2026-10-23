@@ -9,4 +9,4 @@ export function isIos() {
 export function isInAppBrowser() {
   return /FBAN|FBAV|Instagram|Line\/|TikTok|Snapchat|WhatsApp|musical_ly|BytedanceWebview/i.test(navigator.userAgent);
 }
-export const INSTALL_EVENT = "hg:install";
+export const INSTALL_EVENT = "hv:install";

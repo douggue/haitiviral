@@ -11,7 +11,9 @@ export const metadata = { title: "Support request" };
 
 const TEMPLATES = [
   "Mèsi, nou resevwa demann ou. N ap tcheke sa kounye a.",
-  "Kòmand ou livre. Tanpri verifye kont jwèt ou epi fè nou konnen.",
+  "Kòmand ou fini. Tanpri verifye kont ou (li dwe piblik) epi fè nou konnen.",
+  "Founisè a ap travay sou kòmand ou. Vitès la ka chanje lè sèvis la chaje, tanpri tann kèk èdtan ankò.",
+  "Nou voye yon refill bay founisè a. L ap kòmanse nan kèk èdtan.",
   "Nou bezwen nimewo referans NatCash la pou n ka verifye peman an.",
   "Nou ranbouse lajan an nan bous HaitiViral ou.",
 ];

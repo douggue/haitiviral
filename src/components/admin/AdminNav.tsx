@@ -15,7 +15,7 @@ function useAdminTheme() {
     document.documentElement.classList.toggle("dark", next);
     setDark(next);
     try {
-      localStorage.setItem("hg_admin_theme", next ? "dark" : "light");
+      localStorage.setItem("hv_admin_theme", next ? "dark" : "light");
     } catch {}
   };
   return { dark, toggle };

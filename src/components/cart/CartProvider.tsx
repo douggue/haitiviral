@@ -37,8 +37,8 @@ type StoreCtx = {
 };
 
 const Ctx = createContext<StoreCtx | null>(null);
-const STORAGE_KEY = "hg_cart_v2";
-const OLD_KEY = "hg_cart_v1";
+const STORAGE_KEY = "hv_cart_v2";
+const OLD_KEY = "hv_cart_v1";
 
 /** What this device keeps: the lines, when they last changed, and whether they were added while signed out. */
 type Stored = { lines: CartLine[]; updatedAt: number; guest: boolean };

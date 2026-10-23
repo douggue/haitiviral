@@ -56,9 +56,9 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   setRequestLocale(locale);
   const [settings, currency, t, user, hdrs, jar] = await Promise.all([getDisplaySettings(), getDisplayCurrency(), getTranslations("common"), getUser(), headers(), cookies()]);
   // Data saver: the visitor's toggle, or the browser's Save-Data signal.
-  const dataSaver = jar.get("hg_ds")?.value === "1" || (jar.get("hg_ds")?.value !== "0" && hdrs.get("save-data") === "on");
+  const dataSaver = jar.get("hv_ds")?.value === "1" || (jar.get("hv_ds")?.value !== "0" && hdrs.get("save-data") === "on");
   // Light/dark: the visitor's saved choice (cookie), else the store default. Rendered by the server, so it never flashes.
-  const themeCookie = jar.get("hg_theme")?.value;
+  const themeCookie = jar.get("hv_theme")?.value;
   const dark = themeCookie ? themeCookie === "dark" : fullTheme(settings.theme).defaultMode === "dark";
 
   return (

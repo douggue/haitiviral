@@ -4,7 +4,7 @@
 
 /* Brand palette: light ground, navy accent, Haitian red for the brand word. Admin → Appearance overrides these per store (theme-css.ts). */
 :root {
-  --hg-css: 1; /* checked by cssGuardScript: proves the stylesheet loaded */
+  --hv-css: 1; /* checked by cssGuardScript: proves the stylesheet loaded */
   --bg: #f5f6fb;
   --surface: #ffffff;
   --surface-2: #eef0f6;

@@ -47,7 +47,7 @@ export async function requestTrial(userId: string, input: { offer: string; link:
 
   const h = await headers();
   const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
-  const deviceId = /(?:^|;\s*)hg_dev=([A-Za-z0-9_-]{16,64})/.exec(h.get("cookie") ?? "")?.[1] ?? null;
+  const deviceId = /(?:^|;\s*)hv_dev=([A-Za-z0-9_-]{16,64})/.exec(h.get("cookie") ?? "")?.[1] ?? null;
   const since = new Date(Date.now() - 86400000);
   const [taken, sameDevice, perIp, today] = await Promise.all([
     prisma.trialRequest.findFirst({ where: { OR: [{ userId }, { link: link.url }, { phone }] } }),

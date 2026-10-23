@@ -14,7 +14,7 @@ export function DataSaverToggle() {
         onChange={(e) => {
           const v = e.target.checked;
           setOn(v);
-          document.cookie = `hg_ds=${v ? "1" : "0"}; path=/; max-age=31536000; samesite=lax`;
+          document.cookie = `hv_ds=${v ? "1" : "0"}; path=/; max-age=31536000; samesite=lax`;
           document.documentElement.classList.toggle("data-saver", v);
         }}
       />

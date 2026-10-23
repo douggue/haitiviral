@@ -32,7 +32,7 @@ export async function queueSupplierLines(tx: Tx, orderId: string) {
   for (const i of items) {
     if (!i.variant.supplierId || !i.variant.supplier?.isEnabled) continue;
     // The service id is kept on the attempt, so changing the choice's link later doesn't touch orders already placed.
-    await tx.supplierOrder.create({ data: { supplierId: i.variant.supplierId, orderItemId: i.id, ref: `hg-${i.id}`, sku: i.variant.supplierSku } });
+    await tx.supplierOrder.create({ data: { supplierId: i.variant.supplierId, orderItemId: i.id, ref: `hv-${i.id}`, sku: i.variant.supplierSku } });
   }
 }
 
@@ -207,7 +207,7 @@ export async function retrySupplierLine(supplierOrderId: string) {
   const attempt = so.orderItem.supplierOrders.length + 1;
   await prisma.$transaction([
     prisma.supplierOrder.update({ where: { id: so.id }, data: { status: "CLOSED" } }),
-    prisma.supplierOrder.create({ data: { supplierId: so.supplierId, orderItemId: so.orderItemId, ref: `hg-${so.orderItemId}-${attempt}`, sku: so.sku } }),
+    prisma.supplierOrder.create({ data: { supplierId: so.supplierId, orderItemId: so.orderItemId, ref: `hv-${so.orderItemId}-${attempt}`, sku: so.sku } }),
   ]);
   const delivered = await sendQueued(so.orderItem.orderId);
   await finishOrders(delivered);

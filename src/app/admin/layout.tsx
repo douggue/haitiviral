@@ -16,7 +16,7 @@ export default async function AdminRootLayout({ children }: { children: React.Re
   return (
     <html lang="en" suppressHydrationWarning className={`${sans.variable} ${display.variable}`} data-motion="calm">
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript("light", "hg_admin_theme") }} />
+        <script dangerouslySetInnerHTML={{ __html: themeScript("light", "hv_admin_theme") }} />
         <script dangerouslySetInnerHTML={{ __html: cssGuardScript }} />
         {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
       </head>

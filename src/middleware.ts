@@ -17,11 +17,11 @@ export default function middleware(req: NextRequest) {
   const res = intl(inHaitiWithoutChoice(req) ? withLanguage(req, "ht") : req);
   const ref = req.nextUrl.searchParams.get("ref");
   if (ref && /^[A-Z0-9]{6,12}$/i.test(ref)) {
-    res.cookies.set("hg_ref", ref.toUpperCase(), { path: "/", maxAge: 60 * 60 * 24 * 30, sameSite: "lax", httpOnly: true });
+    res.cookies.set("hv_ref", ref.toUpperCase(), { path: "/", maxAge: 60 * 60 * 24 * 30, sameSite: "lax", httpOnly: true });
   }
   // Anonymous browser id, used only to spot several accounts created from one device.
-  if (!req.cookies.get("hg_dev")) {
-    res.cookies.set("hg_dev", crypto.randomUUID().replace(/-/g, ""), { path: "/", maxAge: 60 * 60 * 24 * 400, sameSite: "lax", httpOnly: true, secure: req.nextUrl.protocol === "https:" });
+  if (!req.cookies.get("hv_dev")) {
+    res.cookies.set("hv_dev", crypto.randomUUID().replace(/-/g, ""), { path: "/", maxAge: 60 * 60 * 24 * 400, sameSite: "lax", httpOnly: true, secure: req.nextUrl.protocol === "https:" });
   }
   // The saved language (NEXT_LOCALE) is written only when the visitor picks one (saveLocalePreference).
   // next-intl would also write it on every page response, including the background prefetch of each

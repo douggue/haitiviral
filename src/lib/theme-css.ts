@@ -39,14 +39,14 @@ export function themeAttrs(theme: Partial<ThemeConfig> | undefined) {
 }
 
 /** Runs before paint: the visitor's own choice wins, else the store's default mode. */
-export function themeScript(defaultMode: "dark" | "light", key = "hg_theme") {
+export function themeScript(defaultMode: "dark" | "light", key = "hv_theme") {
   // The visitor's choice wins; it is also copied into a cookie so the server can render the right theme next time.
   return `try{var t=localStorage.getItem('${key}');document.documentElement.classList.toggle('dark',t?t==='dark':${defaultMode === "dark"});if(t&&document.cookie.indexOf('${key}=')<0)document.cookie='${key}='+t+'; path=/; max-age=31536000; samesite=lax'}catch(e){}`;
 }
 
 /**
  * After a new deploy the previous design file is deleted. Safari can bring back a tab from memory that still asks for
- * the old file, and the page shows without any design. If the stylesheet marker (--hg-css, in globals.css) is missing
+ * the old file, and the page shows without any design. If the stylesheet marker (--hv-css, in globals.css) is missing
  * once the page has loaded, reload once to get the current files. At most once a minute, so it can never loop.
  */
-export const cssGuardScript = `(function(){function c(){try{if(getComputedStyle(document.documentElement).getPropertyValue('--hg-css').trim())return;var k='hg_css_reload',l=+sessionStorage.getItem(k)||0;if(Date.now()-l<60000)return;sessionStorage.setItem(k,String(Date.now()));location.reload()}catch(e){}}if(document.readyState==='complete')setTimeout(c,0);else addEventListener('load',function(){setTimeout(c,0)});addEventListener('pageshow',function(e){if(e.persisted)setTimeout(c,0)})})()`;
+export const cssGuardScript = `(function(){function c(){try{if(getComputedStyle(document.documentElement).getPropertyValue('--hv-css').trim())return;var k='hv_css_reload',l=+sessionStorage.getItem(k)||0;if(Date.now()-l<60000)return;sessionStorage.setItem(k,String(Date.now()));location.reload()}catch(e){}}if(document.readyState==='complete')setTimeout(c,0);else addEventListener('load',function(){setTimeout(c,0)});addEventListener('pageshow',function(e){if(e.persisted)setTimeout(c,0)})})()`;

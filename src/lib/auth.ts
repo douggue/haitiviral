@@ -108,7 +108,7 @@ export const auth = betterAuth({
           try {
             const h = (ctx as { headers?: Headers; request?: Request } | null)?.headers ?? (ctx as { request?: Request } | null)?.request?.headers;
             const cookie = h?.get("cookie") ?? "";
-            const code = /(?:^|;\s*)hg_ref=([A-Z0-9]{6,12})/i.exec(cookie)?.[1];
+            const code = /(?:^|;\s*)hv_ref=([A-Z0-9]{6,12})/i.exec(cookie)?.[1];
             const ip = h?.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
             await recordReferral(user.id, code, ip);
           } catch (e) {
@@ -134,7 +134,7 @@ export const auth = betterAuth({
         after: async (session, ctx) => {
           try {
             const h = (ctx as { headers?: Headers; request?: Request } | null)?.headers ?? (ctx as { request?: Request } | null)?.request?.headers;
-            const device = /(?:^|;\s*)hg_dev=([A-Za-z0-9_-]{16,64})/.exec(h?.get("cookie") ?? "")?.[1] ?? null;
+            const device = /(?:^|;\s*)hv_dev=([A-Za-z0-9_-]{16,64})/.exec(h?.get("cookie") ?? "")?.[1] ?? null;
             await recordDevice(session.userId, device, session.ipAddress ?? null, session.userAgent ?? null);
           } catch (e) {
             console.error("device record failed", e);

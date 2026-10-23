@@ -45,10 +45,7 @@ export default async function SettingsPage() {
         <section className="card space-y-4 p-5">
           <h2 className="font-semibold">Exchange rate & wallet</h2>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Field name="htgPerUsd" label="HTG per 1 USD (mid rate)" value={s.htgPerUsd} type="number" hint="Used for USD prices and exchange." />
-            <Field name="exchangeSpreadBps" label="Exchange spread (basis points)" value={s.exchangeSpreadBps} type="number" hint="150 = 1.5% against the customer." />
-            <Field name="exchangeFeeBps" label="Exchange fee (basis points)" value={s.exchangeFeeBps} type="number" />
-            <Field name="exchangeQuoteSeconds" label="Quote validity (seconds)" value={s.exchangeQuoteSeconds} type="number" />
+            <Field name="htgPerUsd" label="HTG per 1 USD (mid rate)" value={s.htgPerUsd} type="number" hint="Provider prices are in dollars: used for costs and profit." />
             <Field name="minDepositHtg" label="Minimum deposit (HTG)" value={m(s.minDepositHtg)} />
             <Field name="maxDepositHtg" label="Maximum deposit (HTG)" value={m(s.maxDepositHtg)} />
           </div>

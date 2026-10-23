@@ -688,21 +688,6 @@
   "phone": {
     "bad": "Nimewo a pa konplè. Egzanp: +509 3456 7890 (oswa +1 809… pou lòt peyi)."
   },
-  "gift": {
-    "shareTitle": "Se yon kado? Voye l bay moun nan",
-    "shareBody": "Peze bouton an, chwazi moun nan nan WhatsApp, epi voye mesaj la.",
-    "shareBodyNote": "Mesaj ou a pare. Peze bouton an, chwazi moun nan nan WhatsApp, epi voye l.",
-    "shareButton": "Voye l sou WhatsApp",
-    "copy": "Kopye mesaj la",
-    "copied": "Kopye!",
-    "messageCode": "🎁 Mwen fè w kado {what}! Louvri lyen sa a pou w wè kòd la:\n{url}",
-    "messageTopup": "🎁 Mwen voye {what} ba ou! Li deja sou kont ou, gade nan jwèt la",
-    "pageTitle": "{name} voye yon kado ba ou!",
-    "reveal": "Montre kòd la",
-    "deliveredToAccount": "Li deja sou kont ou.",
-    "privateNote": "Lyen sa a prive: pa pataje l. Kòd la ka itilize yon sèl fwa.",
-    "shopToo": "Fè kont ou vin viral tou sou HaitiViral"
-  },
   "google": {
     "continue": "Kontinye ak Google",
     "or": "oswa",

@@ -7,8 +7,8 @@ import { INSTALL_EVENT, isInAppBrowser, isIos, isStandalone } from "@/lib/pwa-cl
 
 type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
 
-const OFF_KEY = "hg_install_off";
-const VISITS_KEY = "hg_install_visits";
+const OFF_KEY = "hv_install_off";
+const VISITS_KEY = "hv_install_visits";
 const SNOOZE_MS = 14 * 86_400_000;
 
 function read(key: string) {

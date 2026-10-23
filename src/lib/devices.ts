@@ -2,7 +2,7 @@ import { prisma } from "./db";
 import { getSettings } from "./settings";
 
 /**
- * Remember which browser (hg_dev cookie) and IP each account signs in from.
+ * Remember which browser (hv_dev cookie) and IP each account signs in from.
  * When a browser is already used by too many other accounts, the sign-in is flagged for review
  * (blueprint §8: one person farming several accounts for referral rewards or limits).
  */

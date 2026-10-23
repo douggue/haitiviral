@@ -8,10 +8,7 @@ import { getSettings } from "@/lib/settings";
 import { parseAmount, usdToHtg } from "@/lib/money";
 import { createMoncashPayment, moncashAvailable } from "@/lib/payments/moncash";
 import { assertWithinNewAccountLimit, LimitExceededError } from "@/lib/risk";
-import { postExchange, quoteExchange } from "@/lib/wallet";
-import { InsufficientFundsError } from "@/lib/ledger";
 import { addEvent } from "@/lib/orders";
-import { notify } from "@/lib/notify";
 import { savePrivateImage, uploadsEnabled } from "@/lib/storage";
 import { normalizePhone } from "@/lib/phone";
 import { mustVerifyEmail } from "@/lib/verify-email";
@@ -134,44 +131,4 @@ export async function retryMoncash(orderId: string): Promise<ActionResult<{ redi
   if (!order) return { ok: false, error: "not_found" };
   const intent = await prisma.paymentIntent.create({ data: { userId: user.id, orderId: order.id, provider: "MONCASH", amount: order.total, currency: "HTG" } });
   return { ok: true, redirect: await createMoncashPayment(intent.id, intent.amount) };
-}
-
-export async function requestQuote(from: "HTG" | "USD", amountInput: string): Promise<ActionResult<{ quote: { id: string; from: string; to: string; fromAmount: number; toAmount: number; rate: number; fee: number; expiresAt: string } }>> {
-  const user = await assertUser();
-  if (await mustVerifyEmail(user.id)) return { ok: false, error: "verify_email" };
-  if (from !== "HTG" && from !== "USD") return { ok: false, error: "invalid" };
-  const amount = parseAmount(amountInput);
-  if (!amount || amount > 100_000_000) return { ok: false, error: "invalidAmount" };
-  const settings = await getSettings();
-  const q = quoteExchange(from, amount, settings);
-  if (q.toAmount < 1) return { ok: false, error: "tooSmall" };
-  const expiresAt = new Date(Date.now() + settings.exchangeQuoteSeconds * 1000);
-  const quote = await prisma.exchangeQuote.create({
-    data: { userId: user.id, fromCurrency: from, toCurrency: q.to, fromAmount: amount, toAmount: q.toAmount, rate: new Prisma.Decimal(q.rate.toFixed(8)), feeAmount: q.fee, expiresAt },
-  });
-  return { ok: true, quote: { id: quote.id, from, to: q.to, fromAmount: amount, toAmount: q.toAmount, rate: q.rate, fee: q.fee, expiresAt: expiresAt.toISOString() } };
-}
-
-export async function confirmExchange(quoteId: string): Promise<ActionResult> {
-  const user = await assertUser();
-  if (await mustVerifyEmail(user.id)) return { ok: false, error: "verify_email" };
-  try {
-    await prisma.$transaction(async (tx) => {
-      // Mark used first: the conditional update makes a double-submit a no-op.
-      const used = await tx.exchangeQuote.updateMany({
-        where: { id: quoteId, userId: user.id, usedAt: null, expiresAt: { gt: new Date() } },
-        data: { usedAt: new Date() },
-      });
-      if (used.count !== 1) throw new Error("expired");
-      const q = await tx.exchangeQuote.findUniqueOrThrow({ where: { id: quoteId } });
-      await postExchange(tx, q);
-    });
-  } catch (e) {
-    if (e instanceof InsufficientFundsError) return { ok: false, error: "insufficient" };
-    if (e instanceof Error && e.message === "expired") return { ok: false, error: "quoteExpired" };
-    throw e;
-  }
-  await notify(user.id, "exchange_done", {}, "/account/wallet");
-  revalidatePath("/[locale]/account/wallet", "page");
-  return { ok: true };
 }

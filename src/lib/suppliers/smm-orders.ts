@@ -89,7 +89,7 @@ export async function sendSmm(so: SmmOrder): Promise<void> {
   const backupUsed = so.orderItem.supplierOrders.some((x) => x.supplierId === v.backupSupplierId);
   if (v.backupSupplierId && v.backupSupplier?.isEnabled && v.backupSupplierSku && !backupUsed) {
     const attempt = so.orderItem.supplierOrders.length + 1;
-    const next = await prisma.supplierOrder.create({ data: { supplierId: v.backupSupplierId, orderItemId: so.orderItemId, ref: `hg-${so.orderItemId}-${attempt}`, sku: v.backupSupplierSku } });
+    const next = await prisma.supplierOrder.create({ data: { supplierId: v.backupSupplierId, orderItemId: so.orderItemId, ref: `hv-${so.orderItemId}-${attempt}`, sku: v.backupSupplierSku } });
     await prisma.orderEvent.create({ data: { orderId: so.orderItem.orderId, status: "PROCESSING", note: `Sent to backup provider ${v.backupSupplier.name}` } });
     const claim = await prisma.supplierOrder.updateMany({ where: { id: next.id, status: "QUEUED" }, data: { status: "SENDING" } });
     if (claim.count === 1) await sendSmm(await prisma.supplierOrder.findUniqueOrThrow({ where: { id: next.id }, include: smmInclude }));

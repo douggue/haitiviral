@@ -38,7 +38,7 @@ test("support: photo is added with the picker, previewed and sent with the messa
 
 test("dark mode stays on after changing language on the sign-in page", async ({ browser }) => {
   const ctx = await browser.newContext();
-  await ctx.addInitScript(() => localStorage.setItem("hg_theme", "dark"));
+  await ctx.addInitScript(() => localStorage.setItem("hv_theme", "dark"));
   const p = await ctx.newPage();
   await p.goto("/ht/auth/login");
   await p.waitForLoadState("networkidle");

@@ -15,8 +15,6 @@ import { NatcashOrderForm, MoncashRetryButton } from "@/components/OrderPayment"
 import { WhatsAppIcon } from "@/components/Icons";
 import { ReviewRequest } from "@/components/ReviewRequest";
 import { formatPhone } from "@/lib/phone";
-import { randomToken } from "@/lib/crypto";
-import { GiftShare } from "@/components/GiftShare";
 import { PageBar } from "@/components/PageBar";
 
 export default async function OrderPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
@@ -40,20 +38,6 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
   if (codes.length > 0) await audit(user.id, "code.view.customer", "Order", order.id, { codes: codes.length });
 
   const statusUrl = `${siteUrl()}/${locale}/order-status/${order.id}?t=${order.accessToken}`;
-  // Gift: after delivery, a ready WhatsApp message for the person receiving it (codes go through a private link).
-  let giftText: string | null = null;
-  if (order.status === "FULFILLED") {
-    const tg = await getTranslations("gift");
-    const what = order.items.map((i) => `${t(i.variantName, locale)} ${t(i.productName, locale)}`).join(", ");
-    const note = order.recipientNote ? `"${order.recipientNote}"\n\n` : "";
-    if (codes.length > 0) {
-      const token = order.giftToken ?? (await prisma.order.update({ where: { id: order.id }, data: { giftToken: randomToken(24) } })).giftToken!;
-      giftText = `${note}${tg("messageCode", { what, url: `${siteUrl()}/${locale}/gift/${token}` })}`;
-    } else {
-      const ids = order.items.flatMap((i) => Object.values(i.fieldValues as Record<string, string>)).filter(Boolean).join(", ");
-      giftText = `${note}${tg("messageTopup", { what })}${ids ? ` (${ids})` : ""}\n\n— HaitiViral · haitiviral.com`;
-    }
-  }
   const helpText = encodeURIComponent(`${tc("whatsappMessage")} ${to("title", { number: order.number })} ${statusUrl}`);
   const lastPayment = order.payments[0];
 
@@ -161,7 +145,6 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
         {order.recipientNote && <p className="p-5 text-sm"><span className="text-muted">{to("recipientNote")}:</span> {order.recipientNote}</p>}
       </section>
 
-      {giftText && <GiftShare text={giftText} hasNote={!!order.recipientNote} />}
 
       <section className="card p-5">
         <h2 className="mb-4 font-semibold">{to("timeline")}</h2>

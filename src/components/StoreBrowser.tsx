@@ -37,8 +37,8 @@ export type StoreCategory = { slug: string; name: string; icon: string | null; t
 
 type Init = { q: string; category: string; sort: string; tags: string[]; min: string; max: string };
 
-const VIEW_KEY = "hg_store_view";
-const FAV_KEY = "hg_favorites";
+const VIEW_KEY = "hv_store_view";
+const FAV_KEY = "hv_favorites";
 
 function readList(key: string): string[] {
   try {

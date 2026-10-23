@@ -5,9 +5,9 @@ import Image from "next/image";
 import { CloseIcon } from "./Icons";
 import type { FeedSale } from "@/lib/trust";
 
-const COUNT_KEY = "hg_pop_count";
-const OFF_KEY = "hg_pop_off";
-const SEEN_KEY = "hg_pop_seen";
+const COUNT_KEY = "hv_pop_count";
+const OFF_KEY = "hv_pop_off";
+const SEEN_KEY = "hv_pop_seen";
 const SHOW_MS = 3500;
 
 function session(key: string): string | null {
