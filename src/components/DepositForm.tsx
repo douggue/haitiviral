@@ -198,9 +198,10 @@ export function DepositForm(p: Props) {
         <label className="flex items-center gap-2 text-sm">
           <span className="text-muted">{tu("otherAmount")}</span>
           <span className="relative flex-1">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-muted">{crypto ? "$" : "G"}</span>
+            {crypto && <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-muted">$</span>}
             <input id="amount" name="amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value.replace(",", "."))} required
-              className="h-11 w-full rounded-xl border border-[#CBD2E1] bg-surface pl-8 pr-3 text-base font-bold dark:border-border" />
+              className={`h-11 w-full rounded-xl border border-[#CBD2E1] bg-surface text-base font-bold dark:border-border ${crypto ? "pl-8 pr-3" : "pl-3 pr-14"}`} />
+            {!crypto && <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 font-semibold text-muted">HTG</span>}
           </span>
         </label>
         <p className="text-xs text-muted">{hint}</p>

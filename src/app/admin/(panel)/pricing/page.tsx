@@ -9,7 +9,7 @@ import { ActionButton, ActionForm } from "@/components/admin/ActionButton";
 
 export const metadata = { title: "Pricing & profit" };
 
-const g = (c: number) => `${c < 0 ? "−" : ""}G ${Math.abs(Math.round(c / 100)).toLocaleString("en-US")}`;
+const g = (c: number) => `${c < 0 ? "−" : ""}${Math.abs(Math.round(c / 100)).toLocaleString("en-US")} HTG`;
 const card = "rounded-[14px] border border-[#E5E7EF] bg-surface p-[18px] dark:border-border";
 const pill = "whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold";
 const STATUS = {

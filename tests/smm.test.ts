@@ -44,7 +44,7 @@ describe("provider service ids", () => {
 describe("real profit", () => {
   const s = { htgPerUsd: 131.5, paymentFeePct: 3, minProfitPct: 15 };
   it("counts the biggest VIP discount and the payment fee", () => {
-    const p = profitOf(42000, 1.8, s); // G 420 per 1K, provider $1.80
+    const p = profitOf(42000, 1.8, s); // 420 HTG per 1K, provider $1.80
     expect(p.costHtg).toBe(23670);
     expect(p.vip).toBe(3360);
     expect(p.fee).toBe(1159);

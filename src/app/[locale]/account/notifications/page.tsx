@@ -9,7 +9,7 @@ import { InstallCard } from "@/components/InstallCard";
 
 const KIND: Record<string, [bg: string, fg: string, icon: string]> = {
   ok: ["#DCFCE7", "#166534", "✓"],
-  money: ["#DBEAFE", "#1E40AF", "G"],
+  money: ["#DBEAFE", "#1E40AF", "+"],
   refund: ["#FEF3C7", "#92400E", "↺"],
   warn: ["#FEE2E2", "#991B1B", "!"],
   promo: ["#FCE7F3", "#9D174D", "%"],

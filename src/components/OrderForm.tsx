@@ -77,7 +77,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0 }:
   const ready = signedIn && check?.ok && !rangeError && !short && (!isHigh || accepted) && (meta.type !== "commentLikes" || username.trim().length > 0) && !tier.soldOut;
   const chips = meta.min >= 500 ? [1000, 5000, 10000, 50000] : [100, 500, 1000, 5000];
   const fmt = (n: number) => formatMoney(n, "HTG", locale);
-  const priceLabel = hasComments ? `G ${(tier.rate / 100 / 1000).toFixed(2)}` : fmt(tier.rate);
+  const priceLabel = hasComments ? `${(tier.rate / 100 / 1000).toFixed(2)} HTG` : fmt(tier.rate);
   const durLabel = (m: number) => (m >= 60 ? t("hours", { n: m / 60 }) : t("minutes", { n: m }));
 
   const pickTier = (i: number) => {
@@ -156,7 +156,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0 }:
           {service.tiers.map((x, i) => {
             const on = x.id === tier.id;
             const per = x.meta.type === "comments" || x.meta.type === "liveComments" ? t("perComment") : x.meta.type === "live" ? t("per1000live") : t("per1000");
-            const price = x.meta.type === "comments" || x.meta.type === "liveComments" ? `G ${(x.rate / 100 / 1000).toFixed(2)}` : fmt(x.rate);
+            const price = x.meta.type === "comments" || x.meta.type === "liveComments" ? `${(x.rate / 100 / 1000).toFixed(2)} HTG` : fmt(x.rate);
             return (
               <div key={x.id} className={`flex items-stretch rounded-[14px] border-2 bg-surface ${on ? "border-text shadow-[0_0_0_3px_#E2E8F0] dark:shadow-none" : "border-border"} ${x.soldOut ? "opacity-50" : ""}`}>
                 <button type="button" aria-pressed={on} disabled={x.soldOut} onClick={() => pickTier(i)} className="flex min-w-0 flex-1 flex-col gap-1.5 py-3 pl-3.5 text-left">

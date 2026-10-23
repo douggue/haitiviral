@@ -3,7 +3,7 @@ import type { Currency } from "@prisma/client";
 // "en" is used by the English back office.
 const intlLocale: Record<string, string> = { ht: "fr-HT", fr: "fr-HT", en: "en-US" };
 
-/** Format integer minor units (centimes / cents) for display. Gourdes as in the mockup: "G 1,250" (or "G 12.50"). */
+/** Format integer minor units (centimes / cents) for display. Gourdes the Haitian way, amount first: "1,250 HTG" (or "12.50 HTG"). */
 export function formatMoney(minor: number, currency: Currency, locale = "ht"): string {
   const value = minor / 100;
   if (currency === "HTG") {
@@ -11,7 +11,7 @@ export function formatMoney(minor: number, currency: Currency, locale = "ht"): s
       minimumFractionDigits: value % 1 === 0 ? 0 : 2,
       maximumFractionDigits: 2,
     }).format(Math.abs(value));
-    return `${value < 0 ? "−" : ""}G ${n}`;
+    return `${value < 0 ? "−" : ""}${n} HTG`;
   }
   return new Intl.NumberFormat(intlLocale[locale] ?? "en-US", { style: "currency", currency: "USD" }).format(value);
 }

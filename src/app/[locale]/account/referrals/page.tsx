@@ -85,7 +85,7 @@ export default async function ReferralsPage({ params }: { params: Promise<{ loca
                 </span>
               </span>
               <span className={`text-sm font-bold ${r.status === "REWARDED" ? "text-[#166534] dark:text-success" : r.status === "REJECTED" ? "text-[#991B1B]" : "text-muted"}`}>
-                {r.status === "REWARDED" ? `+ ${formatMoney(r.rewardAmount ?? 0, "HTG", locale)}` : r.status === "REJECTED" ? "—" : "G 0"}
+                {r.status === "REWARDED" ? `+ ${formatMoney(r.rewardAmount ?? 0, "HTG", locale)}` : r.status === "REJECTED" ? "—" : formatMoney(0, "HTG", locale)}
               </span>
             </div>
           ))}

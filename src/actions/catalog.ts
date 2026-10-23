@@ -128,7 +128,7 @@ export async function setChoicePrice(variantId: string, gourdes: string): Promis
     const r = await applyProfitRules();
     await audit(staff.id, "choice.price", "ProductVariant", variantId, { from: before.priceHtg, to: v });
     refresh();
-    return { ok: true, message: `G ${(v / 100).toLocaleString("en-US")}${r.resumed ? " · back on" : r.paused ? " · paused (loss)" : ""}` };
+    return { ok: true, message: `${(v / 100).toLocaleString("en-US")} HTG${r.resumed ? " · back on" : r.paused ? " · paused (loss)" : ""}` };
   } catch (e) {
     return fail(e);
   }
