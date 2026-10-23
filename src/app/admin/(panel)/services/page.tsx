@@ -147,6 +147,9 @@ export default async function ServicesAdmin({ searchParams }: { searchParams: Pr
                         <select name="cancel" defaultValue={c.meta.info?.cancel === true ? "yes" : c.meta.info?.cancel === false ? "no" : ""} className={field} aria-label="Cancel button">
                           <option value="">Cancel button: not shown</option><option value="yes">Cancel button: yes</option><option value="no">Cancel button: no</option>
                         </select>
+                        <select name="postType" defaultValue={c.meta.postType ?? ""} className={field} aria-label="Post type">
+                          <option value="">Posts accepted: any</option><option value="reel">Instagram reels only</option><option value="shorts">YouTube Shorts only</option><option value="video">Normal videos only (no Shorts/reels)</option>
+                        </select>
                         <input name="refillDays" defaultValue={c.meta.refillDays} inputMode="numeric" placeholder="Refill days (0 = none)" className={field} aria-label="Refill days" />
                         <input name="avg_ht" defaultValue={c.meta.avg.ht ?? ""} placeholder="Average time · Kreyòl" className={field} aria-label="Average time Kreyòl" />
                         <input name="avg_fr" defaultValue={c.meta.avg.fr ?? ""} placeholder="Average time · Français" className={field} aria-label="Average time French" />

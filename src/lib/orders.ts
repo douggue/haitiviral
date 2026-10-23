@@ -13,7 +13,8 @@ import { maybeRewardReferral } from "./referrals";
 import { amountInRange, isExchangeProduct, quoteAmount } from "./amount";
 import { hasOpenSupplierOrder, queueSupplierLines, sendQueued } from "./suppliers/orders";
 import { vipStatus, withDiscount } from "./vip";
-import { checkLink, DRIP_INTERVAL_MIN, DRIP_RUNS, LIVE_DURATIONS, parseComments, parseMeta, productKind, servicePrice, wantsPost } from "./services";
+import { resolveShortLink } from "./link-resolve";
+import { checkLink, isShortLink, DRIP_INTERVAL_MIN, DRIP_RUNS, LIVE_DURATIONS, parseComments, parseMeta, productKind, servicePrice, wantsPost } from "./services";
 
 export type FieldDef = {
   key: string;
@@ -166,6 +167,8 @@ export type ServiceOrderInput = {
   durationMin?: number;
   drip?: boolean;
   acceptRisk?: boolean;
+  /** The customer ticked "my account is public" */
+  publicOk?: boolean;
 };
 
 /**
@@ -182,15 +185,26 @@ export async function createServiceOrder(input: ServiceOrderInput) {
   // Admin → Services & risk: a paused platform takes no new orders.
   if ((await getSettings()).serviceStatus?.[v.product.category.slug] === "pause") throw new OrderError("unavailable");
   const kind = productKind(v.product.tags);
-  const link = checkLink(input.link, v.product.category.slug, wantsPost(kind, meta.type));
+  const slug = v.product.category.slug;
+  const post = wantsPost(kind, meta.type);
+  let link = checkLink(input.link, slug, post, meta.postType);
   if (!link.ok) throw new OrderError("invalid_link");
+  // Short share links: open them to see if they really point to a video or a profile, and keep the full address.
+  if (isShortLink(link.url, slug)) {
+    const full = await resolveShortLink(link.url);
+    if (full) {
+      link = checkLink(full, slug, post, meta.postType);
+      if (!link.ok) throw new OrderError(`link_${link.error}`);
+    }
+  }
+  if (!input.publicOk) throw new OrderError("not_public");
   // One order at a time per link and service: providers count from one start number, so two at once get mixed up.
   const running = await prisma.orderItem.count({
     where: { variant: { productId: v.productId }, fieldValues: { path: ["link"], equals: link.url }, order: { status: { in: ["PAID", "PROCESSING"] } } },
   });
   if (running) throw new OrderError("same_link");
 
-  const fieldValues: Record<string, string> = { link: link.url };
+  const fieldValues: Record<string, string> = { link: link.url, publicConfirmedAt: new Date().toISOString() };
   let quantity = input.quantity;
   if (meta.type === "comments" || meta.type === "liveComments") {
     const lines = parseComments(input.comments ?? "");

@@ -26,6 +26,8 @@ export type ServiceMeta = {
   about?: Record<string, string>;
   /** Details card on the order screen: quality, speed, start, drop, location, cancel */
   info?: ServiceInfo;
+  /** Only this kind of post (Instagram reels, YouTube Shorts or normal videos); none = any post */
+  postType?: PostType;
   /** Staff set the risk level by hand: "Re-analyze all" leaves it alone */
   riskLocked?: boolean;
   /** Turned off by the risk analysis (blocked words) or because it sold at a loss: turned back on automatically when fixed */
@@ -53,6 +55,7 @@ export function parseMeta(v: unknown): ServiceMeta | null {
     desc: m.desc,
     about: m.about && typeof m.about === "object" ? m.about : undefined,
     info: cleanInfo(m.info),
+    postType: m.postType === "reel" || m.postType === "shorts" || m.postType === "video" ? m.postType : undefined,
     riskLocked: !!m.riskLocked,
     blocked: !!m.blocked,
     pausedLoss: !!m.pausedLoss,
@@ -99,13 +102,45 @@ export function linkExample(platform: string, post: boolean) {
   return r ? (post ? r.postEx : r.profileEx) : "https://…";
 }
 
-export type LinkCheck = { ok: true; url: string } | { ok: false; error: "empty" | "not_platform" | "need_post" | "need_profile" };
+export type LinkCheck = { ok: true; url: string } | { ok: false; error: "empty" | "not_platform" | "need_post" | "need_profile" | "need_reel" | "need_shorts" | "need_video" };
+/** Which kind of post a service accepts, set per choice in Admin → Services & risk (default: any post). */
+export type PostType = "reel" | "shorts" | "video";
 
-/** Checks a pasted link: right platform, and a profile or a video as the service needs. Tracking extras are dropped. */
-export function checkLink(raw: string, platform: string, post: boolean): LinkCheck {
+/** Profile address built from a username ("@mika" or "mika"), for services that need a profile. */
+const PROFILE_URL: Record<string, (name: string) => string> = {
+  tiktok: (n) => `https://www.tiktok.com/@${n}`,
+  instagram: (n) => `https://www.instagram.com/${n}`,
+  youtube: (n) => `https://www.youtube.com/@${n}`,
+  facebook: (n) => `https://www.facebook.com/${n}`,
+  x: (n) => `https://x.com/${n}`,
+  telegram: (n) => `https://t.me/${n}`,
+};
+
+/** True for share links that hide where they go (vm.tiktok.com, fb.watch): the server opens them to find out. */
+export function isShortLink(url: string, platform: string) {
+  try {
+    const host = new URL(url).hostname.toLowerCase().replace(/^(www|m|mobile)\./, "");
+    return platform !== "youtube" && !!RULES[platform]?.shortHosts.test(host);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Checks a pasted link: right platform, and a profile or a video as the service needs. Tracking extras are dropped.
+ * A bare username ("@mika") is turned into the profile link. Short share links can't be read in the browser, so they
+ * pass here and the server opens them (link-resolve.ts) to check what they really point to.
+ */
+export function checkLink(raw: string, platform: string, post: boolean, postType?: PostType): LinkCheck {
   const text = raw.trim();
   if (!text) return { ok: false, error: "empty" };
   const rule = RULES[platform];
+  const handle = /^@?([A-Za-z0-9._-]{2,40})$/.exec(text);
+  // "@mika" or "mika" (a dot without "@" looks like a web address, e.g. "tiktok.com", so it is read as a link)
+  if (handle && (text.startsWith("@") || !text.includes("."))) {
+    if (post || !PROFILE_URL[platform]) return { ok: false, error: post ? "need_post" : "not_platform" };
+    return { ok: true, url: PROFILE_URL[platform](handle[1]) };
+  }
   let u: URL;
   try {
     u = new URL(/^https?:\/\//i.test(text) ? text : `https://${text}`);
@@ -114,9 +149,19 @@ export function checkLink(raw: string, platform: string, post: boolean): LinkChe
   }
   const host = u.hostname.toLowerCase().replace(/^(www|m|mobile)\./, "");
   if (!rule || !rule.host.test(host)) return { ok: false, error: "not_platform" };
-  const isPost = rule.shortHosts.test(host) || rule.post.test(u.pathname);
-  if (post && !isPost) return { ok: false, error: "need_post" };
-  if (!post && isPost && !/\/live(\/|$)/.test(u.pathname)) return { ok: false, error: "need_profile" };
+  const short = rule.shortHosts.test(host);
+  // youtu.be is always a video; other short links are checked on the server once opened.
+  const isPost = (short && platform === "youtube") || rule.post.test(u.pathname);
+  if (!short || platform === "youtube") {
+    if (post && !isPost) return { ok: false, error: "need_post" };
+    if (!post && isPost && !/\/live(\/|$)/.test(u.pathname)) return { ok: false, error: "need_profile" };
+  }
+  if (post && postType && !(short && platform !== "youtube")) {
+    const path = u.pathname;
+    if (postType === "reel" && !/^\/(reel|reels|tv)\//.test(path) && !/\/reel\//.test(path)) return { ok: false, error: "need_reel" };
+    if (postType === "shorts" && !/^\/shorts\//.test(path)) return { ok: false, error: "need_shorts" };
+    if (postType === "video" && (/^\/shorts\//.test(path) || /\/reel\//.test(path))) return { ok: false, error: "need_video" };
+  }
   for (const k of [...u.searchParams.keys()]) if (/^(igsh|igshid|utm_|si$|_r$|_t$|is_from_webapp|sender_device|feature)/.test(k)) u.searchParams.delete(k);
   u.hash = "";
   u.protocol = "https:";

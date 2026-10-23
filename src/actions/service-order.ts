@@ -15,6 +15,7 @@ const input = z.object({
   durationMin: z.number().int().optional(),
   drip: z.boolean().optional(),
   acceptRisk: z.boolean().optional(),
+  publicOk: z.boolean().optional(),
 });
 
 export type ServiceOrderResult = { ok: true; orderId: string } | { ok: false; error: string };

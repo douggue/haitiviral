@@ -822,7 +822,14 @@
     "readHow4": "Gardez le compte PUBLIC et ne changez pas votre nom d'utilisateur pendant la commande.",
     "readTicket": "Si quelque chose ne va pas, ouvrez un ticket ou écrivez-nous sur WhatsApp avec le numéro de commande.",
     "noUpdates": "Pas de nouveautés pour le moment.",
-    "error_same_link": "Une commande est déjà en cours sur ce lien pour le même service. Attendez qu'elle se termine avant de recommander."
+    "error_same_link": "Une commande est déjà en cours sur ce lien pour le même service. Attendez qu'elle se termine avant de recommander.",
+    "err_need_reel": "Ce service est pour les REELS seulement. Mettez le lien d'un reel (instagram.com/reel/…).",
+    "err_need_shorts": "Ce service est pour les SHORTS seulement. Mettez le lien d'un Short (youtube.com/shorts/…).",
+    "err_need_video": "Ce service est pour les vidéos normales seulement, pas les Shorts ni les reels.",
+    "err_empty": "Mettez le lien.",
+    "publicConfirm": "Je confirme que mon compte est PUBLIC (pas privé) et que je ne change pas mon nom d'utilisateur pendant la commande.",
+    "error_not_public": "Confirmez que votre compte est public avant de commander.",
+    "okHandle": "Nous utiliserons ce profil."
   },
   "ordersUi": {
     "title": "Mes commandes",

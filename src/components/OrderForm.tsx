@@ -52,6 +52,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
   const [dur, setDur] = useState(30);
   const [drip, setDrip] = useState(false);
   const [accepted, setAccepted] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
   const [comments, setComments] = useState("");
   const [username, setUsername] = useState("");
   const [sheet, setSheet] = useState<null | "drip" | "risk">(null);
@@ -70,7 +71,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
   const commentList = parseComments(comments);
   const quantity = hasComments ? commentList.length : Number(qty) || 0;
   const total = withDiscount(servicePrice(tier.rate, quantity, meta.type, dur), discount);
-  const check = link.trim() ? checkLink(link, platform.slug, post) : null;
+  const check = link.trim() ? checkLink(link, platform.slug, post, meta.postType) : null;
   const linkError = check && !check.ok ? t(`err_${check.error === "empty" ? "not_platform" : check.error}`, { platform: platform.name, example: linkExample(platform.slug, post) }) : "";
   const linkOk = check?.ok ? (liveAny ? t("okLive") : post ? t("okPost") : t("okProfile")) : "";
   const rangeError = hasComments
@@ -78,7 +79,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
     : quantity < meta.min || quantity > meta.max ? t("range", { min: num(meta.min), max: num(meta.max) }) : "";
   const short = balance !== null && total > balance;
   const isHigh = meta.risk === "high";
-  const ready = signedIn && check?.ok && !rangeError && !short && (!isHigh || accepted) && (meta.type !== "commentLikes" || username.trim().length > 0) && !tier.soldOut;
+  const ready = signedIn && check?.ok && !rangeError && !short && (!isHigh || accepted) && isPublic && (meta.type !== "commentLikes" || username.trim().length > 0) && !tier.soldOut;
   const chips = meta.min >= 500 ? [1000, 5000, 10000, 50000] : [100, 500, 1000, 5000];
   const fmt = (n: number) => formatMoney(n, "HTG", locale);
   const priceLabel = hasComments ? `${(tier.rate / 100 / 1000).toFixed(2)} HTG` : fmt(tier.rate);
@@ -100,8 +101,10 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
         durationMin: isLive ? dur : undefined,
         drip: meta.drip && drip,
         acceptRisk: accepted,
+        publicOk: isPublic,
       });
       if (r.ok) router.push(`/account/orders/${r.orderId}`);
+      else if (r.error.startsWith("link_")) setError(t(`err_${r.error.slice(5)}`, { platform: platform.name, example: linkExample(platform.slug, post) }));
       else setError(t.has(`error_${r.error}`) ? t(`error_${r.error}`) : t("error_generic"));
     });
   };
@@ -281,6 +284,11 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
             </p>
           )}
         </section>
+
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-border bg-surface p-3.5 text-[13px] leading-normal">
+          <input type="checkbox" checked={isPublic} onChange={() => setIsPublic((v) => !v)} className="m-0 h-[22px] w-[22px] flex-none accent-[#0F172A]" />
+          <span>{t("publicConfirm")}</span>
+        </label>
 
         {isHigh && (
           <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border-2 border-[#FCA5A5] bg-[#FEF2F2] p-3.5 text-[13px] leading-normal text-[#7F1D1D]">

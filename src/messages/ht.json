@@ -822,7 +822,14 @@
     "readHow4": "Kite kont ou PIBLIK epi pa chanje non itilizatè w pandan kòmand lan ap fèt.",
     "readTicket": "Si yon bagay pa mache, ouvri yon tikè oswa ekri nou sou WhatsApp ak nimewo kòmand lan.",
     "noUpdates": "Pa gen nouvèl pou kounye a.",
-    "error_same_link": "Gen yon kòmand ki ap fèt deja sou lyen sa a pou menm sèvis la. Tann li fini anvan w kòmande ankò."
+    "error_same_link": "Gen yon kòmand ki ap fèt deja sou lyen sa a pou menm sèvis la. Tann li fini anvan w kòmande ankò.",
+    "err_need_reel": "Sèvis sa a se pou REEL sèlman. Mete lyen yon reel (instagram.com/reel/…).",
+    "err_need_shorts": "Sèvis sa a se pou SHORTS sèlman. Mete lyen yon Short (youtube.com/shorts/…).",
+    "err_need_video": "Sèvis sa a se pou videyo nòmal sèlman, pa Shorts oswa reel.",
+    "err_empty": "Mete lyen an.",
+    "publicConfirm": "Mwen konfime kont mwen PIBLIK (pa prive) epi m pap chanje non itilizatè m pandan kòmand lan.",
+    "error_not_public": "Konfime kont ou piblik anvan w kòmande.",
+    "okHandle": "Nou pral itilize pwofil sa a."
   },
   "ordersUi": {
     "title": "Kòmand mwen yo",

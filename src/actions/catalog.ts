@@ -246,6 +246,7 @@ export async function saveChoiceDetails(variantId: string, form: FormData): Prom
       avg: { ht: str("avg_ht", 40) || meta.avg.ht, fr: str("avg_fr", 40) || meta.avg.fr },
       refillDays: Number.isInteger(refill) && refill >= 0 && refill <= 365 ? refill : meta.refillDays,
       info,
+      postType: (["reel", "shorts", "video"] as const).find((x) => x === str("postType")),
     };
     await prisma.productVariant.update({ where: { id: variantId }, data: { service: next } });
     await audit(staff.id, "choice.details", "ProductVariant", variantId, { info, refillDays: next.refillDays });
