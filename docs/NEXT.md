@@ -117,6 +117,13 @@ Status: **noted only**. Nothing here is built. The owner decides the order befor
       - **Device ID and disposable-email list:** built in, free.
     - **To decide:** the phone number dedicated to WhatsApp Business, and whether low-risk trials are approved automatically.
 
+14. **Ideas seen on smmresellershub.com (to decide, not agreed yet).**
+    - **Subscription / auto orders:** likes or views sent automatically to each new post for X days.
+    - **Mass order:** many links in one go (useful for resellers).
+    - **"Ask AI" helper button:** answers customer questions in Kreyòl/French.
+    - **Community links bar** at the bottom of the menu: Telegram, WhatsApp channel, review sites (Trustpilot, Google).
+    - **Refills / Refunds pages:** list of the customer's refill and refund requests.
+
 ## Waiting on preview (not on `main` yet)
 - One Private Blob store for every upload (public images served through `/media/…`).
 - `docs/DEPLOY.md` updated: Private Blob, the 5-minute order check with cron-job.org, SMM steps.
