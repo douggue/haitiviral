@@ -6,6 +6,7 @@ import { parseMeta, productKind, type Kind, type ServiceMeta } from "../services
 import { analyzeRisk, type RiskResult } from "../service-risk";
 import { infoFromProvider } from "../service-info";
 import { formatMoney } from "../money";
+import { packPrice, type PackConfig } from "../pack-math";
 import { VIP_LEVELS } from "../vip";
 import { smmBalance, smmServices } from "./smm";
 import { isSmm, serviceIdFor } from "./smm-orders";
@@ -54,6 +55,8 @@ export async function syncAllProviders() {
   await applyRisk();
   await applyProfitRules();
   await updateRealAverages();
+  const { syncPackPrices } = await import("../packs");
+  await syncPackPrices();
   return out;
 }
 
@@ -282,14 +285,16 @@ export async function listPacks(choices?: Choice[]) {
   const s = await getSettings();
   const packs = await prisma.productVariant.findMany({ where: { product: { category: { slug: "pake" } } }, include: { product: true }, orderBy: { product: { sortOrder: "asc" } } });
   return packs.map((v) => {
-    const items = packItems(v.service).map((it) => ({ ...it, choice: all.find((c) => c.id === it.variantId) ?? null }));
-    const price = v.salePriceHtg ?? v.priceHtg;
+    const config = packConfigOf(v.service);
+    const items = config.items.map((it) => ({ ...it, choice: all.find((c) => c.id === it.variantId) ?? null }));
+    // Always from the contents: the choices' prices minus the pack discount.
+    const price = packPrice(items.map((i) => ({ quantity: i.quantity, rate: i.choice ? i.choice.salePriceHtg ?? i.choice.priceHtg : 0 })), config.discountPct).price;
     const missing = !items.length || items.some((i) => !i.choice?.provider);
     const costUsd = items.reduce((a, i) => a + (i.choice?.provider ? (Number(i.choice.provider.rate) * i.quantity) / 1000 : 0), 0);
     const p = profitOf(price, missing ? null : costUsd, s);
     // Discount against buying the same things one by one at today's prices.
     const separate = items.reduce((a, i) => a + (i.choice ? Math.round((i.choice.priceHtg * i.quantity) / 1000) : 0), 0);
-    return { v, items, price, separate, profit: p };
+    return { v, items, price, separate, profit: p, config };
   });
 }
 
@@ -505,4 +510,9 @@ export async function createServiceFromProviders(input: { platform: string; kind
   await applyRisk();
   await applyProfitRules();
   return { productId: product.id, made };
+}
+
+function packConfigOf(service: unknown): PackConfig {
+  const o = (service && typeof service === "object" ? service : {}) as Record<string, unknown>;
+  return { items: packItems(service), discountPct: Number.isFinite(Number(o.discountPct)) ? Number(o.discountPct) : 10, maxVideos: Number(o.maxVideos) || 10, newOnly: o.newOnly === true };
 }

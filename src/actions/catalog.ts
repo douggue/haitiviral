@@ -7,6 +7,7 @@ import { getSettings, setSetting } from "@/lib/settings";
 import { parseMeta } from "@/lib/services";
 import { rulesFromText } from "@/lib/service-risk";
 import { cleanInfo } from "@/lib/service-info";
+import { syncPackPrices } from "@/lib/packs";
 import { runSupplierCron } from "@/lib/suppliers/orders";
 import { candidatesFor, candidatesForSpec, createServiceFromProviders, pickProviderService, type Candidate, postServiceUpdate, applyProfitRules, applyRisk, linkChoice, setChoiceRisk, syncAllProviders, syncProviderServices } from "@/lib/suppliers/catalog";
 
@@ -127,6 +128,7 @@ export async function setChoicePrice(variantId: string, gourdes: string): Promis
     const before = await prisma.productVariant.findUniqueOrThrow({ where: { id: variantId }, select: { priceHtg: true } });
     await prisma.productVariant.update({ where: { id: variantId }, data: { priceHtg: v } });
     if (v !== before.priceHtg) await postServiceUpdate(v > before.priceHtg ? "price_up" : "price_down", variantId, v);
+    await syncPackPrices();
     const r = await applyProfitRules();
     await audit(staff.id, "choice.price", "ProductVariant", variantId, { from: before.priceHtg, to: v });
     refresh();
@@ -186,8 +188,12 @@ export async function savePackItems(variantId: string, form: FormData): Promise<
       items.push({ variantId: id, quantity: q });
     }
     const base = v.service && typeof v.service === "object" ? (v.service as Record<string, unknown>) : {};
-    await prisma.productVariant.update({ where: { id: variantId }, data: { service: { ...base, pack: items } } });
-    await audit(staff.id, "pack.items", "ProductVariant", variantId, { items });
+    const discountPct = Math.min(80, Math.max(0, Math.round(Number(form.get("discountPct") ?? 10)) || 0));
+    const maxVideos = Math.min(50, Math.max(1, Math.round(Number(form.get("maxVideos") ?? 10)) || 10));
+    const newOnly = form.get("newOnly") === "on";
+    await prisma.productVariant.update({ where: { id: variantId }, data: { service: { ...base, pack: items, discountPct, maxVideos, newOnly } } });
+    await syncPackPrices();
+    await audit(staff.id, "pack.items", "ProductVariant", variantId, { items, discountPct, maxVideos, newOnly });
     refresh();
     return { ok: true, message: "Saved" };
   } catch (e) {
@@ -305,6 +311,7 @@ export async function pickProviderAction(variantId: string, providerServiceId: s
     const ps = await pickProviderService(variantId, providerServiceId, role === "backup" ? "backup" : "main", !!setPrice);
     await applyRisk();
     await applyProfitRules();
+    await syncPackPrices();
     await audit(staff.id, "choice.pick", "ProductVariant", variantId, { providerServiceId, role, setPrice });
     refresh();
     return { ok: true, message: `${role === "backup" ? "Backup" : "Main"}: #${ps.serviceId} ${ps.name.slice(0, 60)}` };

@@ -39,6 +39,7 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
     take: 100,
     include: {
       items: {
+        orderBy: { id: "asc" },
         include: {
           variant: { include: { product: { include: { category: true } } } },
           // The provider attempt that counts (the latest): start count, what remains, partial refund.
@@ -78,15 +79,24 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
           const platform = product ? PLATFORMS[product.category.slug] : undefined;
           const meta = parseMeta(item?.variant.service);
           const fv = (item?.fieldValues ?? {}) as Record<string, string>;
-          const qty = Number(fv.quantity) || 0;
+          // A starter pack is one order with a line per service and video: progress adds them up.
+          const pack = o.items.length > 1 && fv.packName ? (JSON.parse(fv.packName) as Record<string, string>) : null;
+          const lineDone = (i: (typeof o.items)[number]) => {
+            const q = Number(((i.fieldValues ?? {}) as Record<string, string>).quantity) || 0;
+            const s0 = i.supplierOrders[0];
+            if (i.status === "DELIVERED") return s0?.remains != null ? Math.max(0, q - s0.remains) : q;
+            if (i.status === "FAILED") return 0;
+            return s0?.remains != null ? Math.max(0, Math.min(q, q - s0.remains)) : 0;
+          };
+          const qty = o.items.reduce((a, i) => a + (Number(((i.fieldValues ?? {}) as Record<string, string>).quantity) || 0), 0);
           const so = item?.supplierOrders[0];
-          const refundedPart = so?.refundedPartial ?? 0;
+          const refundedPart = o.items.reduce((a, i) => a + (i.supplierOrders[0]?.refundedPartial ?? 0), 0);
           const look: Look = refundedPart > 0 && o.status === "FULFILLED" ? "partial" : lookOf(o.status);
           const [bg, fg, bar] = LOOK[look];
           // Real progress from the provider when known (quantity − remains), otherwise a small "started" bar.
-          const done = look === "done" ? qty : so?.remains != null && qty ? Math.max(0, Math.min(qty, qty - so.remains)) : 0;
+          const done = look === "done" ? qty : o.items.reduce((a, i) => a + lineDone(i), 0);
           const pct = look === "done" ? 100 : qty && done ? Math.round((done / qty) * 100) : look === "run" ? 8 : 0;
-          const name = product ? `${txt(product.name, locale)}${qty ? ` · ${qty.toLocaleString("en-US")}` : ""}` : `#${o.number}`;
+          const name = pack ? txt(pack, locale) : product ? `${txt(product.name, locale)}${qty ? ` · ${qty.toLocaleString("en-US")}` : ""}` : `#${o.number}`;
           const statusLabel = look === "run" ? t("running") : look === "done" ? t("done") : look === "partial" ? t("partial") : look === "wait" ? t("waiting") : t("canceled");
           const refunded = o.status === "REFUNDED" || o.status === "CANCELED";
           return (
@@ -107,8 +117,21 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
                 <span className="flex-none rounded-full px-2.5 py-[5px] text-xs font-bold" style={{ background: bg, color: fg }}>{statusLabel}</span>
               </Link>
               <div className="h-2 overflow-hidden rounded-full bg-[#EEF0F5] dark:bg-surface-2"><div className="h-full rounded-full" style={{ width: `${pct}%`, background: bar }} /></div>
+              {pack && (
+                <ul className="flex flex-col gap-1 rounded-[10px] bg-surface-2 px-3 py-2 text-xs">
+                  {o.items.map((i) => {
+                    const q = Number(((i.fieldValues ?? {}) as Record<string, string>).quantity) || 0;
+                    return (
+                      <li key={i.id} className="flex justify-between gap-2">
+                        <span className="truncate">{txt(i.variant.product.name, locale)}</span>
+                        <span className={`flex-none font-semibold ${i.status === "FAILED" ? "text-[#B91C1C]" : ""}`}>{i.status === "FAILED" ? t("lineRefunded") : `${lineDone(i).toLocaleString("en-US")} / ${q.toLocaleString("en-US")}`}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
               <div className="flex justify-between text-xs text-muted">
-                <span>{t("started", { n: so?.startCount != null ? so.startCount.toLocaleString("en-US") : "—" })}</span>
+                <span>{t("started", { n: !pack && so?.startCount != null ? so.startCount.toLocaleString("en-US") : "—" })}</span>
                 <span>{qty ? t("delivered", { done: done.toLocaleString("en-US"), total: qty.toLocaleString("en-US") }) : ""}</span>
                 <span className="font-bold text-text">{o.total === 0 ? t("free") : formatMoney(o.total, o.currency, locale)}</span>
               </div>
@@ -116,12 +139,14 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
               {refunded && <p className="rounded-[10px] px-3 py-2.5 text-xs leading-normal dark:!bg-surface-2 dark:!text-text" style={{ background: bg, color: fg }}>{t("noteRefunded", { amount: formatMoney(o.total, o.currency, locale) })}</p>}
               {(look === "done" || look === "partial") && (
                 <div className="flex gap-2">
-                  {!!meta?.refillDays && (
+                  {!pack && !!meta?.refillDays && (
                     <OrderHelpButton orderId={o.id} kind="refill" label={t("refill")} className="flex min-h-11 w-full flex-1 items-center justify-center gap-1.5 rounded-xl border border-text bg-surface text-sm font-bold text-text">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" /></svg>
                     </OrderHelpButton>
                   )}
-                  {product && (
+                  {pack ? (
+                    <Link href={`/order/pack/${fv.pack}`} className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-primary-soft text-sm font-bold text-text">{t("again")}</Link>
+                  ) : product && (
                     <Link href={`/order?platform=${product.category.slug}&kind=${product.tags.find((x) => x.startsWith("kind:"))?.slice(5) ?? ""}`} className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-primary-soft text-sm font-bold text-text">{t("again")}</Link>
                   )}
                 </div>

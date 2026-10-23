@@ -169,6 +169,12 @@ export default async function PricingAdmin({ searchParams }: { searchParams: Pro
                       <input name={`q${i}`} defaultValue={k.items[i]?.quantity ?? ""} inputMode="numeric" placeholder="Qty" className="h-9 w-20 rounded-lg border border-[#CBD2E1] bg-surface px-2 text-xs dark:border-border" />
                     </div>
                   ))}
+                  <div className="grid grid-cols-2 gap-1.5 pt-1">
+                    <label className="text-[11px] font-bold text-muted">Pack discount %<input name="discountPct" defaultValue={k.config.discountPct} inputMode="numeric" className="mt-0.5 h-9 w-full rounded-lg border border-[#CBD2E1] bg-surface px-2 text-xs dark:border-border" /></label>
+                    <label className="text-[11px] font-bold text-muted">Max videos<input name="maxVideos" defaultValue={k.config.maxVideos} inputMode="numeric" className="mt-0.5 h-9 w-full rounded-lg border border-[#CBD2E1] bg-surface px-2 text-xs dark:border-border" /></label>
+                  </div>
+                  <label className="flex items-center gap-2 text-xs"><input type="checkbox" name="newOnly" defaultChecked={k.config.newOnly} /> New customers only (first order)</label>
+                  <p className="text-[11px] text-muted">The price is always the choices&apos; prices minus the pack discount; likes and views are spread over the customer&apos;s videos (up to the max).</p>
                   <button className="h-9 rounded-lg bg-[#00209F] px-3 text-xs font-bold text-white">Save contents</button>
                 </ActionForm>
               </details>

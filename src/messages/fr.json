@@ -859,7 +859,8 @@
     "refillTooSoon": "Vous avez déjà demandé une recharge pour cette commande aujourd'hui. Réessayez demain.",
     "helpError": "Ça n'a pas marché. Réessayez ou écrivez-nous sur WhatsApp.",
     "notePartial": "Le fournisseur a livré {done} sur {total}. {amount} revient automatiquement dans votre portefeuille.",
-    "remains": "Reste : {n}"
+    "remains": "Reste : {n}",
+    "lineRefunded": "Remboursé"
   },
   "walletUi": {
     "title": "Mon portefeuille",
@@ -1010,5 +1011,43 @@
     "MONCASH": "MonCash",
     "NATCASH": "NatCash",
     "MANUAL": "Virement"
+  },
+  "packUi": {
+    "back": "Accueil",
+    "inside": "Dans le pack",
+    "separately": "Achetés séparément :",
+    "newOnly": "Ce pack est réservé aux nouveaux clients (première commande).",
+    "profileLabel": "Lien de votre profil",
+    "profileHint": "Pour les abonnés. Vous pouvez aussi écrire @votrenom.",
+    "videosLabel": "Liens de vos vidéos (un par ligne)",
+    "videoCount": "{n} / {max} vidéos",
+    "videosHint": "Les likes et vues sont répartis également sur vos vidéos. Maximum {max} vidéos. Toutes les vidéos doivent être sur le même compte.",
+    "split": "Répartition sur {n} vidéos :",
+    "each": "{q} par vidéo",
+    "eachRange": "{a} à {b} par vidéo",
+    "publicConfirm": "Je confirme que mon compte est PUBLIC (pas privé) et que je ne change pas mon nom d'utilisateur pendant la commande.",
+    "riskAccept": "Un des services est à RISQUE ÉLEVÉ. La plateforme peut retirer une partie ou limiter le compte. Je comprends et l'utilise sous ma responsabilité.",
+    "total": "Total",
+    "short": "Solde insuffisant.",
+    "addFunds": "Ajouter des fonds",
+    "unavailable": "Un des services du pack est en pause pour le moment. Réessayez plus tard.",
+    "sending": "Envoi…",
+    "confirm": "Confirmer · {total}",
+    "signIn": "Connectez-vous pour commander",
+    "autoRefund": "Si une partie n'est pas livrée, son prix revient automatiquement dans votre portefeuille.",
+    "error_invalid_link": "Le lien du profil n'est pas valide.",
+    "error_invalid_video": "Un des liens vidéo n'est pas valide (il faut une vidéo).",
+    "error_too_many_videos": "Trop de vidéos : maximum {max}.",
+    "error_other_account": "Toutes les vidéos doivent être sur le même compte que le profil.",
+    "error_pack_new_only": "Ce pack est réservé aux nouveaux clients.",
+    "error_not_public": "Confirmez que votre compte est public.",
+    "error_risk_not_accepted": "Confirmez que vous comprenez le risque.",
+    "error_same_link": "Une commande est déjà en cours sur un de ces liens. Attendez qu'elle se termine.",
+    "error_insufficient": "Solde insuffisant.",
+    "error_unavailable": "Ce pack n'est pas disponible pour le moment.",
+    "error_invalid_quantity": "Trop de vidéos pour les quantités du pack.",
+    "error_generic": "Un problème est survenu. Réessayez.",
+    "error_verify_email": "Vérifiez d'abord votre e-mail.",
+    "error_new_account_limit": "Compte trop récent pour ce montant aujourd'hui."
   }
 }

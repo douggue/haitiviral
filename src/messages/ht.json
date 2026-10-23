@@ -859,7 +859,8 @@
     "refillTooSoon": "Ou deja mande yon refill pou kòmand sa a jodi a. Eseye ankò demen.",
     "helpError": "Sa pa mache. Eseye ankò oswa ekri nou sou WhatsApp.",
     "notePartial": "Founisè a livre {done} sou {total}. {amount} tounen nan bous ou otomatikman.",
-    "remains": "Rete: {n}"
+    "remains": "Rete: {n}",
+    "lineRefunded": "Ranbouse"
   },
   "walletUi": {
     "title": "Bous mwen",
@@ -1010,5 +1011,43 @@
     "MONCASH": "MonCash",
     "NATCASH": "NatCash",
     "MANUAL": "Transfè"
+  },
+  "packUi": {
+    "back": "Akèy",
+    "inside": "Sa ki nan pake a",
+    "separately": "Si w achte yo apa:",
+    "newOnly": "Pake sa a se pou nouvo kliyan sèlman (premye kòmand).",
+    "profileLabel": "Lyen pwofil ou",
+    "profileHint": "Pou abòne yo. Ou ka ekri @non ou tou.",
+    "videosLabel": "Lyen videyo ou yo (youn pa liy)",
+    "videoCount": "{n} / {max} videyo",
+    "videosHint": "Like ak vi yo ap separe egalman sou videyo ou mete yo. Maksimòm {max} videyo. Tout videyo yo dwe sou menm kont lan.",
+    "split": "Separasyon sou {n} videyo:",
+    "each": "{q} chak videyo",
+    "eachRange": "{a} a {b} chak videyo",
+    "publicConfirm": "Mwen konfime kont mwen PIBLIK (pa prive) epi m pap chanje non itilizatè m pandan kòmand lan.",
+    "riskAccept": "Youn nan sèvis yo gen GWO RISK. Platfòm nan ka retire yon pati oswa limite kont ou. Mwen konprann epi mwen itilize l sou pwop responsablite m.",
+    "total": "Total",
+    "short": "Ou pa gen ase kòb nan bous ou.",
+    "addFunds": "Ajoute kòb",
+    "unavailable": "Youn nan sèvis ki nan pake a poze pou kounye a. Eseye ankò pita.",
+    "sending": "N ap voye…",
+    "confirm": "Konfime · {total}",
+    "signIn": "Konekte pou w kòmande",
+    "autoRefund": "Si yon pati pa fin livre, kòb pati sa a tounen nan bous ou otomatikman.",
+    "error_invalid_link": "Lyen pwofil la pa bon.",
+    "error_invalid_video": "Youn nan lyen videyo yo pa bon (se pou se yon videyo).",
+    "error_too_many_videos": "Twòp videyo: maksimòm {max}.",
+    "error_other_account": "Tout videyo yo dwe sou menm kont ak pwofil la.",
+    "error_pack_new_only": "Pake sa a se pou nouvo kliyan sèlman.",
+    "error_not_public": "Konfime kont ou piblik.",
+    "error_risk_not_accepted": "Konfime ou konprann risk la.",
+    "error_same_link": "Gen yon kòmand k ap fèt deja sou youn nan lyen sa yo. Tann li fini.",
+    "error_insufficient": "Ou pa gen ase kòb nan bous ou.",
+    "error_unavailable": "Pake sa a pa disponib pou kounye a.",
+    "error_invalid_quantity": "Twòp videyo pou kantite ki nan pake a.",
+    "error_generic": "Gen yon pwoblèm. Eseye ankò.",
+    "error_verify_email": "Verifye imèl ou anvan.",
+    "error_new_account_limit": "Kont ou twò nouvo pou montan sa a jodi a."
   }
 }

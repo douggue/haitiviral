@@ -110,7 +110,7 @@ export default async function HomePage({ params, searchParams }: { params: Promi
                 const v = p.variants[0];
                 const info = PLATFORMS[p.slug.split("-")[0]] ?? PLATFORMS[p.slug.startsWith("insta") ? "instagram" : "tiktok"];
                 return (
-                  <Link key={p.id} href={`/products/${p.slug}`} className="flex min-w-0 flex-1 flex-col gap-2 rounded-2xl border border-border bg-surface p-3.5 text-text">
+                  <Link key={p.id} href={`/order/pack/${p.slug}`} className="flex min-w-0 flex-1 flex-col gap-2 rounded-2xl border border-border bg-surface p-3.5 text-text">
                     <span className="flex items-center gap-2">
                       <span className="grid h-[30px] w-[30px] flex-none place-items-center rounded-[9px] text-[11px] font-extrabold text-white" style={{ background: p.accent ?? info?.color }}>{info?.letter}</span>
                       <span className="text-sm font-extrabold">{t(p.name, locale)}</span>

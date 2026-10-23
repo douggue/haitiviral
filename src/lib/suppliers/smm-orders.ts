@@ -109,9 +109,33 @@ async function refundUndelivered(so: SmmOrder, remains: number, reason: string) 
   const fields = (so.orderItem.fieldValues ?? {}) as Record<string, string>;
   const qty = lineQuantity(fields);
   const order = so.orderItem.order;
-  if (remains >= qty || qty === 0) {
+  const lines = await prisma.orderItem.count({ where: { orderId: order.id } });
+  if ((remains >= qty || qty === 0) && lines <= 1) {
     const { refundOrCancel } = await import("../orders");
     await refundOrCancel(order.id, null, reason).catch((e) => console.error("SMM refund failed", order.id, e));
+    return;
+  }
+  if (remains >= qty || qty === 0) {
+    // One line of a pack (several lines): only that line's share goes back; the rest of the order carries on.
+    const amount = so.orderItem.unitPrice * so.orderItem.quantity;
+    const allFailed = await prisma.$transaction(async (tx) => {
+      await refundPart(tx, order, amount, so.orderItemId, reason);
+      await tx.supplierOrder.update({ where: { id: so.id }, data: { refundedPartial: amount } });
+      await tx.orderItem.update({ where: { id: so.orderItemId }, data: { status: "FAILED" } });
+      await tx.orderEvent.create({ data: { orderId: order.id, status: "PROCESSING", note: `One line not delivered: ${formatMoney(amount, order.currency, "en")} back to the wallet` } });
+      const left = await tx.orderItem.count({ where: { orderId: order.id, status: { not: "FAILED" } } });
+      if (left === 0) {
+        await tx.order.update({ where: { id: order.id }, data: { status: "REFUNDED" } });
+        await tx.orderEvent.create({ data: { orderId: order.id, status: "REFUNDED", note: reason } });
+      }
+      return left === 0;
+    });
+    if (allFailed) await notify(order.userId, "order_refunded", { number: order.number }, `/account/orders/${order.id}`);
+    else {
+      await notify(order.userId, "order_partial", { number: order.number, amount, currency: order.currency }, `/account/orders/${order.id}`);
+      const { fulfillOrder } = await import("../orders");
+      await fulfillOrder(order.id).catch((e) => console.error("finish order failed", order.id, e));
+    }
     return;
   }
   const amount = partialRefund(so.orderItem.unitPrice * so.orderItem.quantity, qty, remains);
