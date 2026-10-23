@@ -40,8 +40,9 @@ export function themeAttrs(theme: Partial<ThemeConfig> | undefined) {
 
 /** Runs before paint: the visitor's own choice wins, else the store's default mode. */
 export function themeScript(defaultMode: "dark" | "light", key = "hv_theme") {
-  // The visitor's choice wins; it is also copied into a cookie so the server can render the right theme next time.
-  return `try{var t=localStorage.getItem('${key}');document.documentElement.classList.toggle('dark',t?t==='dark':${defaultMode === "dark"});if(t&&document.cookie.indexOf('${key}=')<0)document.cookie='${key}='+t+'; path=/; max-age=31536000; samesite=lax'}catch(e){}`;
+  // The visitor's choice wins ("light", "dark", or "system" = follow the phone); it is also copied into a cookie so the
+  // server can render the right theme next time.
+  return `try{var t=localStorage.getItem('${key}');var d=t==='system'?matchMedia('(prefers-color-scheme: dark)').matches:t?t==='dark':${defaultMode === "dark"};document.documentElement.classList.toggle('dark',d);if(t&&document.cookie.indexOf('${key}=')<0)document.cookie='${key}='+t+'; path=/; max-age=31536000; samesite=lax'}catch(e){}`;
 }
 
 /**

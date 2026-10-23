@@ -68,7 +68,8 @@
     "statusOk": "Tous les services fonctionnent normalement",
     "balance": "Solde",
     "otherLanguage": "Changer de langue",
-    "statusSome": "Certains services sont plus lents en ce moment"
+    "statusSome": "Certains services sont plus lents en ce moment",
+    "themeAuto": "Auto"
   },
   "home": {
     "eyebrow": "Fait en Haïti, pour les créateurs",
@@ -866,7 +867,8 @@
     "security": "Mot de passe et sécurité",
     "profile": "Mon profil",
     "privacy": "Mes données personnelles",
-    "signOut": "Se déconnecter"
+    "signOut": "Se déconnecter",
+    "theme": "Thème"
   },
   "helpUi": {
     "title": "Aide",

@@ -459,3 +459,28 @@ html[data-can-install] .install-link { display: inline-flex; }
 @media (prefers-reduced-motion: reduce) {
   .install-pop { animation: none; }
 }
+
+/*
+ * Dark theme for the customer screens built from the mockup: they use the mockup's exact light colors. In dark mode
+ * each of those colors is swapped here for its dark counterpart, in one place. Elements that already say what to do
+ * in dark (a "dark:" class) are left alone. Logos on purpose keep a white background (.keep-white).
+ */
+:where(.dark) :is(.text-\[\#0F172A\], .text-\[\#334155\], .text-\[\#475569\]):not([class*="dark:text"]) { color: var(--text); }
+:where(.dark) :is(.text-\[\#64748B\], .text-\[\#5B6478\]):not([class*="dark:text"]) { color: var(--muted); }
+:where(.dark) :is(.text-\[\#00209F\], .text-\[\#1E40AF\], .text-\[\#1E3A8A\]):not([class*="dark:text"]) { color: #93b4ff; }
+:where(.dark) :is(.text-\[\#166534\], .text-\[\#15803D\]):not([class*="dark:text"]) { color: #4ade80; }
+:where(.dark) :is(.text-\[\#991B1B\], .text-\[\#B91C1C\], .text-\[\#7F1D1D\]):not([class*="dark:text"]) { color: #ff8a95; }
+:where(.dark) :is(.text-\[\#92400E\], .text-\[\#B45309\], .text-\[\#78350F\], .text-\[\#7C2D12\]):not([class*="dark:text"]) { color: #fbbf24; }
+:where(.dark) :is(.border-\[\#CBD2E1\], .border-\[\#E5E7EF\], .border-\[\#94A3B8\], .border-\[\#EEF0F5\]):not([class*="dark:border"]) { border-color: var(--border); }
+:where(.dark) :is(.bg-\[\#CBD2E1\], .bg-\[\#CBD5E1\], .bg-\[\#EEF0F5\], .bg-\[\#E9ECF4\], .bg-\[\#F1F5F9\], .bg-\[\#F5F6FB\]):not([class*="dark:bg"]) { background-color: var(--surface-2); }
+:where(.dark) .bg-white:not(.keep-white):not([class*="dark:bg"]) { background-color: var(--surface); }
+:where(.dark) .bg-\[\#DCFCE7\]:not([class*="dark:bg"]) { background-color: var(--success-soft); }
+:where(.dark) .bg-\[\#FEE2E2\]:not([class*="dark:bg"]) { background-color: var(--danger-soft); }
+:where(.dark) :is(.bg-\[\#FEF3C7\], .bg-\[\#FFFBEB\]):not([class*="dark:bg"]) { background-color: var(--warning-soft); }
+:where(.dark) .bg-\[\#DBEAFE\]:not([class*="dark:bg"]) { background-color: #172554; }
+:where(.dark) .bg-\[\#0F172A\]:not([class*="dark:bg"]) { background-color: var(--primary); }
+:where(.dark) .divide-\[\#EEF0F5\] > :not(:last-child) { border-color: var(--border); }
+:where(.dark) .bg-\[\#FEF2F2\]:not([class*="dark:bg"]) { background-color: var(--danger-soft); }
+:where(.dark) .bg-\[\#FFEDD5\]:not([class*="dark:bg"]) { background-color: var(--warning-soft); }
+:where(.dark) .border-\[\#FCA5A5\]:not([class*="dark:border"]) { border-color: #7f2a33; }
+:where(.dark) .border-\[\#F59E0B\]:not([class*="dark:border"]) { border-color: #a16207; }

@@ -68,7 +68,8 @@
     "statusOk": "Tout sèvis yo ap mache nòmal",
     "balance": "Balans",
     "otherLanguage": "Chanje lang",
-    "statusSome": "Kèk sèvis pi dousman kounye a"
+    "statusSome": "Kèk sèvis pi dousman kounye a",
+    "themeAuto": "Otomatik"
   },
   "home": {
     "eyebrow": "Fèt an Ayiti, pou kreyatè yo",
@@ -866,7 +867,8 @@
     "security": "Modpas ak sekirite",
     "profile": "Pwofil mwen",
     "privacy": "Done pèsonèl mwen",
-    "signOut": "Dekonekte"
+    "signOut": "Dekonekte",
+    "theme": "Koulè ekran"
   },
   "helpUi": {
     "title": "Sipò",

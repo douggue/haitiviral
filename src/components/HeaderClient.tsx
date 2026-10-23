@@ -16,17 +16,39 @@ import { Avatar } from "./Avatar";
  * Keeps light/dark after client-side navigation. Changing language re-renders <html> from the server,
  * which drops the "dark" class the first-paint script had added; this puts it back before the browser paints.
  */
+export type ThemeMode = "light" | "dark" | "system";
+
+function savedMode(): ThemeMode | null {
+  try {
+    const v = localStorage.getItem("hv_theme");
+    return v === "light" || v === "dark" || v === "system" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Puts light/dark on the page and matches the phone's status bar color (installed app included). */
+function applyTheme(mode: ThemeMode | null, defaultMode: "dark" | "light") {
+  const dark = mode === "system" ? window.matchMedia("(prefers-color-scheme: dark)").matches : mode ? mode === "dark" : defaultMode === "dark";
+  document.documentElement.classList.toggle("dark", dark);
+  const color = dark ? "#0A0F1C" : "#FFFFFF";
+  document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+    m.setAttribute("content", color);
+    m.removeAttribute("media");
+  });
+  return dark;
+}
+
+/**
+ * Keeps light/dark after client-side navigation. Changing language re-renders <html> from the server,
+ * which drops the "dark" class the first-paint script had added; this puts it back before the browser paints.
+ */
 export function ThemeKeeper({ defaultMode }: { defaultMode: "dark" | "light" }) {
   const locale = useLocale();
   const pathname = usePathname();
   useLayoutEffect(() => {
-    let saved: string | null = null;
-    try {
-      saved = localStorage.getItem("hv_theme");
-    } catch {}
-    const dark = saved ? saved === "dark" : defaultMode === "dark";
     const html = document.documentElement;
-    html.classList.toggle("dark", dark);
+    applyTheme(savedMode(), defaultMode);
     // After a language switch: same scroll position, no entrance animations replaying, a short fade in.
     if (html.dataset.switching) {
       delete html.dataset.switching;
@@ -40,7 +62,22 @@ export function ThemeKeeper({ defaultMode }: { defaultMode: "dark" | "light" }) 
       return () => clearTimeout(id);
     }
   }, [locale, pathname, defaultMode]);
+  // "Otomatik": follow the phone when it switches between light and dark.
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const on = () => savedMode() === "system" && applyTheme("system", defaultMode);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, [defaultMode]);
   return null;
+}
+
+function saveMode(mode: ThemeMode) {
+  try {
+    localStorage.setItem("hv_theme", mode);
+    // Also a cookie, so the server sends the page already in the right theme (no flash on any navigation).
+    document.cookie = `hv_theme=${mode}; path=/; max-age=31536000; samesite=lax`;
+  } catch {}
 }
 
 export function ThemeToggle({ withLabel = false }: { withLabel?: boolean }) {
@@ -48,20 +85,37 @@ export function ThemeToggle({ withLabel = false }: { withLabel?: boolean }) {
   const [dark, setDark] = useState(false);
   useEffect(() => setDark(document.documentElement.classList.contains("dark")), []);
   function toggle() {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    try {
-      localStorage.setItem("hv_theme", next ? "dark" : "light");
-      // Also a cookie, so the server sends the page already in the right theme (no flash on any navigation).
-      document.cookie = `hv_theme=${next ? "dark" : "light"}; path=/; max-age=31536000; samesite=lax`;
-    } catch {}
+    const next: ThemeMode = dark ? "light" : "dark";
+    saveMode(next);
+    setDark(applyTheme(next, "light"));
   }
   return (
     <button type="button" onClick={toggle} className="btn-ghost min-h-10 px-2.5" aria-label={`${t("theme")}: ${dark ? t("dark") : t("light")}`}>
       {dark ? <SunIcon /> : <MoonIcon />}
       {withLabel && <span>{dark ? t("light") : t("dark")}</span>}
     </button>
+  );
+}
+
+/** Account screen: Klè / Fonse / Otomatik (follows the phone). */
+export function ThemeSegment() {
+  const t = useTranslations("common");
+  const [mode, setMode] = useState<ThemeMode>("light");
+  useEffect(() => setMode(savedMode() ?? (document.documentElement.classList.contains("dark") ? "dark" : "light")), []);
+  const pick = (m: ThemeMode) => {
+    saveMode(m);
+    applyTheme(m, "light");
+    setMode(m);
+  };
+  return (
+    <div role="group" aria-label={t("theme")} className="flex overflow-hidden rounded-[10px] border border-[#CBD2E1] dark:border-border">
+      {(["light", "dark", "system"] as const).map((m) => (
+        <button key={m} type="button" onClick={() => pick(m)} aria-pressed={m === mode}
+          className={`h-9 min-w-11 px-2.5 text-[13px] font-bold ${m === mode ? "bg-text text-surface" : "bg-surface text-text/80"}`}>
+          {m === "light" ? t("light") : m === "dark" ? t("dark") : t("themeAuto")}
+        </button>
+      ))}
+    </div>
   );
 }
 

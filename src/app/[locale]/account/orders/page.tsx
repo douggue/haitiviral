@@ -112,8 +112,8 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
                 <span>{qty ? t("delivered", { done: done.toLocaleString("en-US"), total: qty.toLocaleString("en-US") }) : ""}</span>
                 <span className="font-bold text-text">{o.total === 0 ? t("free") : formatMoney(o.total, o.currency, locale)}</span>
               </div>
-              {look === "partial" && <p className="rounded-[10px] px-3 py-2.5 text-xs leading-normal" style={{ background: bg, color: fg }}>{t("notePartial", { done: done.toLocaleString("en-US"), total: qty.toLocaleString("en-US"), amount: formatMoney(refundedPart, o.currency, locale) })}</p>}
-              {refunded && <p className="rounded-[10px] px-3 py-2.5 text-xs leading-normal" style={{ background: bg, color: fg }}>{t("noteRefunded", { amount: formatMoney(o.total, o.currency, locale) })}</p>}
+              {look === "partial" && <p className="rounded-[10px] px-3 py-2.5 text-xs leading-normal dark:!bg-surface-2 dark:!text-text" style={{ background: bg, color: fg }}>{t("notePartial", { done: done.toLocaleString("en-US"), total: qty.toLocaleString("en-US"), amount: formatMoney(refundedPart, o.currency, locale) })}</p>}
+              {refunded && <p className="rounded-[10px] px-3 py-2.5 text-xs leading-normal dark:!bg-surface-2 dark:!text-text" style={{ background: bg, color: fg }}>{t("noteRefunded", { amount: formatMoney(o.total, o.currency, locale) })}</p>}
               {(look === "done" || look === "partial") && (
                 <div className="flex gap-2">
                   {!!meta?.refillDays && (

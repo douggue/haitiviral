@@ -8,7 +8,7 @@ import { t as txt } from "@/lib/text";
 import { vipStatus } from "@/lib/vip";
 import { emailEnabled } from "@/lib/email";
 import { VerifyEmailBanner } from "@/components/VerifyEmailBanner";
-import { LangSegment, SignOutButton } from "@/components/HeaderClient";
+import { LangSegment, SignOutButton, ThemeSegment } from "@/components/HeaderClient";
 import { PushSwitch } from "@/components/PushToggle";
 import { MarketingSwitch } from "@/components/AccountSwitches";
 
@@ -83,6 +83,10 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           <div className="flex min-h-[54px] items-center justify-between border-b border-border">
             <span className="text-sm font-semibold">{t("language")}</span>
             <LangSegment full />
+          </div>
+          <div className="flex min-h-[54px] items-center justify-between border-b border-border">
+            <span className="text-sm font-semibold">{t("theme")}</span>
+            <ThemeSegment />
           </div>
           <PushSwitch label={t("orderNotifs")} sub={t("orderNotifsSub")} />
           <MarketingSwitch initial={marketing} label={t("promos")} sub={t("promosSub")} />
