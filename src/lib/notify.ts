@@ -16,7 +16,9 @@ export type NotificationType =
   | "order_partial"
   | "exchange_done"
   | "wallet_adjusted"
-  | "referral_rewarded";
+  | "referral_rewarded"
+  | "payout_sent"
+  | "payout_rejected";
 
 const CATALOGS: Record<string, { notifications: Record<string, string> }> = { ht, fr };
 

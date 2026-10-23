@@ -3,7 +3,7 @@ import { requireStaff } from "@/lib/session";
 import { getSettings } from "@/lib/settings";
 import { t as txt } from "@/lib/text";
 import { VIP_LEVELS } from "@/lib/vip";
-import { avgText, listChoices, listPacks, profitOf, realAverages } from "@/lib/suppliers/catalog";
+import { avgText, maxReferralPct, listChoices, listPacks, profitOf, realAverages } from "@/lib/suppliers/catalog";
 import { savePackItems, savePricing, setChoicePrice } from "@/actions/catalog";
 import { ActionButton, ActionForm } from "@/components/admin/ActionButton";
 
@@ -32,6 +32,7 @@ export default async function PricingAdmin({ searchParams }: { searchParams: Pro
   const rows = choices.map((c) => ({ c, p: profitOf(c.priceHtg, c.provider ? Number(c.provider.rate) : null, s) }));
   const n = (k: keyof typeof STATUS) => rows.filter((r) => r.p.status === k).length;
   const vipMax = Math.max(...VIP_LEVELS.map((l) => l.discount));
+  const refMax = maxReferralPct(s);
   const products = [...new Map(choices.map((c) => [c.product.slug, c.product])).values()];
   const picked = products.find((p) => p.slug === pick) ?? products[0];
   const picks = choices.filter((c) => c.productId === picked?.id);
@@ -70,7 +71,7 @@ export default async function PricingAdmin({ searchParams }: { searchParams: Pro
 
       <section className={`${card} flex flex-col gap-3`}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-base font-bold">Real profit per 1,000 (worst case: Diamond customer + payment fee)</h2>
+          <h2 className="text-base font-bold">Real profit per 1,000 (worst case: Diamond customer, referred by a top-tier friend, + payment fee)</h2>
           <span className="text-xs text-muted">{n("ok")} OK · {n("low")} low margin · {n("loss")} losing{s.autoPauseLoss ? " (paused)" : ""} · {n("nocost")} not linked</span>
         </div>
         <div className="overflow-x-auto">
@@ -82,6 +83,7 @@ export default async function PricingAdmin({ searchParams }: { searchParams: Pro
                 <th className="px-1.5 py-2 font-bold">= in HTG</th>
                 <th className="px-1.5 py-2 font-bold">Selling price</th>
                 <th className="px-1.5 py-2 font-bold">VIP −{vipMax}%</th>
+                <th className="px-1.5 py-2 font-bold">Referral {refMax}%</th>
                 <th className="px-1.5 py-2 font-bold">Pay fee</th>
                 <th className="px-1.5 py-2 font-bold">Real profit</th>
                 <th className="px-1.5 py-2 text-left font-bold">Status</th>
@@ -99,6 +101,7 @@ export default async function PricingAdmin({ searchParams }: { searchParams: Pro
                       <ActionButton label={g(p.sell)} prompt={`New selling price per 1,000 in gourdes (now ${(p.sell / 100).toLocaleString("en-US")})`} className="rounded-md px-1 font-bold tabular-nums underline decoration-dotted underline-offset-4 hover:text-[#00209F]" action={setChoicePrice.bind(null, c.id)} />
                     </td>
                     <td className="px-1.5 py-[11px] tabular-nums text-muted">−{g(p.vip)}</td>
+                    <td className="px-1.5 py-[11px] tabular-nums text-muted">−{g(p.ref)}</td>
                     <td className="px-1.5 py-[11px] tabular-nums text-muted">−{g(p.fee)}</td>
                     <td className="px-1.5 py-[11px] font-extrabold tabular-nums" style={{ color: st[3] }}>{p.status === "nocost" ? "—" : `${g(p.profit)} (${Math.round(p.pct)}%)`}</td>
                     <td className="px-1.5 py-[11px] text-left"><span className={pill} style={{ background: st[1], color: st[2] }}>{p.status === "loss" && c.meta.pausedLoss ? "Loss: auto-paused" : st[0]}</span></td>
@@ -108,7 +111,7 @@ export default async function PricingAdmin({ searchParams }: { searchParams: Pro
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-muted">Tap a selling price to change it. The referral reward is a fixed amount paid once per new customer, so it isn&apos;t counted per service; there is no top-up bonus.</p>
+        <p className="text-xs text-muted">Tap a selling price to change it. The referral column is the highest tier&apos;s commission; there is no top-up bonus.</p>
       </section>
 
       <section className="flex flex-wrap gap-4">

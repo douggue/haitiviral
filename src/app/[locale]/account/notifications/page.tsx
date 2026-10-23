@@ -15,7 +15,7 @@ const KIND: Record<string, [bg: string, fg: string, icon: string]> = {
   promo: ["#FCE7F3", "#9D174D", "%"],
 };
 const KIND_OF: Record<string, keyof typeof KIND> = {
-  order_fulfilled: "ok", order_paid: "ok", deposit_approved: "money", wallet_adjusted: "money", referral_rewarded: "money", exchange_done: "money",
+  order_fulfilled: "ok", order_paid: "ok", deposit_approved: "money", wallet_adjusted: "money", referral_rewarded: "money", exchange_done: "money", payout_sent: "money", payout_rejected: "warn", order_partial: "refund",
   order_refunded: "refund", deposit_held: "refund", deposit_rejected: "warn",
 };
 

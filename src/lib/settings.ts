@@ -4,6 +4,8 @@ import { prisma } from "./db";
 import { DEFAULT_EXCHANGE, type ExchangePricing } from "./amount";
 import { DEFAULT_BLOCKED, DEFAULT_RISK_RULES, type RiskRule } from "./service-risk";
 
+export type RefTier = { key: string; name: Record<string, string>; pct: number; minActive: number; minVolume: number };
+
 export type Settings = {
   /** Recent sales popup on the products ticked in Admin → Trust */
   salesPopupEnabled: boolean;
@@ -84,6 +86,14 @@ export type Settings = {
   targetProfitPct: number;
   autoPauseLoss: boolean;
   referralRewardHtg: number;
+  /** Referral tiers over the last 30 days: reach minActive friends with a completed order, or minVolume (HTG centimes) of their orders */
+  refTiers: RefTier[];
+  /** Days a commission waits after the order completes before it can be withdrawn */
+  refHoldDays: number;
+  /** Smallest withdrawal to MonCash / NatCash (HTG centimes); moving earnings to the wallet has no minimum */
+  refMinPayoutHtg: number;
+  /** Months a friend's orders earn commission after they sign up (0 = for life) */
+  refMonths: number;
   referralMinOrderHtg: number;
   heroImageUrl: string;
   ogImageUrl: string;
@@ -210,6 +220,15 @@ export const DEFAULT_SETTINGS: Settings = {
     { key: "yt-views", product: "youtube-views", tier: 0, quantity: 100, label: { ht: "100 vi YouTube", fr: "100 vues YouTube" }, avg: { ht: "1 èdtan", fr: "1 heure" } },
   ],
   referralRewardHtg: 10_000,
+  refTiers: [
+    { key: "bronze", name: { ht: "Bwonz", fr: "Bronze" }, pct: 5, minActive: 0, minVolume: 0 },
+    { key: "silver", name: { ht: "Ajan", fr: "Argent" }, pct: 7, minActive: 5, minVolume: 1_000_000 },
+    { key: "gold", name: { ht: "Lò", fr: "Or" }, pct: 10, minActive: 20, minVolume: 5_000_000 },
+    { key: "diamond", name: { ht: "Dyaman", fr: "Diamant" }, pct: 12, minActive: 50, minVolume: 15_000_000 },
+  ],
+  refHoldDays: 3,
+  refMinPayoutHtg: 100_000,
+  refMonths: 0,
   referralMinOrderHtg: 50_000,
   heroImageUrl: "",
   ogImageUrl: "",
@@ -251,4 +270,5 @@ export async function setSetting<K extends keyof Settings>(key: K, value: Settin
  * Money paths (deposits, exchange, limits, checkout) keep using getSettings(), which always reads the database.
  */
 const cachedSettings = unstable_cache(getSettings, ["site-settings"], { tags: ["settings"], revalidate: 60 });
-export const getDisplaySettings = cache(() => cachedSettings());
+// Merged over the defaults so a cached copy from before a new setting existed still has it.
+export const getDisplaySettings = cache(async (): Promise<Settings> => ({ ...DEFAULT_SETTINGS, ...(await cachedSettings()) }));

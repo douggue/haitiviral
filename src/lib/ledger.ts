@@ -25,6 +25,16 @@ export async function walletAccount(tx: Tx, userId: string, currency: Currency) 
   });
 }
 
+/** Referral earnings (withdrawable to MonCash / NatCash), separate from the spend-only wallet. */
+export async function earningsAccount(tx: Tx, userId: string) {
+  const code = `earnings:${userId}:HTG`;
+  return tx.ledgerAccount.upsert({
+    where: { code },
+    create: { code, type: "CUSTOMER_EARNINGS", currency: "HTG", userId },
+    update: {},
+  });
+}
+
 export async function heldAccount(tx: Tx, userId: string, currency: Currency) {
   const code = `held:${userId}:${currency}`;
   return tx.ledgerAccount.upsert({

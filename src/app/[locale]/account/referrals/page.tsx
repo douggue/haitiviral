@@ -3,19 +3,20 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { getSettings } from "@/lib/settings";
-import { ensureReferralCode } from "@/lib/referrals";
+import { earningsBalance, ensureReferralCode, referralStats } from "@/lib/referrals";
 import { formatMoney } from "@/lib/money";
-import { CopyButton } from "@/components/CopyButton";
+import { t as txt } from "@/lib/text";
 import { PageBar } from "@/components/PageBar";
-import { WhatsAppIcon } from "@/components/Icons";
+import { Link } from "@/i18n/navigation";
+import { EarningsCard, ReferralLists, ShareBox, TierCard } from "@/components/ReferralClient";
 
-/** Invite friends (mockup "Envite zanmi"): link, share buttons, counts, invited friends. */
+/** Invite friends, customer side (mockup "Referral: customer"): tier, earnings and withdrawals, link, friends. */
 export default async function ReferralsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
   const user = await requireUser(locale);
-  const [t, tr, tc, settings] = await Promise.all([getTranslations("referralsUi"), getTranslations("referrals"), getTranslations("common"), getSettings()]);
-  const bar = <PageBar title={tr("title")} back="/account" backLabel={tc("back")} />;
+  const [t, tr, tc, settings] = await Promise.all([getTranslations("refUi"), getTranslations("referrals"), getTranslations("common"), getSettings()]);
+  const bar = <PageBar title={tr("title")} back="/account" backLabel={tc("back")} right={<Link href="/referral" className="px-1.5 text-[13px] font-bold text-[#00209F] dark:text-primary">{t("how")}</Link>} />;
   if (!settings.referralEnabled) {
     return (
       <>
@@ -25,72 +26,85 @@ export default async function ReferralsPage({ params }: { params: Promise<{ loca
     );
   }
   const code = await ensureReferralCode(user.id);
-  const link = `${siteUrl()}/${locale}?ref=${code}`;
-  const shown = link.replace(/^https?:\/\//, "");
-  const list = await prisma.referral.findMany({ where: { referrerId: user.id }, orderBy: { createdAt: "desc" }, include: { referred: { select: { name: true } } } });
-  const earned = list.reduce((s, r) => s + (r.rewardAmount ?? 0), 0);
-  const reward = formatMoney(settings.referralRewardHtg, "HTG", locale);
-  const share = encodeURIComponent(tr("shareText", { link }));
+  const link = `${siteUrl()}/r/${code}`;
+  const [stats, money, earnedTotal, refs, commissions, payouts, me] = await Promise.all([
+    referralStats(user.id, settings),
+    earningsBalance(user.id),
+    prisma.referralCommission.aggregate({ where: { referrerId: user.id, status: "AVAILABLE" }, _sum: { amount: true } }),
+    prisma.referral.findMany({ where: { referrerId: user.id }, orderBy: { createdAt: "desc" }, take: 100, include: { referred: { select: { name: true } } } }),
+    prisma.referralCommission.groupBy({ by: ["referredId"], where: { referrerId: user.id, status: { in: ["AVAILABLE", "PENDING"] } }, _sum: { amount: true }, _count: true }),
+    prisma.payout.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 30 }),
+    prisma.user.findUniqueOrThrow({ where: { id: user.id }, select: { name: true, phone: true } }),
+  ]);
+  const fmt = (n: number) => formatMoney(n, "HTG", locale);
   const mask = (name: string) => name.split(" ").map((p, i) => (i === 0 ? p : `${p[0] ?? ""}.`)).join(" ");
+  const when = (d: Date) => d.toLocaleDateString(locale === "fr" ? "fr-FR" : "fr-HT", { day: "numeric", month: "short" });
+
+  const next = stats.next;
+  const needActive = next ? Math.max(0, next.minActive - stats.active) : 0;
+  const needVolume = next ? Math.max(0, next.minVolume - stats.volume) : 0;
+  const progress = next ? Math.min(100, Math.round(Math.max(next.minActive ? stats.active / next.minActive : 0, next.minVolume ? stats.volume / next.minVolume : 0) * 100)) : 100;
 
   return (
     <>
       {bar}
-      <div className="mx-auto flex max-w-[560px] flex-col gap-[18px] px-5 py-[18px]">
-        <section className="relative flex flex-col gap-2.5 overflow-hidden rounded-[20px] bg-primary p-5 text-white">
-          <div aria-hidden className="absolute -right-9 -top-9 h-[130px] w-[130px] rounded-full bg-[#D21034]" />
-          <p className="relative max-w-[250px] text-[22px] font-extrabold leading-tight">{t("headline", { reward })}</p>
-          <p className="relative text-sm leading-normal text-[#DCE3FF]">{t("body", { reward, min: formatMoney(settings.referralMinOrderHtg, "HTG", locale) })}</p>
-        </section>
+      <div className="mx-auto flex max-w-[560px] flex-col gap-4 px-5 py-[18px]">
+        <TierCard
+          title={t("yourTier")}
+          name={`${txt(stats.tier.name, locale)} · ${stats.tier.pct}%`}
+          window={t("last30")}
+          line={next ? t("progressLine", { n: stats.active, of: next.minActive, next: `${txt(next.name, locale)} · ${next.pct}%` }) : t("topTier")}
+          need={next ? t.rich("tierGap", { friends: needActive, amount: fmt(needVolume), next: txt(next.name, locale), b: (c) => <b className="text-[#FBBF24]">{c}</b> }) : null}
+          progress={progress}
+          showLabel={t("showTiers")}
+          hideLabel={t("hideTiers")}
+          tiers={stats.tiers.map((x) => ({ key: x.key, name: txt(x.name, locale), pct: x.pct, need: x.minActive || x.minVolume ? t("tierNeed", { n: x.minActive, amount: fmt(x.minVolume) }) : t("tierStart"), current: x.key === stats.tier.key }))}
+        />
 
-        <section className="flex flex-col gap-2.5">
-          <label htmlFor="reflink" className="text-sm font-bold">{t("yourLink")}</label>
-          <div className="flex gap-2">
-            <input id="reflink" readOnly value={shown} className="h-12 min-w-0 flex-1 rounded-xl border border-[#CBD2E1] bg-surface px-3 text-[15px] font-semibold dark:border-border" />
-            <CopyButton value={link} label={t("copy")} done={t("copied")} icon={false} className="h-12 min-w-20 flex-none rounded-xl bg-text px-3 text-sm font-bold text-surface" />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <a href={`https://wa.me/?text=${share}`} target="_blank" rel="noopener" className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#15803D] text-sm font-bold text-white">
-              <WhatsAppIcon width={18} height={18} />{t("whatsapp")}
-            </a>
-            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`} target="_blank" rel="noopener" className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#1D4ED8] text-sm font-bold text-white">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>{t("facebook")}
-            </a>
-          </div>
-        </section>
+        <EarningsCard available={money.available} pending={money.pending} min={settings.refMinPayoutHtg} name={me.name} phone={me.phone ?? ""} />
 
         <section className="grid grid-cols-3 gap-2">
           {[
-            [String(list.length), t("invited"), ""],
-            [String(list.filter((r) => r.status === "REWARDED").length), t("active"), ""],
-            [formatMoney(earned, "HTG", locale), t("earned"), "text-[#166534] dark:text-success"],
+            [String(stats.invited), t("statInvited"), ""],
+            [String(stats.active), t("statActive"), "text-[#00209F] dark:text-primary"],
+            [fmt(earnedTotal._sum.amount ?? 0), t("statEarned"), "text-[#166534]"],
           ].map(([v, l, c]) => (
-            <div key={l} className="flex flex-col items-center gap-1 rounded-[14px] border border-border bg-surface px-2.5 py-3 text-center">
-              <span className={`text-xl font-extrabold ${c}`}>{v}</span>
+            <div key={l} className="flex flex-col items-center gap-1 rounded-[14px] border border-border bg-surface px-2 py-3 text-center">
+              <span className={`text-lg font-extrabold ${c}`}>{v}</span>
               <span className="text-[11px] font-semibold text-muted">{l}</span>
             </div>
           ))}
         </section>
 
-        <section className="flex flex-col gap-2">
-          <h2 className="text-base font-bold">{t("friends")}</h2>
-          {list.length === 0 && <p className="py-3 text-sm text-muted">{t("none")}</p>}
-          {list.map((r) => (
-            <div key={r.id} className="flex items-center justify-between border-b border-border py-2.5">
-              <span className="flex items-center gap-2.5">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-[#E0E6FF] text-sm font-extrabold text-[#00209F]">{r.referred.name.trim()[0]?.toUpperCase() ?? "?"}</span>
-                <span className="flex flex-col gap-0.5">
-                  <span className="text-sm font-semibold">{mask(r.referred.name)}</span>
-                  <span className="text-xs text-muted">{t(r.status)}</span>
-                </span>
-              </span>
-              <span className={`text-sm font-bold ${r.status === "REWARDED" ? "text-[#166534] dark:text-success" : r.status === "REJECTED" ? "text-[#991B1B]" : "text-muted"}`}>
-                {r.status === "REWARDED" ? `+ ${formatMoney(r.rewardAmount ?? 0, "HTG", locale)}` : r.status === "REJECTED" ? "—" : formatMoney(0, "HTG", locale)}
-              </span>
-            </div>
-          ))}
-        </section>
-        <p className="text-xs leading-normal text-muted">{t("rules")}</p>
+        <ShareBox link={link} message={tr("shareText", { link })} />
+
+        <ReferralLists
+          friendsLabel={t("tabFriends")}
+          payoutsLabel={t("tabPayouts")}
+          emptyFriends={t("noFriends")}
+          emptyPayouts={t("noPayouts")}
+          friends={refs.map((r) => {
+            const c = commissions.find((x) => x.referredId === r.referredId);
+            return {
+              id: r.id,
+              initial: (r.referred.name[0] ?? "?").toUpperCase(),
+              name: mask(r.referred.name),
+              meta: r.status === "REJECTED" ? t("friendBlocked") : c ? t("friendActive", { n: c._count }) : t("friendNoOrder"),
+              value: r.status === "REJECTED" ? "—" : `+ ${fmt(c?._sum.amount ?? 0)}`,
+              tone: r.status === "REJECTED" ? "bad" : c ? "good" : "muted",
+            } as const;
+          })}
+          payouts={payouts.map((p) => ({
+            id: p.id,
+            initial: p.method === "MONCASH" ? "M" : "N",
+            name: `${fmt(p.amount)} · ${p.method === "MONCASH" ? "MonCash" : "NatCash"}`,
+            meta: `${when(p.createdAt)} · ${p.phone.replace(/(\d{4})$/, "••••")}`,
+            value: p.status === "SENT" ? t("paySent") : p.status === "REJECTED" ? t("payRejected") : t("payWaiting"),
+            tone: p.status === "SENT" ? "good" : p.status === "REJECTED" ? "bad" : "muted",
+          } as const))}
+        />
+
+        <p className="text-xs leading-normal text-muted">{t("rules", { days: settings.refHoldDays })}</p>
       </div>
     </>
   );

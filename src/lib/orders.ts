@@ -9,7 +9,7 @@ import { assertWithinNewAccountLimit, flag } from "./risk";
 import { notify } from "./notify";
 import { t } from "./text";
 import { moncashAvailable } from "./payments/moncash";
-import { maybeRewardReferral } from "./referrals";
+import { createCommission } from "./referrals";
 import { amountInRange, isExchangeProduct, quoteAmount } from "./amount";
 import { hasOpenSupplierOrder, queueSupplierLines, sendQueued } from "./suppliers/orders";
 import { vipStatus, withDiscount } from "./vip";
@@ -354,7 +354,7 @@ export async function fulfillOrder(orderId: string, actorId?: string | null): Pr
   if (result?.fulfilled) {
     const o = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
     await notify(o.userId, "order_fulfilled", { number: o.number }, `/account/orders/${o.id}`);
-    await maybeRewardReferral(o.userId).catch((e) => console.error("referral reward failed", e));
+    await createCommission(o.id).catch((e) => console.error("referral commission failed", e));
   }
   return result;
 }

@@ -430,6 +430,8 @@ model PaymentIntent {
 enum LedgerAccountType {
   CUSTOMER_WALLET
   CUSTOMER_HELD
+  /// Referral earnings: the only money a customer can withdraw (MonCash / NatCash)
+  CUSTOMER_EARNINGS
   CLEARING
   REVENUE
   FX
@@ -1025,4 +1027,59 @@ model ServiceUpdate {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+enum CommissionStatus {
+  /// Waiting: the order must stay completed for the hold days
+  PENDING
+  /// In the referrer's earnings balance
+  AVAILABLE
+  /// Order refunded, or the accounts look like the same person
+  CANCELED
+}
+
+/// Referral program: a % of each completed order of a direct friend, by the referrer's tier at that time.
+model ReferralCommission {
+  id          String           @id @default(cuid())
+  referrerId  String
+  referredId  String
+  orderId     String           @unique
+  orderTotal  Int
+  /// Commission % and tier name when the order completed
+  pct         Int
+  tier        String
+  amount      Int
+  status      CommissionStatus @default(PENDING)
+  availableAt DateTime
+  createdAt   DateTime         @default(now())
+
+  @@index([referrerId, status])
+  @@index([status, availableAt])
+}
+
+enum PayoutStatus {
+  REQUESTED
+  SENT
+  REJECTED
+}
+
+/// Withdrawal of referral earnings to MonCash or NatCash, sent by staff.
+model Payout {
+  id          String       @id @default(cuid())
+  userId      String
+  amount      Int
+  /// MONCASH | NATCASH
+  method      String
+  phone       String
+  name        String
+  status      PayoutStatus @default(REQUESTED)
+  /// Transaction reference staff copy from MonCash/NatCash when sent
+  reference   String?
+  note        String?
+  decidedById String?
+  createdAt   DateTime     @default(now())
+  decidedAt   DateTime?
+
+  @@index([status, createdAt])
+  @@index([userId])
 }

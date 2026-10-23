@@ -123,21 +123,28 @@ export async function setChoiceRisk(variantId: string, level: "auto" | "low" | "
   });
 }
 
-export type Profit = { costHtg: number; sell: number; vip: number; fee: number; profit: number; pct: number; status: "ok" | "low" | "loss" | "nocost" };
+export type Profit = { costHtg: number; sell: number; vip: number; fee: number; ref: number; profit: number; pct: number; status: "ok" | "low" | "loss" | "nocost" };
 
 /**
  * Per 1,000, in HTG centimes. Worst case: the customer has the biggest VIP discount and pays a payment fee.
  * (The referral reward is a fixed amount paid once per new customer, so it isn't counted per service.)
  */
-export function profitOf(priceHtg: number, rateUsd: number | null, s: Pick<Settings, "htgPerUsd" | "paymentFeePct" | "minProfitPct">): Profit {
+/** Highest referral commission % (counted in the worst case when the program is on). */
+export function maxReferralPct(s: Partial<Pick<Settings, "refTiers" | "referralEnabled">>) {
+  return s.referralEnabled && s.refTiers?.length ? Math.max(...s.refTiers.map((t) => t.pct)) : 0;
+}
+
+export function profitOf(priceHtg: number, rateUsd: number | null, s: Pick<Settings, "htgPerUsd" | "paymentFeePct" | "minProfitPct"> & Partial<Pick<Settings, "refTiers" | "referralEnabled">>): Profit {
   const vipPct = Math.max(...VIP_LEVELS.map((l) => l.discount));
   const vip = Math.round((priceHtg * vipPct) / 100);
   const fee = Math.round(((priceHtg - vip) * s.paymentFeePct) / 100);
-  if (rateUsd === null) return { costHtg: 0, sell: priceHtg, vip, fee, profit: 0, pct: 0, status: "nocost" };
+  // A referred customer: the referrer gets up to the top tier's % of what the customer paid.
+  const ref = Math.round(((priceHtg - vip) * maxReferralPct(s)) / 100);
+  if (rateUsd === null) return { costHtg: 0, sell: priceHtg, vip, fee, ref, profit: 0, pct: 0, status: "nocost" };
   const costHtg = Math.round(rateUsd * s.htgPerUsd * 100);
-  const profit = priceHtg - vip - fee - costHtg;
+  const profit = priceHtg - vip - fee - ref - costHtg;
   const pct = priceHtg ? (profit / priceHtg) * 100 : 0;
-  return { costHtg, sell: priceHtg, vip, fee, profit, pct, status: profit < 0 ? "loss" : pct < s.minProfitPct ? "low" : "ok" };
+  return { costHtg, sell: priceHtg, vip, fee, ref, profit, pct, status: profit < 0 ? "loss" : pct < s.minProfitPct ? "low" : "ok" };
 }
 
 /** Pause linked choices that lose money (when the switch is on); turn back on the ones this paused once they're fine. */
@@ -375,9 +382,9 @@ export function speedPerDay(speed?: string) {
 }
 
 /** Selling price per 1,000 (HTG centimes) that leaves the target profit in the worst case, rounded to a clean amount. */
-export function suggestPrice(rateUsd: number, s: Pick<Settings, "htgPerUsd" | "paymentFeePct" | "targetProfitPct">) {
+export function suggestPrice(rateUsd: number, s: Pick<Settings, "htgPerUsd" | "paymentFeePct" | "targetProfitPct"> & Partial<Pick<Settings, "refTiers" | "referralEnabled">>) {
   const vip = Math.max(...VIP_LEVELS.map((l) => l.discount)) / 100;
-  const keep = 1 - vip - (1 - vip) * (s.paymentFeePct / 100) - s.targetProfitPct / 100;
+  const keep = 1 - vip - (1 - vip) * (s.paymentFeePct / 100) - (1 - vip) * (maxReferralPct(s) / 100) - s.targetProfitPct / 100;
   const cost = rateUsd * s.htgPerUsd * 100;
   const raw = cost / Math.max(0.05, keep);
   const step = raw < 10_000 ? 500 : 1_000; // under 100 HTG: by 5 HTG, else by 10 HTG

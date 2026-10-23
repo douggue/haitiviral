@@ -65,16 +65,12 @@ export default async function SettingsPage() {
         </section>
         <section className="card space-y-4 p-5">
           <h2 className="font-semibold">Referral program</h2>
-          <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="referralEnabled" defaultChecked={s.referralEnabled} /> Referral program on</label>
+          <p className="text-sm text-muted">Referral program (tiers, withdrawals, minimum payout): <a href="/admin/referrals" className="font-semibold text-primary">Admin → Referrals</a>.</p>
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" name="requireEmailVerification" defaultChecked={s.requireEmailVerification} className="mt-1" />
             <span>Require email confirmation before buying, depositing or exchanging. <span className="text-muted">Customers can still browse, fill their cart and contact support. Turns itself off while email sending is off.</span></span>
           </label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="newsletterEnabled" defaultChecked={s.newsletterEnabled} /> Newsletter sign-up form in the footer (subscribers are listed in Admin → Newsletter)</label>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field name="referralRewardHtg" label="Reward to the referrer (HTG, store credit)" value={m(s.referralRewardHtg)} />
-            <Field name="referralMinOrderHtg" label="Friend's first order must be at least (HTG)" value={m(s.referralMinOrderHtg)} />
-          </div>
         </section>
         <section className="card space-y-4 p-5">
           <h2 className="font-semibold">Payment methods</h2>

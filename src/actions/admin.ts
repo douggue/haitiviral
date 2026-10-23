@@ -422,12 +422,9 @@ export async function saveSettings(form: FormData): Promise<R> {
       reviewOrderThresholdHtg: money("reviewOrderThresholdHtg"),
       approvalThresholdHtg: money("approvalThresholdHtg"),
       autoRefundHours: Math.max(0, Math.min(720, Math.round(num("autoRefundHours")))),
-      referralEnabled: form.get("referralEnabled") === "on",
       newsletterEnabled: form.get("newsletterEnabled") === "on",
       requireEmailVerification: form.get("requireEmailVerification") === "on",
       maxAccountsPerDevice: Math.max(1, Math.min(50, Math.round(num("maxAccountsPerDevice")) || 3)),
-      referralRewardHtg: money("referralRewardHtg"),
-      referralMinOrderHtg: money("referralMinOrderHtg"),
       natcashRecipientName: str("natcashRecipientName"),
       natcashRecipientPhone: str("natcashRecipientPhone"),
       moncashEnabled: form.get("moncashEnabled") === "on",
@@ -663,27 +660,6 @@ export async function setTicketStatus(ticketId: string, status: "OPEN" | "CLOSED
     await prisma.supportTicket.update({ where: { id: ticketId }, data: { status } });
     await audit(staff.id, "support.status", "SupportTicket", ticketId, { status });
     revalidatePath(`/admin/support/${ticketId}`);
-    return { ok: true };
-  } catch (e) {
-    return fail(e);
-  }
-}
-
-// ───────────── Referrals ─────────────
-
-export async function decideReferral(id: string, decision: "PAY" | "REJECT"): Promise<R> {
-  try {
-    const staff = await assertStaff("referrals.manage");
-    const r = await prisma.referral.findUniqueOrThrow({ where: { id } });
-    if (r.status === "REWARDED") return { ok: false, error: "Already rewarded" };
-    if (decision === "PAY") {
-      const { payReferral } = await import("@/lib/referrals");
-      await payReferral(id, staff.id);
-    } else {
-      await prisma.referral.update({ where: { id }, data: { status: "REJECTED", note: `Rejected by ${staff.name}` } });
-    }
-    await audit(staff.id, `referral.${decision.toLowerCase()}`, "Referral", id);
-    revalidatePath("/admin/referrals");
     return { ok: true };
   } catch (e) {
     return fail(e);

@@ -7,6 +7,7 @@ import { getSettings } from "@/lib/settings";
 import { refundOrCancel } from "@/lib/orders";
 import { OPEN, runSupplierCron } from "@/lib/suppliers/orders";
 import { syncAllProviders } from "@/lib/suppliers/catalog";
+import { matureCommissions } from "@/lib/referrals";
 import { smmBalance } from "@/lib/suppliers/smm";
 
 /**
@@ -15,6 +16,7 @@ import { smmBalance } from "@/lib/suppliers/smm";
  * - releases held deposits whose hold period ended
  * - expires abandoned payment intents
  * - sends supplier orders and checks the ones still pending (see src/lib/suppliers/orders.ts)
+ * - referral commissions whose hold is over go to the referrer's earnings
  * - SMM providers: balance every hour; once a day, service lists, risk levels, profit check and real average times
  * - refunds paid orders that were not delivered within `autoRefundHours` (nothing delivered, no open risk review,
  *   no supplier order still running)
@@ -29,6 +31,11 @@ export async function GET(req: NextRequest) {
     Object.assign(result, await runSupplierCron());
   } catch (e) {
     console.error("Supplier cron failed", e);
+  }
+  try {
+    result.commissionsReleased = await matureCommissions();
+  } catch (e) {
+    console.error("Referral commissions failed", e);
   }
   try {
     const smm = await prisma.supplier.findMany({ where: { isEnabled: true, preset: { in: ["smm_panel", "smm_mock"] } } });
