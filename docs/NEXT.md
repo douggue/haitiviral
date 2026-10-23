@@ -63,6 +63,12 @@ Status: **noted only**. Nothing here is built. The owner decides the order befor
     - **Anti-cheat:** the free-trial checks (same phone, device, IP).
     - **Profit check:** the highest tier is counted in Pricing & profit.
     - **To confirm:** the percentages, the minimum payout amount, the hold, the payout time.
+11. **Dark theme for the customer app.**
+    - Today a dark mode exists underneath (from the old foundations: a `hg_theme` switch, dark colors), but the new screens built from the mockup use fixed light colors (white cards, light grey backgrounds) in about 14 files, so they would look broken in dark.
+    - **Switch** in Kont (Account): Klè / Fonse / Otomatik (follows the phone). Remembered per person; light stays the default.
+    - **Every screen checked in dark:** home, new order (including risk colors and the "?" sheets), my orders (progress colors), wallet, referral, trial, help, notifications, login.
+    - **Installed app (PWA):** status bar and splash color follow the theme.
+    - **Optional:** add dark versions of a few screens to the mockup first, to agree on the look.
 
 ## Waiting on preview (not on `main` yet)
 - One Private Blob store for every upload (public images served through `/media/…`).
