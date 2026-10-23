@@ -9,6 +9,7 @@ import type { ManualMethodView } from "@/lib/manual-methods";
 import { CopyButton } from "./CopyButton";
 import { Turnstile } from "./Turnstile";
 import { PhoneInput } from "./PhoneInput";
+import { PayLogo } from "./PayLogo";
 
 const HTG_PRESETS = [250, 500, 1000, 2500];
 const USD_PRESETS = [10, 25, 50, 100];
@@ -217,14 +218,16 @@ export function DepositForm(p: Props) {
             return (
               <button key={x.key} type="button" role="radio" aria-checked={on} onClick={() => switchTo(x.key)}
                 className={`flex items-center gap-3 rounded-[14px] border-2 bg-surface px-3.5 py-3 text-left ${on ? "border-text" : "border-border"}`}>
-                {x.logo ? (
+                {x.brand ? (
+                  <span className="flex h-[42px] w-[104px] flex-none items-center justify-center rounded-xl border border-[#E5E7EF] bg-white px-2"><PayLogo brand={x.brand} height={20} /></span>
+                ) : x.logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={x.logo} alt="" className="h-[42px] w-[42px] flex-none rounded-xl bg-white object-contain p-1" />
                 ) : (
                   <span className="grid h-[42px] w-[42px] flex-none place-items-center rounded-xl text-[13px] font-extrabold" style={{ background: x.markBg, color: x.markFg }}>{x.mark}</span>
                 )}
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="text-[15px] font-bold">{x.name}</span>
+                  <span className={x.brand ? "sr-only" : "text-[15px] font-bold"}>{x.name}</span>
                   <span className="text-xs text-muted">{meta}</span>
                 </span>
                 <span className={`grid h-[22px] w-[22px] flex-none place-items-center rounded-full border-2 ${on ? "border-text" : "border-[#94A3B8]"}`}>

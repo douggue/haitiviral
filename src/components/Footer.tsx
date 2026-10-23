@@ -10,6 +10,7 @@ import { NewsletterForm } from "./NewsletterForm";
 import { prisma } from "@/lib/db";
 import { t as txt } from "@/lib/text";
 import { getLocale } from "next-intl/server";
+import { PayBadges } from "./PayLogo";
 
 const footerPages = unstable_cache(
   () => prisma.page.findMany({ where: { isPublished: true, showInFooter: true }, select: { slug: true, title: true }, orderBy: { createdAt: "asc" } }),
@@ -35,6 +36,7 @@ export async function Footer({ settings }: { settings: Settings }) {
         <div className="space-y-3">
           <Logo src={settings.logoUrl} darkSrc={settings.logoDarkUrl} alt={settings.businessName} />
           <p className="text-sm text-muted">{t("footerTagline")}</p>
+          <PayBadges />
           <p className="flex items-start gap-2 text-sm text-muted">
             <PinIcon width={16} height={16} className="mt-0.5 shrink-0" />
             <span>
