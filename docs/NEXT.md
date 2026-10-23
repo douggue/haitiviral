@@ -69,6 +69,11 @@ Status: **noted only**. Nothing here is built. The owner decides the order befor
     - **Every screen checked in dark:** home, new order (including risk colors and the "?" sheets), my orders (progress colors), wallet, referral, trial, help, notifications, login.
     - **Installed app (PWA):** status bar and splash color follow the theme.
     - **Optional:** add dark versions of a few screens to the mockup first, to agree on the look.
+12. **Real MonCash and NatCash logos everywhere.**
+    - The real logos came with the Haiti Gaming foundations (`public/brand/moncash.webp`, `public/brand/natcash.webp`, `PayLogo` component), but only the old checkout and guide pages use them.
+    - The new screens show red "MC" / orange "NC" letter tiles or text labels instead: Wallet (top-up picker), referral pages, the withdrawal panel, home.
+    - Use the real logos on every screen where a payment method appears, including the bank-transfer logo set in Admin → Payment methods.
+    - Keep them sharp and readable in dark theme (#11): a white rounded background behind each logo.
 
 ## Waiting on preview (not on `main` yet)
 - One Private Blob store for every upload (public images served through `/media/…`).
