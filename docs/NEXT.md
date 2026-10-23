@@ -24,6 +24,23 @@ Status: **noted only**. Nothing here is built. The owner decides the order befor
    - Automatic warnings per kind of service: public profile, speed can change, don't change your username.
    - Block a second order on the same link and service while one is running.
    - Never show the provider's service number or name.
+   - **Service details card shown before ordering,** right on the order screen (not hidden behind "?"), as small tiles with icons:
+     - Quality (Real / Mixed / Bot)
+     - Speed (e.g. 300K/day)
+     - Start time (e.g. 0–5 min)
+     - Guarantee / refill (30 days / No refill)
+     - Drop rate (Non drop / Low drop)
+     - Link to give (profile / post)
+     - Cancel button (yes/no)
+     - Refill button (yes/no)
+     - Location (global / country)
+     - Filled from the provider data and the risk analysis, editable in the admin; the colors follow the risk level.
+   - **"Li anvan ou kòmande" (read before ordering) tab/page,** in Kreyòl and French:
+     - What each status means: An atant (pending), Ap trete (in progress), Konplete (completed), Pasyèl (partial, the rest refunded automatically), Anile (canceled, fully refunded).
+     - The refund policy in plain words.
+     - How to order correctly: grow naturally (don't buy 50K on a 100-follower account), one order at a time per link, don't use another SMM site on the same account at the same time, keep the account public.
+     - When to open a ticket (with the order number).
+   - **"Nouvèl sèvis" (service updates) tab,** optional: new services, price changes and paused services, fed by the provider sync alerts (#7).
 6. **Smarter link check** (the basic profile-vs-video check already works).
    - Follow short links (vm.tiktok.com, youtu.be, fb.watch).
    - Instagram reel vs photo; YouTube video vs Shorts, per service.
