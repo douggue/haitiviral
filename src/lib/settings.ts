@@ -71,6 +71,11 @@ export type Settings = {
   trialStrict: boolean;
   trialPerDay: number;
   trialPerIpPerDay: number;
+  /** Anti-cheat: risk below trialAutoBelow is sent at once (at most trialAutoPerDay a day), from trialRefuseAt it is refused */
+  trialAutoApprove: boolean;
+  trialAutoPerDay: number;
+  trialAutoBelow: number;
+  trialRefuseAt: number;
   trialOffers: { key: string; product: string; tier: number; quantity: number; label: Record<string, string>; avg: Record<string, string> }[];
   /** Services status per platform (category slug) shown on the help page and home bar; missing = normal */
   serviceStatus: Record<string, "ok" | "slow" | "pause">;
@@ -214,6 +219,10 @@ export const DEFAULT_SETTINGS: Settings = {
   trialStrict: false,
   trialPerDay: 30,
   trialPerIpPerDay: 3,
+  trialAutoApprove: true,
+  trialAutoPerDay: 20,
+  trialAutoBelow: 25,
+  trialRefuseAt: 70,
   trialOffers: [
     { key: "tt-views", product: "tiktok-views", tier: 0, quantity: 100, label: { ht: "100 vi TikTok", fr: "100 vues TikTok" }, avg: { ht: "10 minit", fr: "10 minutes" } },
     { key: "ig-likes", product: "instagram-likes", tier: 0, quantity: 20, label: { ht: "20 like Instagram", fr: "20 likes Instagram" }, avg: { ht: "25 minit", fr: "25 minutes" } },

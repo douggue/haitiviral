@@ -959,6 +959,8 @@ model SupplierLog {
 }
 
 enum TrialStatus {
+  /// waiting for the customer's WhatsApp message with the code
+  AWAITING_PHONE
   PENDING
   APPROVED
   REJECTED
@@ -973,9 +975,25 @@ model TrialRequest {
   offer     String
   /// Link as cleaned by the link check; unique so the same profile/video never gets two trials
   link      String      @unique
-  phone     String      @unique
+  /// Social account behind the link ("tiktok:mika"): one trial per account whatever link form is pasted
+  handle    String?     @unique
+  /// Set when the customer types it, or from WhatsApp once they send the code
+  phone     String?     @unique
   deviceId  String?
+  /// Browser id kept in local storage + IndexedDB (survives cookie clearing)
+  localId   String?
+  /// Light print of the phone model and settings (screen, time zone, language…): a hint, never a block on its own
+  fingerprint String?
   ip        String?
+  ipInfo    Json?
+  /// WhatsApp code "HV123456" while status is AWAITING_PHONE
+  code      String?     @unique
+  phoneVerifiedAt DateTime?
+  /// Risk points and the reasons, shown to staff
+  risk      Int         @default(0)
+  reasons   Json?
+  /// Decided by the automatic check (not by staff)
+  auto      Boolean     @default(false)
   status    TrialStatus @default(PENDING)
   orderId   String?
   note      String?
@@ -984,6 +1002,8 @@ model TrialRequest {
 
   @@index([status, createdAt])
   @@index([ip, createdAt])
+  @@index([localId])
+  @@index([fingerprint])
 }
 
 /// A provider's service list (SMM panel "services"), refreshed by "Sync services" and the daily check.

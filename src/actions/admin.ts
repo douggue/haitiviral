@@ -727,3 +727,30 @@ export async function decideTrialAction(id: string, approve: boolean, note: stri
     return fail(e);
   }
 }
+
+/** Free trial rules and anti-cheat thresholds (Admin → Free trials). */
+export async function saveTrialSettings(form: FormData): Promise<R> {
+  try {
+    const staff = await assertStaff("settings.manage");
+    const num = (k: string, min: number, max: number, def: number) => {
+      const n = Math.round(Number(String(form.get(k) ?? "").trim()));
+      return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def;
+    };
+    const autoBelow = num("trialAutoBelow", 0, 100, 25);
+    const refuseAt = num("trialRefuseAt", 1, 200, 70);
+    if (refuseAt <= autoBelow) return { ok: false, error: "\"Refuse from\" must be higher than \"Send automatically below\"" };
+    await setSetting("trialEnabled", form.get("trialEnabled") === "on");
+    await setSetting("trialStrict", form.get("trialStrict") === "on");
+    await setSetting("trialAutoApprove", form.get("trialAutoApprove") === "on");
+    await setSetting("trialPerDay", num("trialPerDay", 0, 1000, 30));
+    await setSetting("trialPerIpPerDay", num("trialPerIpPerDay", 1, 50, 3));
+    await setSetting("trialAutoPerDay", num("trialAutoPerDay", 0, 1000, 20));
+    await setSetting("trialAutoBelow", autoBelow);
+    await setSetting("trialRefuseAt", refuseAt);
+    await audit(staff.id, "trial.settings", "SiteSetting", "trial");
+    revalidatePath("/admin/trials");
+    return { ok: true, message: "Saved" };
+  } catch (e) {
+    return fail(e);
+  }
+}

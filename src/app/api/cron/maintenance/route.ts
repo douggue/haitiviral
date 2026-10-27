@@ -8,6 +8,7 @@ import { refundOrCancel } from "@/lib/orders";
 import { OPEN, runSupplierCron } from "@/lib/suppliers/orders";
 import { syncAllProviders } from "@/lib/suppliers/catalog";
 import { matureCommissions } from "@/lib/referrals";
+import { expireTrialCodes } from "@/lib/trials";
 import { smmBalance } from "@/lib/suppliers/smm";
 
 /**
@@ -17,6 +18,7 @@ import { smmBalance } from "@/lib/suppliers/smm";
  * - expires abandoned payment intents
  * - sends supplier orders and checks the ones still pending (see src/lib/suppliers/orders.ts)
  * - referral commissions whose hold is over go to the referrer's earnings
+ * - free trial requests that never got their WhatsApp code within a day are removed
  * - SMM providers: balance every hour; once a day, service lists, risk levels, profit check and real average times
  * - refunds paid orders that were not delivered within `autoRefundHours` (nothing delivered, no open risk review,
  *   no supplier order still running)
@@ -36,6 +38,11 @@ export async function GET(req: NextRequest) {
     result.commissionsReleased = await matureCommissions();
   } catch (e) {
     console.error("Referral commissions failed", e);
+  }
+  try {
+    result.trialCodesExpired = await expireTrialCodes();
+  } catch (e) {
+    console.error("Trial code expiry failed", e);
   }
   try {
     const smm = await prisma.supplier.findMany({ where: { isEnabled: true, preset: { in: ["smm_panel", "smm_mock"] } } });

@@ -113,6 +113,18 @@ On your own server (VPS) later, this becomes a normal scheduled task calling the
 2. Set `NEXT_PUBLIC_SITE_URL=https://yourdomain.com`, then redeploy.
 3. With the domain, you can verify it in Resend and turn on email (see `docs/OPERATIONS.md` §7).
 
+## Later: free trial protection (WhatsApp code + VPN check)
+Free trials work without this, but staff then see more requests to review. Each piece is off until its keys are added in Vercel → Settings → Environment Variables (never in a chat):
+1. **WhatsApp code** (Meta, free to receive). In Meta for Developers, create an app with WhatsApp and add your business number. Then set:
+   - `WHATSAPP_BUSINESS_NUMBER`: the number customers write to, digits only (e.g. `50937000000`)
+   - `WHATSAPP_VERIFY_TOKEN`: any long random text you make up
+   - `WHATSAPP_APP_SECRET`: from Meta → App settings → Basic
+   - optional, to answer "confirmed" in WhatsApp: `WHATSAPP_TOKEN` and `WHATSAPP_PHONE_NUMBER_ID`
+   In Meta → WhatsApp → Configuration, set the webhook to `https://yourdomain.com/api/whatsapp/webhook`, type the same verify token, and subscribe to **messages**.
+2. **VPN check**: works without a key (100 checks a day). For 1,000 a day, get a free key at proxycheck.io and set `PROXYCHECK_API_KEY`.
+3. **Bot check**: the Turnstile keys above also protect the trial form.
+4. Admin → Free trials → **Trial rules**: choose how many are sent automatically and the risk levels.
+
 ## If something goes wrong
 | Problem | Fix |
 |---|---|

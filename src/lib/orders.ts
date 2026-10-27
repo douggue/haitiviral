@@ -274,7 +274,7 @@ export async function createServiceOrder(input: ServiceOrderInput) {
 }
 
 /** A free order (approved free trial): nothing is charged; it then follows the normal delivery path. */
-export async function createFreeOrder(input: { userId: string; variantId: string; quantity: number; link: string; note: string; actorId: string }) {
+export async function createFreeOrder(input: { userId: string; variantId: string; quantity: number; link: string; note: string; actorId: string | null }) {
   const v = await prisma.productVariant.findUniqueOrThrow({ where: { id: input.variantId }, include: { product: true } });
   const qtyLabel = input.quantity.toLocaleString("en-US");
   const variantName = Object.fromEntries(Object.entries(v.name as Record<string, string>).map(([l, n]) => [l, `${n} · ${qtyLabel}`]));
