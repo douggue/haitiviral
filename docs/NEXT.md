@@ -1,6 +1,7 @@
-# Next changes (noted with the owner, not built yet)
+# Next changes (noted with the owner)
 
-Status: **noted only**. Nothing here is built. The owner decides the order before work starts; changes go to the preview branch and reach `main` after "ship it".
+Status: **all 14 built on the preview branch** (`preview/foundations`), waiting for "ship it" to reach `main`.
+Still waiting on outside things: YTSeller's warranty terms in writing; the WhatsApp (Meta) keys; optional proxycheck.io and Turnstile keys.
 
 1. **Clean the admin.**
    - Remove what an SMM panel doesn't need, and every Haiti Gaming leftover: `hg_` names, gift-card and game wording.
