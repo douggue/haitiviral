@@ -45,6 +45,7 @@ export async function Footer({ settings }: { settings: Settings }) {
           <ul className="space-y-2 text-sm text-muted">
             <li><Link href="/order" className="hover:text-text">{t("tabOrder")}</Link></li>
             <li><Link href="/trial" className="hover:text-text">{t("freeTrial")}</Link></li>
+            <li><Link href="/accounts" className="hover:text-text">{t("accounts")}</Link></li>
             <li><Link href="/guides" className="hover:text-text">{t("guides")}</Link></li>
             <li><Link href="/news" className="hover:text-text">{t("news")}</Link></li>
             <li><Link href="/account/wallet" className="hover:text-text">{t("wallet")}</Link></li>

@@ -9,6 +9,7 @@ import { OPEN, runSupplierCron } from "@/lib/suppliers/orders";
 import { syncAllProviders } from "@/lib/suppliers/catalog";
 import { matureCommissions } from "@/lib/referrals";
 import { expireTrialCodes } from "@/lib/trials";
+import { syncAllAccountProviders } from "@/lib/accounts-shop";
 import { smmBalance } from "@/lib/suppliers/smm";
 
 /**
@@ -19,6 +20,7 @@ import { smmBalance } from "@/lib/suppliers/smm";
  * - sends supplier orders and checks the ones still pending (see src/lib/suppliers/orders.ts)
  * - referral commissions whose hold is over go to the referrer's earnings
  * - free trial requests that never got their WhatsApp code within a day are removed
+ * - accounts providers (YTSeller): products, stock and cost every hour (our products follow: sold out / back)
  * - SMM providers: balance every hour; once a day, service lists, risk levels, profit check and real average times
  * - refunds paid orders that were not delivered within `autoRefundHours` (nothing delivered, no open risk review,
  *   no supplier order still running)
@@ -43,6 +45,15 @@ export async function GET(req: NextRequest) {
     result.trialCodesExpired = await expireTrialCodes();
   } catch (e) {
     console.error("Trial code expiry failed", e);
+  }
+  try {
+    const acct = await prisma.supplier.findMany({ where: { isEnabled: true, preset: { in: ["ytseller", "ytseller_mock"] } }, select: { balanceAt: true } });
+    if (acct.some((s) => !s.balanceAt || now.getTime() - s.balanceAt.getTime() > 3_600_000)) {
+      await syncAllAccountProviders();
+      result.accountProvidersSynced = acct.length;
+    }
+  } catch (e) {
+    console.error("Accounts provider sync failed", e);
   }
   try {
     const smm = await prisma.supplier.findMany({ where: { isEnabled: true, preset: { in: ["smm_panel", "smm_mock"] } } });

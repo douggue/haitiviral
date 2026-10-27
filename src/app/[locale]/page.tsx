@@ -96,6 +96,19 @@ export default async function HomePage({ params, searchParams }: { params: Promi
           </div>
         </section>
 
+        {settings.accountsEnabled && (
+          <Link href="/accounts" className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5 text-text">
+            <span className="grid h-11 w-11 flex-none place-items-center rounded-xl bg-[#0F172A] text-white dark:bg-surface-2">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="11" width="18" height="10" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+            </span>
+            <span className="flex flex-1 flex-col gap-0.5">
+              <span className="text-[15px] font-bold">{th("accountsTitle")}</span>
+              <span className="text-xs text-muted">{th("accountsText")}</span>
+            </span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="9 18 15 12 9 6" /></svg>
+          </Link>
+        )}
+
         {packs.length > 0 && (
           <section className="flex flex-col gap-2.5">
             <div className="flex items-baseline justify-between">

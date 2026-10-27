@@ -113,6 +113,13 @@ On your own server (VPS) later, this becomes a normal scheduled task calling the
 2. Set `NEXT_PUBLIC_SITE_URL=https://yourdomain.com`, then redeploy.
 3. With the domain, you can verify it in Resend and turn on email (see `docs/OPERATIONS.md` §7).
 
+## Later: selling accounts and SMS numbers (YTSeller)
+1. Top up your YTSeller balance on their site.
+2. Admin → Providers → add **"Accounts & SMS numbers (YTSeller)"** and paste your API key there (never in a chat). Press **Check balance**.
+3. Admin → Accounts & SMS → **Sync**, then press **Sell** on a product: give it a Kreyòl and French name, a short text, and check the price.
+4. Stock is checked every hour; a product goes "sold out" by itself when YTSeller has none or its cost rises above your price.
+5. Keep the 24 h warranty until YTSeller confirms its own warranty in writing.
+
 ## Later: free trial protection (WhatsApp code + VPN check)
 Free trials work without this, but staff then see more requests to review. Each piece is off until its keys are added in Vercel → Settings → Environment Variables (never in a chat):
 1. **WhatsApp code** (Meta, free to receive). In Meta for Developers, create an app with WhatsApp and add your business number. Then set:

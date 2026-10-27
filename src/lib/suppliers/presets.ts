@@ -221,6 +221,28 @@ export const PRESETS: Record<string, Preset> = {
     },
   },
 
+  ytseller: {
+    label: "Accounts & SMS numbers (YTSeller): paste your API key",
+    baseUrl: "https://ytseller.com/api/v2",
+    skuHelp: "Product id",
+    config: {
+      secrets: ["apiKey"],
+      notes: "Accounts provider. Each order carries our reference (trans_id), so a timeout is asked again without paying twice. Sell its products in Admin → Accounts & SMS.",
+      order: { method: "POST", path: "", encoding: "form", body: {} },
+    },
+  },
+
+  ytseller_mock: {
+    label: "Test accounts provider (fake YTSeller; key: mock-key)",
+    baseUrl: "/api/suppliers/mock-ytseller",
+    skuHelp: "Product id (501-506, 599)",
+    config: {
+      secrets: ["apiKey"],
+      notes: "Fake accounts provider built into the site for tests. API key: mock-key. 503 is made on order (Partial: 1 missing), 599 is refused.",
+      order: { method: "POST", path: "", encoding: "form", body: {} },
+    },
+  },
+
   smm_mock: {
     label: "Test SMM panel (fake, for trying the setup; key: mock-key)",
     baseUrl: "/api/suppliers/mock-smm",

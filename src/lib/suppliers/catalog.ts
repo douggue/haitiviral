@@ -24,7 +24,12 @@ const SMM = ["smm_panel", "smm_mock"];
 
 export async function syncProviderServices(supplierId: string) {
   const s = await prisma.supplier.findUniqueOrThrow({ where: { id: supplierId } });
-  if (!isSmm(s.preset)) throw new Error("Only SMM panels have a service list");
+  if (s.preset === "ytseller" || s.preset === "ytseller_mock") {
+    const { syncAccountProducts } = await import("../accounts-shop");
+    const r = await syncAccountProducts(supplierId);
+    return { total: r.total, added: 0, updated: r.changed, removed: r.removed };
+  }
+  if (!isSmm(s.preset)) throw new Error("Only SMM panels and accounts providers have a product list");
   const list = await smmServices(s);
   const now = new Date();
   // Real panels list thousands of services: add new ones in bulk, update only what changed.

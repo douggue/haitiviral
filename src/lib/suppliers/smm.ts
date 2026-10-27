@@ -54,7 +54,7 @@ export async function smmCall(s: Row, action: string, params: Record<string, str
     error = e instanceof Error ? e.message : "Request failed";
   }
   const hide = (x: string) => (key.length >= 4 ? x.split(key).join("•••") : x).slice(0, MAX_LOG);
-  if (action !== "services") {
+  if (action !== "services" && action !== "products") {
     await prisma.supplierLog
       .create({ data: { supplierId: s.id, supplierOrderId, op: action, request: hide(`POST ${url}\n\n${form.toString()}`), response: hide(text || error || ""), httpStatus: http, ms: Date.now() - started, outcome: error ? "ERROR" : "OK" } })
       .catch((e) => console.error("supplier log failed", e));

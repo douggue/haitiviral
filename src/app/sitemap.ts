@@ -13,7 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.product.findMany({ where: { isPublished: true, category: { slug: "pake" } }, select: { slug: true, updatedAt: true } }),
   ]);
   const paths: { path: string; lastModified?: Date }[] = [
-    { path: "" }, { path: "/order" }, { path: "/trial" }, { path: "/help" }, { path: "/guides" }, { path: "/faq" },
+    { path: "" }, { path: "/order" }, { path: "/trial" }, { path: "/accounts" }, { path: "/help" }, { path: "/guides" }, { path: "/faq" },
     { path: "/about" }, { path: "/news" }, { path: "/contact" }, { path: "/terms" }, { path: "/privacy" }, { path: "/refunds" },
     ...packs.map((p) => ({ path: `/order/pack/${p.slug}`, lastModified: p.updatedAt })),
     ...news.map((n) => ({ path: `/news/${n.slug}`, lastModified: n.updatedAt })),

@@ -105,7 +105,7 @@ async function costData(usd: number) {
 }
 
 /** Everything (or the rest) goes back to the wallet; the order is closed as refunded or partly delivered. */
-async function refundUndelivered(so: SmmOrder, remains: number, reason: string) {
+export async function refundUndelivered(so: SmmOrder, remains: number, reason: string) {
   const fields = (so.orderItem.fieldValues ?? {}) as Record<string, string>;
   const qty = lineQuantity(fields);
   const order = so.orderItem.order;

@@ -245,6 +245,9 @@ model ProductVariant {
   /// Social media service choice (Bon mache / Pi bon kalite / Rapid): priceHtg is the price per 1,000 and this holds
   /// { type, min, max, avg {ht,fr}, risk, refillDays, drip, desc } (see src/lib/services.ts)
   service      Json?
+  /// Accounts / SMS numbers sold through an accounts provider (YTSeller): priceHtg is the price per piece and this holds
+  /// { kind: account|sms, min, max, delivery: instant|24h, require {ht,fr} | null, warrantyHours, about {ht,fr} } (see src/lib/accounts.ts)
+  account      Json?
   codes        CodeItem[]
   orderItems   OrderItem[]
   createdAt    DateTime    @default(now())
@@ -1015,8 +1018,11 @@ model ProviderService {
   name       String
   category   String
   type       String
-  /// Provider price per 1,000, in the provider's currency (usually USD)
+  /// Provider price per 1,000 (SMM panels) or per piece (accounts providers), in the provider's currency (usually USD)
   rate       Decimal   @db.Decimal(18, 6)
+  /// Accounts providers: pieces in stock (null = unknown / made on order) and the input the provider needs
+  stock      Int?
+  require    String?
   min        Int
   max        Int
   refill     Boolean   @default(false)

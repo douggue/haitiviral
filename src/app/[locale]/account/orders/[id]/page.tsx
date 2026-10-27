@@ -16,6 +16,8 @@ import { WhatsAppIcon } from "@/components/Icons";
 import { ReviewRequest } from "@/components/ReviewRequest";
 import { formatPhone } from "@/lib/phone";
 import { PageBar } from "@/components/PageBar";
+import { AccountDelivery } from "@/components/AccountDelivery";
+import { parseAccountMeta } from "@/lib/accounts";
 
 export default async function OrderPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale, id } = await params;
@@ -92,9 +94,9 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
           <div key={item.id} className="space-y-3 p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p className="font-medium">{itemTitle(item, locale)} × {item.quantity}</p>
+                <p className="font-medium">{itemTitle(item, locale)}{item.quantity > 1 ? ` × ${item.quantity}` : ""}</p>
                 <dl className="mt-1 space-y-0.5 text-sm">
-                  {Object.entries(item.fieldValues as Record<string, string>).filter(([k]) => !["riskAcceptedAt", "trial", "amountUsd", "feeUsd", "rate"].includes(k)).map(([k, v]) => (
+                  {Object.entries(item.fieldValues as Record<string, string>).filter(([k]) => !["riskAcceptedAt", "trial", "amountUsd", "feeUsd", "rate", "termsAcceptedAt", "warrantyHours", "publicConfirmedAt"].includes(k)).map(([k, v]) => (
                     <div key={k} className="flex gap-1.5"><dt className="text-muted">{td.has(k) ? td(k) : k}:</dt><dd className="min-w-0 whitespace-pre-line break-all font-medium">{v}</dd></div>
                   ))}
                 </dl>
@@ -104,7 +106,16 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
                 <StatusBadge status={item.status} label={to(`itemStatus.${item.status}`)} />
               </div>
             </div>
-            {item.codes.length > 0 && (
+            {item.codes.length > 0 && parseAccountMeta(item.variant.account) && (() => {
+              const meta = parseAccountMeta(item.variant.account)!;
+              const hours = Number((item.fieldValues as Record<string, string> | null)?.warrantyHours ?? meta.warrantyHours) || 0;
+              const delivered = item.codes.reduce<Date | null>((a, c) => (c.assignedAt && (!a || c.assignedAt > a) ? c.assignedAt : a), null) ?? order.fulfilledAt;
+              return (
+                <AccountDelivery kind={meta.kind} lines={item.codes.map((c) => ({ id: c.id, text: revealCode(c.codeEncrypted) }))}
+                  warrantyUntil={hours && delivered ? new Date(delivered.getTime() + hours * 3_600_000).toISOString() : null} supportHref={`/${locale}/account/support?order=${order.number}`} />
+              );
+            })()}
+            {item.codes.length > 0 && !parseAccountMeta(item.variant.account) && (
               <div className="rounded-xl bg-surface-2 p-4">
                 <p className="mb-2 text-sm font-semibold">{to("yourCodes")}</p>
                 <ul className="space-y-2">
@@ -135,7 +146,7 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
                 <p className="mt-1 whitespace-pre-wrap">{item.deliveryNote}</p>
               </div>
             )}
-            <Link href={item.variant.product.tags.some((x) => x.startsWith("kind:")) ? `/order?platform=${item.variant.product.category.slug}&kind=${item.variant.product.tags.find((x) => x.startsWith("kind:"))!.slice(5)}` : `/products/${item.variant.product.slug}`} className="inline-block text-sm font-semibold text-primary">{to("buyAgain")} →</Link>
+            <Link href={parseAccountMeta(item.variant.account) ? `/accounts/${item.variant.product.slug}` : item.variant.product.tags.some((x) => x.startsWith("kind:")) ? `/order?platform=${item.variant.product.category.slug}&kind=${item.variant.product.tags.find((x) => x.startsWith("kind:"))!.slice(5)}` : `/products/${item.variant.product.slug}`} className="inline-block text-sm font-semibold text-primary">{to("buyAgain")} →</Link>
           </div>
         ))}
         <div className="flex items-center justify-between p-5">

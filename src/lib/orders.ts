@@ -398,5 +398,8 @@ export function revealCode(encrypted: string) {
 }
 
 export function itemTitle(item: { productName: unknown; variantName: unknown }, locale: string) {
-  return `${t(item.productName, locale)} — ${t(item.variantName, locale)}`;
+  const product = t(item.productName, locale);
+  const variant = t(item.variantName, locale);
+  // Accounts: the option repeats the product name ("Kont Gmail × 2"), so show it alone.
+  return variant.startsWith(product) ? variant : `${product} — ${variant}`;
 }

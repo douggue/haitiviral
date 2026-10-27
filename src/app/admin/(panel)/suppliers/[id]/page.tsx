@@ -1,3 +1,4 @@
+import { isAccounts } from "@/lib/suppliers/ytseller";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -30,7 +31,7 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
   const s = await prisma.supplier.findUnique({ where: { id } });
   if (!s) notFound();
   const cfg = s.config as unknown as SupplierConfig;
-  const smm = isSmm(s.preset);
+  const smm = isSmm(s.preset) || isAccounts(s.preset);
   const saved = secretsOf(s);
   const preset = PRESETS[s.preset];
   const [orders, logs, variants] = await Promise.all([

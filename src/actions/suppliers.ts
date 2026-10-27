@@ -9,7 +9,8 @@ import { PRESETS } from "@/lib/suppliers/presets";
 import { callSupplier, secretsOf } from "@/lib/suppliers/engine";
 import { checkSupplierOrder, closeSupplierLine, finishOrders, retrySupplierLine } from "@/lib/suppliers/orders";
 import { mockSupplierAllowed } from "@/lib/suppliers/mock";
-import { smmBalance, smmStatuses } from "@/lib/suppliers/smm";
+import { smmBalance, smmCall, smmStatuses } from "@/lib/suppliers/smm";
+import { isAccounts } from "@/lib/suppliers/ytseller";
 import { isSmm } from "@/lib/suppliers/smm-orders";
 import type { SupplierConfig } from "@/lib/suppliers/types";
 
@@ -97,6 +98,18 @@ export async function testSupplier(id: string, what: "balance" | "token" | "stat
   try {
     await assertStaff("settings.manage");
     const sup = await prisma.supplier.findUniqueOrThrow({ where: { id } });
+    if (isAccounts(sup.preset)) {
+      if (what === "balance") {
+        const b = await smmBalance(sup);
+        return b ? { ok: true, message: `Balance: ${b.balance} ${b.currency}` } : { ok: false, error: "No balance in the reply. Check the API key, then see the request log." };
+      }
+      if (what === "status") {
+        const so = await prisma.supplierOrder.findFirst({ where: { supplierId: id, OR: [{ ref: ref.trim() }, { supplierOrderId: ref.trim() }] } });
+        const r = await smmCall(sup, "product_order_status", { order: so?.supplierOrderId ?? ref.trim() });
+        return r.error ? { ok: false, error: r.error } : { ok: true, message: `Status: ${JSON.stringify(r.data)}` };
+      }
+      return { ok: false, error: "This provider uses a key, there is no login to test" };
+    }
     if (isSmm(sup.preset)) {
       if (what === "balance") {
         const b = await smmBalance(sup);

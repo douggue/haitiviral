@@ -6,8 +6,10 @@ import { siteUrl } from "../site-url";
 import { callSupplier } from "./engine";
 import type { CallResult, SupplierConfig } from "./types";
 import { isSmm, runSmmChecks, sendSmm, smmInclude } from "./smm-orders";
+import { ACCOUNT_PRESETS, isAccounts, runAccountChecks, sendAccountOrder } from "./ytseller";
 
-const SMM_PRESETS = ["smm_panel", "smm_mock"];
+/** Providers with their own order steps (SMM panels, accounts providers), not the generic template engine. */
+const SMM_PRESETS = ["smm_panel", "smm_mock", ...ACCOUNT_PRESETS];
 
 /**
  * Supplier orders, step by step:
@@ -112,6 +114,14 @@ export async function sendQueued(orderId?: string): Promise<string[]> {
     const claim = await prisma.supplierOrder.updateMany({ where: { id: q.id, status: "QUEUED" }, data: { status: "SENDING" } });
     if (claim.count !== 1) continue;
     const smm = await prisma.supplierOrder.findUniqueOrThrow({ where: { id: q.id }, include: smmInclude });
+    if (isAccounts(smm.supplier.preset)) {
+      // Accounts: sent with our reference as trans_id; the lines come from the status checks.
+      await sendAccountOrder(smm).catch(async (e) => {
+        console.error("accounts send failed", q.id, e);
+        await prisma.supplierOrder.updateMany({ where: { id: q.id, status: "SENDING" }, data: { status: "UNKNOWN", nextCheckAt: new Date(), message: "Sending stopped with an error: will ask again with the same reference" } });
+      });
+      continue;
+    }
     if (isSmm(smm.supplier.preset)) {
       // SMM orders are never delivered on the spot: progress comes from the status checks.
       await sendSmm(smm).catch(async (e) => {
@@ -138,6 +148,7 @@ export async function sendQueued(orderId?: string): Promise<string[]> {
 export async function checkSupplierOrder(id: string, force = false): Promise<string | null> {
   const row = await prisma.supplierOrder.findUnique({ where: { id }, select: { supplier: { select: { preset: true } } } });
   if (row && isSmm(row.supplier.preset)) return (await runSmmChecks([id]))[0] ?? null;
+  if (row && isAccounts(row.supplier.preset)) return (await runAccountChecks([id]))[0] ?? null;
   const claim = await prisma.supplierOrder.updateMany({
     where: { id, status: { in: force ? ["PENDING", "UNKNOWN", "FAILED"] : ["PENDING", "UNKNOWN"] }, OR: [{ lockedUntil: null }, { lockedUntil: { lt: new Date() } }] },
     data: { lockedUntil: new Date(Date.now() + 60_000), checks: { increment: 1 } },
@@ -176,20 +187,26 @@ export async function runSupplierCron() {
     where: { status: "SENDING", updatedAt: { lt: stale }, supplier: { preset: { notIn: SMM_PRESETS } } },
     data: { status: "UNKNOWN", nextCheckAt: new Date(), message: "Sending was interrupted: checking with the supplier" },
   });
+  // Accounts providers take our reference again (trans_id): an interrupted send is simply asked again.
+  const accountsInterrupted = await prisma.supplierOrder.updateMany({
+    where: { status: "SENDING", updatedAt: { lt: stale }, supplier: { preset: { in: ACCOUNT_PRESETS } } },
+    data: { status: "UNKNOWN", nextCheckAt: new Date(), message: "Sending was interrupted: asking again with the same reference" },
+  });
   // SMM panels can't be asked about an order by our reference: an interrupted send goes to staff.
   const smmInterrupted = await prisma.supplierOrder.updateMany({
-    where: { status: "SENDING", updatedAt: { lt: stale }, supplier: { preset: { in: SMM_PRESETS } } },
+    where: { status: "SENDING", updatedAt: { lt: stale }, supplier: { preset: { in: ["smm_panel", "smm_mock"] } } },
     data: { status: "UNKNOWN", nextCheckAt: null, message: "Sending was interrupted: check on the provider's site, then close or retry here" },
   });
   const delivered = await sendQueued();
   delivered.push(...(await runSmmChecks().catch((e) => (console.error("SMM checks failed", e), []))));
+  delivered.push(...(await runAccountChecks().catch((e) => (console.error("accounts checks failed", e), []))));
   const due = await prisma.supplierOrder.findMany({ where: { status: { in: ["PENDING", "UNKNOWN"] }, nextCheckAt: { lte: new Date() }, supplier: { preset: { notIn: SMM_PRESETS } } }, select: { id: true }, orderBy: { nextCheckAt: "asc" }, take: 30 });
   for (const d of due) {
     const o = await checkSupplierOrder(d.id).catch((e) => (console.error("supplier check failed", d.id, e), null));
     if (o) delivered.push(o);
   }
   await finishOrders(delivered);
-  return { supplierInterrupted: interrupted.count + smmInterrupted.count, supplierChecked: due.length, supplierDelivered: delivered.length };
+  return { supplierInterrupted: interrupted.count + smmInterrupted.count + accountsInterrupted.count, supplierChecked: due.length, supplierDelivered: delivered.length };
 }
 
 /** After lines were delivered: let fulfillOrder close the order and tell the customer. */
