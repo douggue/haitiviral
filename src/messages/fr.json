@@ -72,7 +72,12 @@
     "themeAuto": "Auto",
     "community": "Rejoignez la communauté",
     "freeTrial": "Essai gratuit",
-    "accounts": "Comptes et numéros SMS"
+    "accounts": "Comptes et numéros SMS",
+    "ourServices": "Nos services",
+    "accountsShort": "Comptes & SMS",
+    "inviteShort": "Parrainage",
+    "hoursShort": "Horaires",
+    "helpCenter": "Centre d'aide"
   },
   "home": {
     "eyebrow": "Fait en Haïti, pour les créateurs",

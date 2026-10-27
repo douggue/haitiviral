@@ -8,7 +8,7 @@ import { getDisplaySettings } from "@/lib/settings";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { BottomNav, HeaderSlot, PhoneHidden, ThemeKeeper } from "@/components/HeaderClient";
+import { BottomNav, HeaderSlot, FooterSlot, PhoneHidden, ThemeKeeper } from "@/components/HeaderClient";
 import { AnnouncementBar } from "@/components/AnnouncementBar";
 import { alternates } from "@/lib/seo";
 import { themeAttrs, themeCss, themeScript, cssGuardScript } from "@/lib/theme-css";
@@ -77,9 +77,9 @@ export default async function LocaleLayout({ children, params }: { children: Rea
               <Header />
             </HeaderSlot>
             <main id="main">{children}</main>
-            <PhoneHidden>
+            <FooterSlot>
               <Footer settings={settings} />
-            </PhoneHidden>
+            </FooterSlot>
             <PhoneHidden onHome={false}>
               <WhatsAppButton number={settings.whatsappNumber} />
             </PhoneHidden>

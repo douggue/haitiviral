@@ -188,6 +188,12 @@ export function PhoneHidden({ onHome = true, children }: { onHome?: boolean; chi
   return <div className={hide ? "max-md:hidden" : undefined}>{children}</div>;
 }
 
+/** Footer: shown on every page, except on phones on the sign-in screens (they have their own layout). */
+export function FooterSlot({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  return <div className={pathname === "/auth" || pathname.startsWith("/auth/") ? "max-md:hidden" : undefined}>{children}</div>;
+}
+
 /** Header (mockup): "KR" / "FR"; tapping switches to the other language. */
 export function LangToggle() {
   const t = useTranslations("common");
