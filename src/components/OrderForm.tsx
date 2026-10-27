@@ -55,6 +55,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
   const [comments, setComments] = useState("");
   const [username, setUsername] = useState("");
   const [sheet, setSheet] = useState<null | "drip" | "risk">(null);
+  const [dripOn, setDripOn] = useState(false);
   const [tab, setTab] = useState<"info" | "read" | "updates">("info");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
@@ -69,7 +70,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
   const post = wantsPost(service.kind, meta.type);
   const commentList = parseComments(comments);
   const quantity = hasComments ? commentList.length : Number(qty) || 0;
-  // Drip-feed is set by staff per service and applied automatically: shown here, nothing to choose.
+  // Drip-feed: the customer only turns it on; batches and timing come from the staff settings of the service.
   const drip = meta.type === "default" ? dripPlan(quantity, meta) : null;
   const total = withDiscount(servicePrice(tier.rate, quantity, meta.type, dur), discount);
   const check = link.trim() ? checkLink(link, platform.slug, post, meta.postType) : null;
@@ -100,6 +101,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
         comments: hasComments ? comments : undefined,
         username: meta.type === "commentLikes" ? username : undefined,
         durationMin: isLive ? dur : undefined,
+        drip: !!drip && dripOn,
         acceptRisk: accepted,
         publicOk: isPublic,
       });
@@ -259,9 +261,12 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
             <div className="mt-1 flex items-center gap-2 rounded-[14px] border border-border bg-surface py-1.5 pl-3.5 pr-1.5">
               <div className="flex flex-1 flex-col gap-0.5">
                 <span className="text-sm font-bold">{t("dripTitle")}</span>
-                <span className="text-xs text-muted">{t("dripAuto", { runs: drip.runs, each: num(drip.perRun), minutes: drip.interval })}</span>
+                <span className="text-xs text-muted">{dripOn ? t("dripAuto", { runs: drip.runs, each: num(drip.perRun), minutes: drip.interval }) : t("dripOff")}</span>
               </div>
               <button type="button" onClick={() => setSheet("drip")} aria-label={t("dripWhat")} className="h-10 w-10 flex-none rounded-full bg-surface-2 font-extrabold text-text/80">?</button>
+              <button type="button" onClick={() => setDripOn((d) => !d)} aria-pressed={dripOn} aria-label={t("dripToggle")} className="grid h-11 w-[60px] flex-none place-items-center">
+                <span className={`flex h-7 w-12 rounded-full p-[3px] ${dripOn ? "justify-end bg-text" : "justify-start bg-[#CBD2E1]"}`}><span className="h-[22px] w-[22px] rounded-full bg-white" /></span>
+              </button>
             </div>
           )}
         </section>

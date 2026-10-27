@@ -223,8 +223,8 @@ export async function createServiceOrder(input: ServiceOrderInput) {
     if (!(LIVE_DURATIONS as readonly number[]).includes(duration)) throw new OrderError("invalid_quantity");
     fieldValues.durationMin = String(duration);
   }
-  // Drip-feed: staff settings per service, applied automatically.
-  const drip = meta.type === "default" ? dripPlan(quantity, meta) : null;
+  // Drip-feed: the customer turns it on; batches and timing come from the staff settings of the service.
+  const drip = input.drip && meta.type === "default" ? dripPlan(quantity, meta) : null;
   if (drip) fieldValues.drip = `${drip.runs}x${drip.perRun}/${drip.interval}min`;
   if (meta.risk === "high") {
     if (!input.acceptRisk) throw new OrderError("risk_not_accepted");

@@ -160,8 +160,8 @@ export default async function ServicesAdmin({ searchParams }: { searchParams: Pr
                         <input name="avg_fr" defaultValue={c.meta.avg.fr ?? ""} placeholder="Average time · Français" className={field} aria-label="Average time French" />
                         {c.meta.drip && c.meta.type === "default" ? (
                           <fieldset className="flex flex-col gap-1.5 rounded-lg border border-[#CBD2E1] p-2 sm:col-span-2 dark:border-border">
-                            <legend className="px-1 text-[11px] font-bold text-muted">Drip-feed (the provider supports it) · applied automatically, the customer chooses nothing</legend>
-                            <label className="flex items-center gap-2 text-xs"><input type="checkbox" name="dripOn" defaultChecked={!!c.meta.dripAuto} /> Send in batches</label>
+                            <legend className="px-1 text-[11px] font-bold text-muted">Drip-feed (the provider supports it) · the customer only sees an on/off switch; these settings are used</legend>
+                            <label className="flex items-center gap-2 text-xs"><input type="checkbox" name="dripOn" defaultChecked={!!c.meta.dripAuto} /> Offer drip-feed to customers</label>
                             <div className="grid grid-cols-3 gap-1.5">
                               <label className="text-[11px] text-muted">Batches<input name="dripRuns" defaultValue={c.meta.dripAuto?.runs ?? 5} inputMode="numeric" className={`${field} w-full`} /></label>
                               <label className="text-[11px] text-muted">Minutes between<input name="dripInterval" defaultValue={c.meta.dripAuto?.interval ?? 60} inputMode="numeric" className={`${field} w-full`} /></label>
