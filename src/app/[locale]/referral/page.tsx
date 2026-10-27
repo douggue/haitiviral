@@ -31,7 +31,7 @@ export default async function ReferralPublicPage({ params }: { params: Promise<{
         <span className="relative text-xs font-extrabold tracking-[0.6px] text-[#DCE3FF]">{t("eyebrow")}</span>
         <h1 className="relative max-w-[290px] text-[27px] font-extrabold leading-[1.18]">{t("title")}</h1>
         <p className="relative text-[15px] leading-normal text-[#E5EAFF]">{t.rich("lead", { pct: top, b: (c) => <b className="text-white">{c}</b> })}</p>
-        <PayBadges className="relative" />
+        <PayBadges height={24} className="relative" />
         <Link href={cta.href} className="relative flex min-h-[52px] items-center justify-center rounded-[14px] bg-white text-base font-extrabold text-[#00209F] dark:bg-white dark:text-[#00209F]">{cta.label}</Link>
       </section>
 

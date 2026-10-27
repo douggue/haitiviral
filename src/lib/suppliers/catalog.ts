@@ -199,7 +199,7 @@ export async function linkChoice(variantId: string, input: { supplierId: string 
   const refillDays = main.refill ? meta.refillDays || Number(/(\d+)\s*(?:days?|d)\b/i.exec(`${main.name} ${main.desc ?? ""}`)?.[1] ?? 30) : 0;
   // The details card is refilled from the new provider service (the customer description, "about", is kept).
   const info = infoFromProvider(main.name, main.desc, main.cancel);
-  const next: ServiceMeta = { ...meta, min: Math.max(...found.map((f) => f.min)), max: Math.min(...found.map((f) => f.max)), refillDays, drip: meta.drip && main.dripfeed, desc: [main.name, main.desc].filter(Boolean).join(" · ").slice(0, 500), info };
+  const next: ServiceMeta = { ...meta, min: Math.max(...found.map((f) => f.min)), max: Math.min(...found.map((f) => f.max)), refillDays, drip: main.dripfeed, desc: [main.name, main.desc].filter(Boolean).join(" · ").slice(0, 500), info };
   await prisma.$transaction([
     prisma.productVariant.update({ where: { id: variantId }, data: { supplierId: input.supplierId, supplierSku: sku, backupSupplierId: input.backupSupplierId && backupSku ? input.backupSupplierId : null, backupSupplierSku: input.backupSupplierId && backupSku ? backupSku : null, service: next } }),
     prisma.product.update({ where: { id: v.productId }, data: { fulfillmentType: "SUPPLIER_API" } }),

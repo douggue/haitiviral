@@ -14,7 +14,7 @@ import { amountInRange, isExchangeProduct, quoteAmount } from "./amount";
 import { hasOpenSupplierOrder, queueSupplierLines, sendQueued } from "./suppliers/orders";
 import { vipStatus, withDiscount } from "./vip";
 import { resolveShortLink } from "./link-resolve";
-import { checkLink, isShortLink, DRIP_INTERVAL_MIN, DRIP_RUNS, LIVE_DURATIONS, parseComments, parseMeta, productKind, servicePrice, wantsPost } from "./services";
+import { checkLink, dripPlan, isShortLink, LIVE_DURATIONS, parseComments, parseMeta, productKind, servicePrice, wantsPost } from "./services";
 
 export type FieldDef = {
   key: string;
@@ -223,9 +223,9 @@ export async function createServiceOrder(input: ServiceOrderInput) {
     if (!(LIVE_DURATIONS as readonly number[]).includes(duration)) throw new OrderError("invalid_quantity");
     fieldValues.durationMin = String(duration);
   }
-  if (input.drip && meta.drip) {
-    fieldValues.drip = `${DRIP_RUNS}x${Math.ceil(quantity / DRIP_RUNS)}/${DRIP_INTERVAL_MIN}min`;
-  }
+  // Drip-feed: staff settings per service, applied automatically.
+  const drip = meta.type === "default" ? dripPlan(quantity, meta) : null;
+  if (drip) fieldValues.drip = `${drip.runs}x${drip.perRun}/${drip.interval}min`;
   if (meta.risk === "high") {
     if (!input.acceptRisk) throw new OrderError("risk_not_accepted");
     fieldValues.riskAcceptedAt = new Date().toISOString();

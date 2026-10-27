@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { assertStaff } from "@/lib/session";
 import { audit } from "@/lib/audit";
 import { getSettings, setSetting } from "@/lib/settings";
-import { parseMeta } from "@/lib/services";
+import { cleanDrip, parseMeta } from "@/lib/services";
 import { rulesFromText } from "@/lib/service-risk";
 import { cleanInfo } from "@/lib/service-info";
 import { syncPackPrices } from "@/lib/packs";
@@ -253,9 +253,11 @@ export async function saveChoiceDetails(variantId: string, form: FormData): Prom
       refillDays: Number.isInteger(refill) && refill >= 0 && refill <= 365 ? refill : meta.refillDays,
       info,
       postType: (["reel", "shorts", "video"] as const).find((x) => x === str("postType")),
+      dripAuto: meta.drip && form.get("dripOn") === "on" ? cleanDrip({ runs: str("dripRuns"), interval: str("dripInterval"), from: str("dripFrom") }) : undefined,
     };
+    if (meta.drip && form.get("dripOn") === "on" && !next.dripAuto) return { ok: false, error: "Drip-feed: 2–100 batches, 1–1440 minutes between" };
     await prisma.productVariant.update({ where: { id: variantId }, data: { service: next } });
-    await audit(staff.id, "choice.details", "ProductVariant", variantId, { info, refillDays: next.refillDays });
+    await audit(staff.id, "choice.details", "ProductVariant", variantId, { info, refillDays: next.refillDays, dripAuto: next.dripAuto ?? null });
     refresh();
     return { ok: true, message: "Saved" };
   } catch (e) {

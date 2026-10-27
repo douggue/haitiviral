@@ -77,7 +77,7 @@ export function EarningsCard({ available, pending, min, name, phone }: { availab
       setMsg(r.ok ? { ok: true, text: t("walletDone", { amount: fmt(available) }) } : { ok: false, text: error(r.error) });
       router.refresh();
     });
-  const pick = (m: "MONCASH" | "NATCASH") => `flex min-h-[52px] items-center justify-center rounded-[14px] ${method === m ? "border-2 border-text" : "border border-[#CBD2E1] dark:border-border"} keep-white bg-white`;
+  const pick = (m: "MONCASH" | "NATCASH") => `flex min-h-[52px] items-center justify-center rounded-[14px] ${method === m ? "border-2 border-text" : "border border-[#CBD2E1] dark:border-border"} bg-surface`;
   return (
     <section className="flex flex-col gap-3 rounded-[18px] border border-border bg-surface p-4">
       <div className="flex items-start justify-between gap-2.5">
@@ -87,8 +87,8 @@ export function EarningsCard({ available, pending, min, name, phone }: { availab
           {pending > 0 && <span className="text-xs text-muted">{t("waiting", { amount: fmt(pending) })}</span>}
         </div>
         <span className="flex flex-col gap-1.5">
-          <span className="keep-white rounded-lg border border-[#E5E7EF] bg-white px-2 py-1"><PayLogo brand="moncash" height={14} /></span>
-          <span className="keep-white rounded-lg border border-[#E5E7EF] bg-white px-2 py-1"><PayLogo brand="natcash" height={14} /></span>
+          <PayLogo brand="moncash" height={20} />
+          <PayLogo brand="natcash" height={20} />
         </span>
       </div>
       <div className="grid grid-cols-[2fr_1fr] gap-2">

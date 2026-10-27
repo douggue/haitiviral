@@ -6,7 +6,7 @@ import { placeServiceOrder } from "@/actions/service-order";
 import { formatMoney } from "@/lib/money";
 import { withDiscount } from "@/lib/vip-math";
 import {
-  checkLink, DRIP_INTERVAL_MIN, DRIP_RUNS, LIVE_DURATIONS, linkExample, parseComments, servicePrice, wantsPost,
+  checkLink, dripPlan, LIVE_DURATIONS, linkExample, parseComments, servicePrice, wantsPost,
   type Kind, type Risk, type ServiceMeta,
 } from "@/lib/services";
 
@@ -50,7 +50,6 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
   const [link, setLink] = useState("");
   const [qty, setQty] = useState("1000");
   const [dur, setDur] = useState(30);
-  const [drip, setDrip] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
   const [comments, setComments] = useState("");
@@ -70,6 +69,8 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
   const post = wantsPost(service.kind, meta.type);
   const commentList = parseComments(comments);
   const quantity = hasComments ? commentList.length : Number(qty) || 0;
+  // Drip-feed is set by staff per service and applied automatically: shown here, nothing to choose.
+  const drip = meta.type === "default" ? dripPlan(quantity, meta) : null;
   const total = withDiscount(servicePrice(tier.rate, quantity, meta.type, dur), discount);
   const check = link.trim() ? checkLink(link, platform.slug, post, meta.postType) : null;
   const linkError = check && !check.ok ? t(`err_${check.error === "empty" ? "not_platform" : check.error}`, { platform: platform.name, example: linkExample(platform.slug, post) }) : "";
@@ -99,7 +100,6 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
         comments: hasComments ? comments : undefined,
         username: meta.type === "commentLikes" ? username : undefined,
         durationMin: isLive ? dur : undefined,
-        drip: meta.drip && drip,
         acceptRisk: accepted,
         publicOk: isPublic,
       });
@@ -255,16 +255,13 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
             </div>
           )}
 
-          {meta.drip && (
+          {drip && (
             <div className="mt-1 flex items-center gap-2 rounded-[14px] border border-border bg-surface py-1.5 pl-3.5 pr-1.5">
               <div className="flex flex-1 flex-col gap-0.5">
                 <span className="text-sm font-bold">{t("dripTitle")}</span>
-                <span className="text-xs text-muted">{drip ? t("dripOn", { runs: DRIP_RUNS, minutes: DRIP_INTERVAL_MIN }) : t("dripOff")}</span>
+                <span className="text-xs text-muted">{t("dripAuto", { runs: drip.runs, each: num(drip.perRun), minutes: drip.interval })}</span>
               </div>
               <button type="button" onClick={() => setSheet("drip")} aria-label={t("dripWhat")} className="h-10 w-10 flex-none rounded-full bg-surface-2 font-extrabold text-text/80">?</button>
-              <button type="button" onClick={() => setDrip((d) => !d)} aria-pressed={drip} aria-label={t("dripToggle")} className="grid h-11 w-[60px] flex-none place-items-center">
-                <span className={`flex h-7 w-12 rounded-full p-[3px] ${drip ? "justify-end bg-text" : "justify-start bg-[#CBD2E1]"}`}><span className="h-[22px] w-[22px] rounded-full bg-white" /></span>
-              </button>
             </div>
           )}
         </section>

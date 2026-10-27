@@ -840,7 +840,8 @@
     "err_empty": "Mettez le lien.",
     "publicConfirm": "Je confirme que mon compte est PUBLIC (pas privé) et que je ne change pas mon nom d'utilisateur pendant la commande.",
     "error_not_public": "Confirmez que votre compte est public avant de commander.",
-    "okHandle": "Nous utiliserons ce profil."
+    "okHandle": "Nous utiliserons ce profil.",
+    "dripAuto": "Livré en {runs} fois · {each} toutes les {minutes} minutes, pour un rendu naturel"
   },
   "ordersUi": {
     "title": "Mes commandes",
@@ -871,7 +872,11 @@
     "helpError": "Ça n'a pas marché. Réessayez ou écrivez-nous sur WhatsApp.",
     "notePartial": "Le fournisseur a livré {done} sur {total}. {amount} revient automatiquement dans votre portefeuille.",
     "remains": "Reste : {n}",
-    "lineRefunded": "Remboursé"
+    "lineRefunded": "Remboursé",
+    "refillUntil": "Recharge possible jusqu'au {date}.",
+    "refillRunning": "Recharge en cours chez le fournisseur.",
+    "refillWait": "Recharge déjà demandée. Réessayez demain.",
+    "refillOver": "La période de recharge est terminée."
   },
   "walletUi": {
     "title": "Mon portefeuille",

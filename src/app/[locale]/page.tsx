@@ -61,7 +61,7 @@ export default async function HomePage({ params, searchParams }: { params: Promi
           <div aria-hidden className="absolute -right-10 -top-10 h-[140px] w-[140px] rounded-full bg-[#D21034]" />
           <h1 className="relative max-w-[240px] text-[25px] font-extrabold leading-[1.15] md:max-w-none md:text-3xl">{heroTitle}</h1>
           <p className="relative text-sm leading-normal text-[#DCE3FF]">{heroSubtitle}</p>
-          <PayBadges className="relative" />
+          <PayBadges height={24} className="relative" />
           <Link href="/order" className="relative self-start rounded-xl bg-white px-[18px] py-3 text-[15px] font-bold text-[#0F172A]">{th("heroCta")}</Link>
         </section>
 

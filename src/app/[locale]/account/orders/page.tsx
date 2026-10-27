@@ -43,7 +43,7 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
         include: {
           variant: { include: { product: { include: { category: true } } } },
           // The provider attempt that counts (the latest): start count, what remains, partial refund.
-          supplierOrders: { where: { status: { not: "CLOSED" } }, orderBy: { createdAt: "desc" }, take: 1, select: { startCount: true, remains: true, refundedPartial: true } },
+          supplierOrders: { where: { status: { not: "CLOSED" } }, orderBy: { createdAt: "desc" }, take: 1, select: { startCount: true, remains: true, refundedPartial: true, refillAt: true, refillStatus: true, supplierOrderId: true } },
         },
       },
     },
@@ -97,6 +97,12 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
           const done = look === "done" ? qty : o.items.reduce((a, i) => a + lineDone(i), 0);
           const pct = look === "done" ? 100 : qty && done ? Math.round((done / qty) * 100) : look === "run" ? 8 : 0;
           const name = pack ? txt(pack, locale) : product ? `${txt(product.name, locale)}${qty ? ` · ${qty.toLocaleString("en-US")}` : ""}` : `#${o.number}`;
+          // Refill: only inside the refill period (from delivery), once a day, and not while one is running.
+          const refillUntil = meta?.refillDays && o.fulfilledAt ? new Date(o.fulfilledAt.getTime() + meta.refillDays * 86_400_000) : null;
+          const refillOpen = !!so?.refillAt && !["Completed", "Rejected", "Canceled", "Error"].includes(so.refillStatus ?? "");
+          const refill: "none" | "over" | "running" | "wait" | "open" = !refillUntil ? "none" : now > refillUntil ? "over"
+            : refillOpen && now.getTime() - so!.refillAt!.getTime() < 3 * 86_400_000 ? "running"
+            : so?.refillAt && now.getTime() - so.refillAt.getTime() < 86_400_000 ? "wait" : "open";
           const statusLabel = look === "run" ? t("running") : look === "done" ? t("done") : look === "partial" ? t("partial") : look === "wait" ? t("waiting") : t("canceled");
           const refunded = o.status === "REFUNDED" || o.status === "CANCELED";
           return (
@@ -137,9 +143,14 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
               </div>
               {look === "partial" && <p className="rounded-[10px] px-3 py-2.5 text-xs leading-normal dark:!bg-surface-2 dark:!text-text" style={{ background: bg, color: fg }}>{t("notePartial", { done: done.toLocaleString("en-US"), total: qty.toLocaleString("en-US"), amount: formatMoney(refundedPart, o.currency, locale) })}</p>}
               {refunded && <p className="rounded-[10px] px-3 py-2.5 text-xs leading-normal dark:!bg-surface-2 dark:!text-text" style={{ background: bg, color: fg }}>{t("noteRefunded", { amount: formatMoney(o.total, o.currency, locale) })}</p>}
+              {(look === "done" || look === "partial") && !pack && refill !== "none" && (
+                <p className="text-xs text-muted">
+                  {refill === "running" ? t("refillRunning") : refill === "wait" ? t("refillWait") : refill === "over" ? t("refillOver") : t("refillUntil", { date: refillUntil!.toLocaleDateString(locale === "fr" ? "fr-FR" : "fr-HT", { day: "numeric", month: "short" }) })}
+                </p>
+              )}
               {(look === "done" || look === "partial") && (
                 <div className="flex gap-2">
-                  {!pack && !!meta?.refillDays && (
+                  {!pack && refill === "open" && (
                     <OrderHelpButton orderId={o.id} kind="refill" label={t("refill")} className="flex min-h-11 w-full flex-1 items-center justify-center gap-1.5 rounded-xl border border-text bg-surface text-sm font-bold text-text">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 12a9 9 0 1 1-3-6.7L21 8" /><path d="M21 3v5h-5" /></svg>
                     </OrderHelpButton>
@@ -147,12 +158,12 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
                   {pack ? (
                     <Link href={`/order/pack/${fv.pack}`} className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-primary-soft text-sm font-bold text-text">{t("again")}</Link>
                   ) : product && (
-                    <Link href={`/order?platform=${product.category.slug}&kind=${product.tags.find((x) => x.startsWith("kind:"))?.slice(5) ?? ""}`} className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-primary-soft text-sm font-bold text-text">{t("again")}</Link>
+                    <Link href={["accounts", "sms"].includes(product.category.slug) ? `/accounts/${product.slug}` : `/order?platform=${product.category.slug}&kind=${product.tags.find((x) => x.startsWith("kind:"))?.slice(5) ?? ""}`} className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-primary-soft text-sm font-bold text-text">{t("again")}</Link>
                   )}
                 </div>
               )}
               {look === "run" && meta && <p className="text-xs text-[#1E40AF] dark:text-primary">{t("avg", { time: txt(meta.avg, locale) })}</p>}
-              {look === "run" && (
+              {look === "run" && meta?.info?.cancel !== false && (
                 <OrderHelpButton orderId={o.id} kind="cancel" label={t("cancel")} className="min-h-11 w-full rounded-xl border border-[#FCA5A5] bg-surface px-3 text-sm font-bold text-[#B91C1C]" />
               )}
             </article>

@@ -840,7 +840,8 @@
     "err_empty": "Mete lyen an.",
     "publicConfirm": "Mwen konfime kont mwen PIBLIK (pa prive) epi m pap chanje non itilizatè m pandan kòmand lan.",
     "error_not_public": "Konfime kont ou piblik anvan w kòmande.",
-    "okHandle": "Nou pral itilize pwofil sa a."
+    "okHandle": "Nou pral itilize pwofil sa a.",
+    "dripAuto": "Livre an {runs} fwa · {each} chak {minutes} minit, pou li parèt natirèl"
   },
   "ordersUi": {
     "title": "Kòmand mwen yo",
@@ -871,7 +872,11 @@
     "helpError": "Sa pa mache. Eseye ankò oswa ekri nou sou WhatsApp.",
     "notePartial": "Founisè a livre {done} sou {total}. {amount} tounen nan bous ou otomatikman.",
     "remains": "Rete: {n}",
-    "lineRefunded": "Ranbouse"
+    "lineRefunded": "Ranbouse",
+    "refillUntil": "Refill disponib jiska {date}.",
+    "refillRunning": "Refill an kou kay founisè a.",
+    "refillWait": "Refill la fèk mande. Ou ka mande ankò demen.",
+    "refillOver": "Peryòd refill la fini."
   },
   "walletUi": {
     "title": "Bous mwen",

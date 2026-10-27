@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkLink, parseComments, servicePrice, wantsPost } from "@/lib/services";
+import { checkLink, cleanDrip, dripPlan, parseComments, servicePrice, wantsPost } from "@/lib/services";
 import { withDiscount } from "@/lib/vip-math";
 
 describe("service links", () => {
@@ -54,5 +54,26 @@ describe("smarter link check", () => {
     expect(checkLink("https://www.youtube.com/watch?v=x", "youtube", true, "shorts")).toEqual({ ok: false, error: "need_shorts" });
     expect(checkLink("https://www.youtube.com/shorts/abc", "youtube", true, "video")).toEqual({ ok: false, error: "need_video" });
     expect(checkLink("https://youtu.be/abc", "youtube", true, "video").ok).toBe(true);
+  });
+});
+
+describe("dripPlan", () => {
+  const base = { drip: true, min: 100, dripAuto: { runs: 5, interval: 60, from: 500 } };
+  it("splits big orders into the staff batches", () => {
+    expect(dripPlan(1000, base)).toEqual({ runs: 5, perRun: 200, interval: 60 });
+  });
+  it("small orders go in one go", () => {
+    expect(dripPlan(400, base)).toBeNull();
+  });
+  it("keeps each batch above the service minimum", () => {
+    expect(dripPlan(250, { ...base, dripAuto: { runs: 5, interval: 30, from: 0 } })).toEqual({ runs: 2, perRun: 125, interval: 30 });
+  });
+  it("off when staff didn't set it or the provider can't", () => {
+    expect(dripPlan(1000, { ...base, dripAuto: undefined })).toBeNull();
+    expect(dripPlan(1000, { ...base, drip: false })).toBeNull();
+  });
+  it("cleans stored settings", () => {
+    expect(cleanDrip({ runs: "3", interval: "45", from: "" })).toEqual({ runs: 3, interval: 45, from: 0 });
+    expect(cleanDrip({ runs: 1, interval: 45 })).toBeUndefined();
   });
 });

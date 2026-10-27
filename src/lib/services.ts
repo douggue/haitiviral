@@ -19,7 +19,10 @@ export type ServiceMeta = {
   risk: Risk;
   /** 0 = no refill */
   refillDays: number;
+  /** The provider can drip-feed this service */
   drip: boolean;
+  /** Staff drip-feed settings, applied automatically (the customer chooses nothing); none = off */
+  dripAuto?: DripAuto;
   /** The provider's own description: admin only (customers never see the provider's words, name or number) */
   desc?: string;
   /** Short description for customers, per language (editable in Admin → Services & risk) */
@@ -38,6 +41,30 @@ export type ServiceMeta = {
 export const LIVE_DURATIONS = [15, 30, 60, 120] as const;
 export const DRIP_RUNS = 5;
 export const DRIP_INTERVAL_MIN = 60;
+
+/** Drip-feed set by staff: split into `runs` batches, `interval` minutes apart, for orders of at least `from`. */
+export type DripAuto = { runs: number; interval: number; from: number };
+
+export function cleanDrip(v: unknown): DripAuto | undefined {
+  if (!v || typeof v !== "object") return undefined;
+  const d = v as Partial<DripAuto>;
+  const runs = Math.round(Number(d.runs));
+  const interval = Math.round(Number(d.interval));
+  if (!(runs >= 2 && runs <= 100 && interval >= 1 && interval <= 1440)) return undefined;
+  return { runs, interval, from: Math.max(0, Math.round(Number(d.from)) || 0) };
+}
+
+/**
+ * What drip-feed this order gets: null when off, when the order is under the staff "from" size, or when it can't be
+ * split into at least 2 batches of the service minimum. Batches round up (a few extra at most, never fewer).
+ */
+export function dripPlan(quantity: number, meta: Pick<ServiceMeta, "drip" | "dripAuto" | "min">): { runs: number; perRun: number; interval: number } | null {
+  const d = meta.drip ? meta.dripAuto : undefined;
+  if (!d || quantity < d.from) return null;
+  const runs = Math.min(d.runs, Math.floor(quantity / Math.max(1, meta.min)));
+  if (runs < 2) return null;
+  return { runs, perRun: Math.ceil(quantity / runs), interval: d.interval };
+}
 export const MAX_COMMENT_LENGTH = 300;
 
 export function parseMeta(v: unknown): ServiceMeta | null {
@@ -52,6 +79,7 @@ export function parseMeta(v: unknown): ServiceMeta | null {
     risk: m.risk ?? "med",
     refillDays: m.refillDays ?? 0,
     drip: !!m.drip,
+    dripAuto: cleanDrip(m.dripAuto),
     desc: m.desc,
     about: m.about && typeof m.about === "object" ? m.about : undefined,
     info: cleanInfo(m.info),
