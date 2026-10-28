@@ -5,7 +5,7 @@ export const DEFAULT_FOOTER_SERVICES: NavLink[] = [
   { label: { ht: "Kòmande", fr: "Commander" }, href: "/order" },
   { label: { ht: "Eseye gratis", fr: "Essai gratuit" }, href: "/trial" },
   { label: { ht: "Kont & SMS", fr: "Comptes & SMS" }, href: "/accounts" },
-  { label: { ht: "Envite zanmi", fr: "Parrainage" }, href: "/referral" },
+  { label: { ht: "Fè Kòb", fr: "Gagner de l'argent" }, href: "/referral" },
   { label: { ht: "Bous", fr: "Portefeuille" }, href: "/account/wallet" },
 ];
 
