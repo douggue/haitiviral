@@ -52,7 +52,8 @@ export type Settings = {
   reviewsTrustpilot: string;
   announcement: { enabled: boolean; text: Record<string, string>; link: string; startsAt?: string; endsAt?: string };
   /** Header and footer links (Admin → Navigation). Empty = built-in links. */
-  navigation: { header: NavLink[]; footer: NavLink[] };
+  /** footer = extra legal links; footerServices / footerHelp = the footer's buttons and help links (empty = standard lists) */
+  navigation: { header: NavLink[]; footer: NavLink[]; footerServices?: NavLink[]; footerHelp?: NavLink[] };
   newsletterEnabled: boolean;
   /** Customers must confirm their email before ordering, depositing or exchanging (only while email sending is on) */
   requireEmailVerification: boolean;

@@ -56,16 +56,18 @@ export async function deletePage(id: string): Promise<R> {
 
 // ───────────── Navigation ─────────────
 
-export async function saveNavigation(nav: { header: NavLink[]; footer: NavLink[] }): Promise<R> {
+export async function saveNavigation(nav: { header: NavLink[]; footer: NavLink[]; footerServices?: NavLink[]; footerHelp?: NavLink[] }): Promise<R> {
   try {
     const staff = await assertStaff("content.manage");
     const clean = (list: NavLink[]) =>
       (list ?? []).slice(0, 12).map((l) => ({ label: cleanL(l.label, 40), href: String(l.href ?? "").trim() })).filter((l) => l.href && (l.label.ht || l.label.fr || l.label.en));
     const header = clean(nav.header);
     const footer = clean(nav.footer);
-    for (const l of [...header, ...footer]) if (!(l.href.startsWith("/") || l.href.startsWith("https://"))) return { ok: false, error: `Link "${l.href}" must start with / or https://` };
-    await setSetting("navigation", { header, footer });
-    await audit(staff.id, "navigation.save", "SiteSetting", "navigation", { header: header.length, footer: footer.length });
+    const footerServices = clean(nav.footerServices ?? []);
+    const footerHelp = clean(nav.footerHelp ?? []);
+    for (const l of [...header, ...footer, ...footerServices, ...footerHelp]) if (!(l.href.startsWith("/") || l.href.startsWith("https://"))) return { ok: false, error: `Link "${l.href}" must start with / or https://` };
+    await setSetting("navigation", { header, footer, footerServices, footerHelp });
+    await audit(staff.id, "navigation.save", "SiteSetting", "navigation", { footer: footer.length, footerServices: footerServices.length, footerHelp: footerHelp.length });
     revalidatePath("/", "layout");
     return { ok: true, message: "Navigation published" };
   } catch (e) {

@@ -10,7 +10,7 @@ export default async function NavigationPage() {
   const s = await getSettings();
   return (
     <>
-      <PageTitle title="Navigation" sub="Header menu and extra footer links. Leave the header list empty to keep the standard menu (Store, Categories, Guides, News, FAQ). Custom pages with “Link in footer” are added automatically." />
+      <PageTitle title="Menus" sub="The footer on every page: service buttons, help links and extra legal links, in Kreyòl and French. Use ▲▼ to change the order, ✕ to remove. Press Publish to put it live." />
       <NavigationEditor initial={s.navigation ?? { header: [], footer: [] }} />
     </>
   );

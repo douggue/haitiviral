@@ -8,6 +8,7 @@ import { DataSaverToggle } from "./DataSaverToggle";
 import { InstallLink } from "./InstallPrompt";
 import { NewsletterForm } from "./NewsletterForm";
 import { PayBadges } from "./PayLogo";
+import { DEFAULT_FOOTER_HELP, DEFAULT_FOOTER_SERVICES } from "@/lib/footer-links";
 
 const footerPages = unstable_cache(
   () => prisma.page.findMany({ where: { isPublished: true, showInFooter: true }, select: { slug: true, title: true }, orderBy: { createdAt: "asc" } }),
@@ -38,10 +39,11 @@ export async function Footer({ settings }: { settings: Settings }) {
   const extra = settings.navigation?.footer ?? [];
   const chip = "inline-flex min-h-11 items-center rounded-full border border-[#24357A] bg-[#111C47] px-4 text-[15px] font-bold text-[#7B95FF] hover:bg-[#16245C]";
   const label = "text-xs font-extrabold uppercase tracking-[1.6px] text-[#475176]";
-  const services: [string, string][] = [
-    ["/order", t("tabOrder")], ["/trial", t("freeTrial")], ["/accounts", t("accountsShort")], ["/referral", t("inviteShort")], ["/account/wallet", t("wallet")],
-  ];
-  const help: [string, string][] = [["/help", t("helpCenter")], ["/faq", t("faq")], ["/guides", t("guides")], ["/news", t("news")], ["/contact", t("contact")]];
+  // Admin → Menus; the standard lists while staff haven't made their own.
+  const pick = (list: { href: string; label: Record<string, string> }[] | undefined, fallback: typeof DEFAULT_FOOTER_SERVICES) =>
+    (list?.length ? list : fallback).map((l) => ({ href: l.href, label: txt(l.label, locale), external: l.href.startsWith("https://") }));
+  const services = pick(settings.navigation?.footerServices, DEFAULT_FOOTER_SERVICES);
+  const help = pick(settings.navigation?.footerHelp, DEFAULT_FOOTER_HELP);
   const socials = [
     ["whatsapp", settings.socialWhatsappChannel || `https://wa.me/${settings.whatsappNumber}`, "WhatsApp"], ["instagram", settings.socialInstagram, "Instagram"],
     ["tiktok", settings.socialTiktok, "TikTok"], ["facebook", settings.socialFacebook, "Facebook"], ["youtube", settings.socialYoutube, "YouTube"],
@@ -68,14 +70,18 @@ export async function Footer({ settings }: { settings: Settings }) {
         <nav aria-label={t("ourServices")} className="flex flex-col gap-3">
           <h2 className={label}>{t("ourServices")}</h2>
           <div className="flex flex-wrap gap-2.5">
-            {services.map(([href, text]) => <Link key={href} href={href} className={chip}>{text}</Link>)}
+            {services.map((l) => (l.external
+              ? <a key={l.href} href={l.href} target="_blank" rel="noopener" className={chip}>{l.label}</a>
+              : <Link key={l.href} href={l.href} className={chip}>{l.label}</Link>))}
           </div>
         </nav>
 
         <nav aria-label={t("help")} className="flex flex-col gap-3">
           <h2 className={label}>{t("help")}</h2>
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-[15px] font-semibold text-[#AEB7D4]">
-            {help.map(([href, text]) => <Link key={href} href={href} className="py-1 hover:text-white">{text}</Link>)}
+            {help.map((l) => (l.external
+              ? <a key={l.href} href={l.href} target="_blank" rel="noopener" className="py-1 hover:text-white">{l.label}</a>
+              : <Link key={l.href} href={l.href} className="py-1 hover:text-white">{l.label}</Link>))}
             <span className="py-1 text-[#6B7393]">{t("hoursShort")}: {settings.supportHours}</span>
           </div>
         </nav>
