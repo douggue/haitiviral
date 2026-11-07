@@ -90,7 +90,7 @@ Use a free outside timer, such as https://cron-job.org:
 - Every **5 minutes**
 - Header: `Authorization` = `Bearer YOUR_CRON_SECRET`
 
-On your own server (VPS) later, this becomes a normal scheduled task calling the same address.
+On your own server (VPS), use the Docker setup instead: it runs this job every 5 minutes by itself. See `docs/DOCKER.md`.
 
 ## Step 7: Before real customers
 1. Admin → Settings:

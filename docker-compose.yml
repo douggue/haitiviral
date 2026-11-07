@@ -1,0 +1,91 @@
+# HaitiViral on your own server: site + database + HTTPS + 5-minute order checks + nightly backups.
+# Setup and daily use: docs/DOCKER.md. Settings come from the .env file next to this one (copy .env.docker.example).
+name: haitiviral
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: haitiviral
+      POSTGRES_USER: haitiviral
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U haitiviral -d haitiviral"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: https://${DOMAIN:?Set DOMAIN in .env}
+        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+    image: haitiviral-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://haitiviral:${POSTGRES_PASSWORD}@db:5432/haitiviral
+      DATABASE_URL_UNPOOLED: postgresql://haitiviral:${POSTGRES_PASSWORD}@db:5432/haitiviral
+      NEXT_PUBLIC_SITE_URL: https://${DOMAIN:?Set DOMAIN in .env}
+      BETTER_AUTH_URL: https://${DOMAIN}
+      CRON_SECRET: ${CRON_SECRET:?Set CRON_SECRET in .env}
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # HTTPS for your domain (certificates are made and renewed automatically)
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+
+  # Every 5 minutes: send orders to providers, follow them, refunds, balances (the "maintenance" job)
+  cron:
+    image: haitiviral-app
+    restart: unless-stopped
+    environment:
+      CRON_SECRET: ${CRON_SECRET:?Set CRON_SECRET in .env}
+    entrypoint: ["node", "docker/cron.mjs"]
+    healthcheck:
+      disable: true
+    depends_on:
+      - app
+
+  # Every night: a copy of the database and the uploaded files in ./backups (kept 14 days)
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+      - ./docker/backup.sh:/backup.sh:ro
+      - uploads:/uploads:ro
+    entrypoint: ["sh", "/backup.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db:
+  uploads:
+  caddy_data:
+  caddy_config:

@@ -4,6 +4,9 @@ import { getDisplaySettings } from "@/lib/settings";
 import { themeCss, themeScript, cssGuardScript } from "@/lib/theme-css";
 import "../globals.css";
 
+// Never pre-built: every admin page reads the database (and a Docker build has none).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: { default: "Admin", template: "%s · HaitiViral Admin" }, robots: { index: false, follow: false } };
 
 const sans = Plus_Jakarta_Sans({ subsets: ["latin", "latin-ext"], variable: "--font-body", display: "swap" });
