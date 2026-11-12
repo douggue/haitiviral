@@ -9,6 +9,8 @@ type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ out
 
 const OFF_KEY = "hv_install_off";
 const VISITS_KEY = "hv_install_visits";
+/** Screens where people fill a form or pay: the card never shows there. */
+const BUSY = /^\/(checkout|auth|cart|order|trial|account\/wallet)(\/|$)/;
 const SNOOZE_MS = 14 * 86_400_000;
 
 function read(key: string) {
@@ -67,7 +69,7 @@ export function InstallPrompt() {
 
   useEffect(() => {
     if (!mode || open) return;
-    if (/\/(checkout|auth|cart)/.test(pathname)) return;
+    if (BUSY.test(pathname)) return;
     if (Number(read(OFF_KEY) ?? 0) > Date.now()) return;
     const visits = Number(read(VISITS_KEY) ?? 0) + 1;
     write(VISITS_KEY, String(visits));
@@ -77,7 +79,7 @@ export function InstallPrompt() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, pathname]);
 
-  if (!open || !mode) return null;
+  if (!open || !mode || BUSY.test(pathname)) return null;
 
   const later = () => {
     write(OFF_KEY, String(Date.now() + SNOOZE_MS));

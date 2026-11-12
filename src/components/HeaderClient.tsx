@@ -188,6 +188,26 @@ export function PhoneHidden({ onHome = true, children }: { onHome?: boolean; chi
   return <div className={hide ? "max-md:hidden" : undefined}>{children}</div>;
 }
 
+/** Pages where the floating WhatsApp button would cover prices or forms, and which have their own help link. */
+const NO_WHATSAPP = ["/help", "/contact", "/checkout", "/order", "/account/support", "/account/wallet", "/auth"];
+const under = (pathname: string, list: string[]) => list.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+/**
+ * Floating WhatsApp button: hidden where it would cover prices or forms (and on phones on the app screens that have
+ * their own top bar). Where it shows, a spacer at the end of the page keeps it from covering the last lines.
+ */
+export function WhatsAppSlot({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  if (under(pathname, NO_WHATSAPP)) return null;
+  const phoneHide = under(pathname, OWN_BAR);
+  return (
+    <div className={phoneHide ? "max-md:hidden" : undefined}>
+      {children}
+      <div className="h-[4.5rem] md:h-20" aria-hidden />
+    </div>
+  );
+}
+
 /** Footer: shown on every page, except on phones on the sign-in screens (they have their own layout). */
 export function FooterSlot({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -319,10 +339,10 @@ export function BottomNav({ signedIn }: { signedIn: boolean }) {
   const gate = (href: string) => (signedIn ? href : `/auth/login?next=${href}`);
   const items = [
     { href: "/", label: t("home"), icon: HomeIcon, active: pathname === "/" },
-    { href: "/order", label: t("tabOrder"), icon: PlusCircleIcon, active: pathname.startsWith("/order") },
-    { href: gate("/account/orders"), label: t("tabOrders"), icon: ListIcon, active: pathname.startsWith("/account/orders") },
-    { href: gate("/account/wallet"), label: t("wallet"), icon: WalletIcon, active: pathname.startsWith("/account/wallet") },
-    { href: signedIn ? "/account" : "/auth/login", label: t("tabAccount"), icon: UserIcon, active: (pathname.startsWith("/account") && !pathname.startsWith("/account/wallet") && !pathname.startsWith("/account/orders")) || pathname.startsWith("/auth") },
+    { href: "/order", label: t("tabOrder"), icon: PlusCircleIcon, active: under(pathname, ["/order"]) },
+    { href: gate("/account/orders"), label: t("tabOrders"), icon: ListIcon, active: under(pathname, ["/account/orders"]) },
+    { href: gate("/account/wallet"), label: t("wallet"), icon: WalletIcon, active: under(pathname, ["/account/wallet"]) },
+    { href: signedIn ? "/account" : "/auth/login", label: t("tabAccount"), icon: UserIcon, active: (under(pathname, ["/account"]) && !under(pathname, ["/account/wallet", "/account/orders"])) || under(pathname, ["/auth"]) },
   ];
   return (
     <nav

@@ -1,6 +1,6 @@
 import { siteUrl } from "@/lib/site-url";
 import { notFound } from "next/navigation";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/session";
@@ -18,6 +18,9 @@ import { formatPhone } from "@/lib/phone";
 import { PageBar } from "@/components/PageBar";
 import { AccountDelivery } from "@/components/AccountDelivery";
 import { parseAccountMeta } from "@/lib/accounts";
+import { kDate } from "@/lib/kreyol-date";
+import { orderSummary, summaryItemInclude } from "@/components/account/order-summary";
+import { OrderProgress, OrderStatusPill } from "@/components/account/OrderProgress";
 
 export default async function OrderPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale, id } = await params;
@@ -26,14 +29,14 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
   const order = await prisma.order.findFirst({
     where: { id, userId: user.id },
     include: {
-      items: { include: { codes: true, supplierOrders: { where: { refundedPartial: { gt: 0 } }, take: 1, select: { remains: true, refundedPartial: true } }, variant: { include: { product: { select: { slug: true, tags: true, category: { select: { slug: true } } } } } } } },
+      items: { orderBy: { id: "asc" }, include: { codes: true, ...summaryItemInclude, variant: { include: { product: { select: { slug: true, tags: true, category: { select: { slug: true } } } } } } } },
       events: { orderBy: { createdAt: "asc" } },
       payments: { orderBy: { createdAt: "desc" }, take: 1 },
       review: { select: { id: true } },
     },
   });
   if (!order) notFound();
-  const [to, tc, fmt, settings, ts, td, tu] = await Promise.all([getTranslations("order"), getTranslations("common"), getFormatter(), getSettings(), getTranslations("support"), getTranslations("orderDetail"), getTranslations("ordersUi")]);
+  const [to, tc, settings, ts, td, tu] = await Promise.all([getTranslations("order"), getTranslations("common"), getSettings(), getTranslations("support"), getTranslations("orderDetail"), getTranslations("ordersUi")]);
 
   const manual = order.manualMethodId ? await prisma.manualMethod.findUnique({ where: { id: order.manualMethodId } }) : null;
   const codes = order.items.flatMap((i) => i.codes);
@@ -42,14 +45,17 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
   const statusUrl = `${siteUrl()}/${locale}/order-status/${order.id}?t=${order.accessToken}`;
   const helpText = encodeURIComponent(`${tc("whatsappMessage")} ${to("title", { number: order.number })} ${statusUrl}`);
   const lastPayment = order.payments[0];
+  const sum = orderSummary(order);
+  if (sum.canCancel && (await prisma.supportTicket.count({ where: { userId: user.id, orderId: order.id, subject: { startsWith: "Anile #" }, status: { not: "CLOSED" } } }))) sum.cancelAsked = true;
+  // Provider services (with a quantity) get the same progress card as "My orders".
+  const showProgress = sum.qty > 0 && !["AWAITING_PAYMENT", "PAYMENT_REVIEW"].includes(order.status);
+  const city = order.status === "FULFILLED" && !order.review ? (await prisma.user.findUnique({ where: { id: user.id }, select: { city: true } }))?.city ?? "" : null;
 
   return (
     <>
-    <PageBar title={to("title", { number: order.number })} back="/account/orders" backLabel={tc("orders")} right={<StatusBadge status={order.status} label={to(`status.${order.status}`)} />} />
+    <PageBar title={to("title", { number: order.number })} back="/account/orders" backLabel={tc("orders")} right={<OrderStatusPill s={sum} />} />
     <div className="mx-auto max-w-[560px] space-y-5 px-5 py-4 lg:max-w-none lg:px-0">
-      <p className="text-sm text-muted">{to("placedOn", { date: order.createdAt.toLocaleString(locale === "fr" ? "fr-FR" : "fr-HT", { dateStyle: "long", timeStyle: "short" }) })}</p>
-
-      {order.status === "FULFILLED" && !order.review && <ReviewRequest orderId={order.id} city={(await prisma.user.findUnique({ where: { id: user.id }, select: { city: true } }))?.city ?? ""} />}
+      <p className="text-sm text-muted">{to("placedOn", { date: kDate(order.createdAt, locale, { year: true }) })}</p>
 
       {order.status === "AWAITING_PAYMENT" && order.paymentMethod === "MANUAL" && manual && (
         <section className="card border-warning p-5">
@@ -84,8 +90,13 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
           {to("proofSubmitted")} {to("reviewTime", { hours: settings.supportHours })}
         </p>
       )}
-      {["PAID", "PROCESSING"].includes(order.status) && (
+      {["PAID", "PROCESSING"].includes(order.status) && !showProgress && (
         <p className="rounded-xl bg-primary-soft px-4 py-3 text-sm text-primary">{to("waitingDelivery")}</p>
+      )}
+      {showProgress && (
+        <section className="flex flex-col gap-2.5 rounded-2xl border border-border bg-surface p-4">
+          <OrderProgress s={sum} orderId={order.id} total={order.total} currency={order.currency} status={order.status} locale={locale} again={null} />
+        </section>
       )}
 
       <section className="card divide-y divide-border">
@@ -112,7 +123,7 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
               const delivered = item.codes.reduce<Date | null>((a, c) => (c.assignedAt && (!a || c.assignedAt > a) ? c.assignedAt : a), null) ?? order.fulfilledAt;
               return (
                 <AccountDelivery kind={meta.kind} lines={item.codes.map((c) => ({ id: c.id, text: revealCode(c.codeEncrypted) }))}
-                  warrantyUntil={hours && delivered ? new Date(delivered.getTime() + hours * 3_600_000).toISOString() : null} supportHref={`/${locale}/account/support?order=${order.number}`} />
+                  warrantyUntil={hours && delivered ? new Date(delivered.getTime() + hours * 3_600_000).toISOString() : null} supportHref={`/${locale}/account/support?order=${order.id}`} />
               );
             })()}
             {item.codes.length > 0 && !parseAccountMeta(item.variant.account) && (
@@ -131,7 +142,7 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
                 </ul>
               </div>
             )}
-            {item.supplierOrders[0] && (() => {
+            {!showProgress && (item.supplierOrders[0]?.refundedPartial ?? 0) > 0 && (() => {
               const qty = Number((item.fieldValues as Record<string, string> | null)?.quantity) || 0;
               const part = item.supplierOrders[0];
               return (
@@ -157,6 +168,9 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
       </section>
 
 
+      {/* Review request after what was delivered (credentials first, then "how was it?"). */}
+      {city !== null && <ReviewRequest orderId={order.id} city={city} />}
+
       <section className="card p-5">
         <h2 className="mb-4 font-semibold">{to("timeline")}</h2>
         <ol className="relative space-y-4 border-l border-border pl-5">
@@ -168,7 +182,7 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
                 const why = (e.status === "REFUNDED" || e.status === "CANCELED") ? (e.actorId ? e.note : to("autoRefundNote")) : e.note?.startsWith("Payment rejected: ") ? e.note.slice(18) : null;
                 return why ? <p className="mt-0.5 text-[13px]"><span className="text-muted">{to("reason")}:</span> {why}</p> : null;
               })()}
-              <p className="text-xs text-muted">{fmt.dateTime(e.createdAt, { dateStyle: "medium", timeStyle: "short" })}</p>
+              <p className="text-xs text-muted">{kDate(e.createdAt, locale)}</p>
             </li>
           ))}
         </ol>

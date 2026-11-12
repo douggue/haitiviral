@@ -88,9 +88,10 @@ export function AuthForm({ mode: firstMode, google = false }: { mode: "login" | 
     goNext();
   }
 
+  // Only a path on this site (no "//host" or "/\\host" tricks). New accounts with nowhere to go see the welcome screen.
+  const safeNext = next && /^\/(?![/\\])/.test(next) ? next.replace(/^\/(ht|fr)(?=\/|\?|$)/, "") || "/" : null;
   function goNext() {
-    const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/account";
-    router.push(safeNext.replace(/^\/(ht|fr)(?=\/|$)/, "") || "/account");
+    router.push(safeNext ?? (mode === "register" ? "/welcome" : "/account"));
     router.refresh();
   }
 
@@ -143,7 +144,7 @@ export function AuthForm({ mode: firstMode, google = false }: { mode: "login" | 
             onClick={async () => {
               setError("");
               setLoading(true);
-              const done = `/${locale}${next && next.startsWith("/") && !next.startsWith("//") ? next.replace(/^\/(ht|fr)(?=\/|$)/, "") || "/account" : "/account"}`;
+              const done = `/${locale}${safeNext ?? "/account"}`;
               const r = await authClient.signIn.social({ provider: "google", callbackURL: done, errorCallbackURL: `/${locale}/auth/login?error=google` });
               if (r?.error) {
                 setLoading(false);
@@ -211,6 +212,9 @@ export function AuthForm({ mode: firstMode, google = false }: { mode: "login" | 
       >
         {loading ? tc("loading") : mode === "login" ? tu("tabLogin") : tu("tabRegister")}
       </button>
+      {mode === "register" && hydrated && !loading && (!agree || (turnstileOn && !captcha)) && (
+        <p className="-mt-2 text-center text-[13px] leading-normal text-[#475569] dark:text-muted"><b>{tu("needTitle")}</b> {[!agree && tu("need_terms"), turnstileOn && !captcha && tu("need_captcha")].filter(Boolean).join(" · ")}</p>
+      )}
       <p className="text-center text-xs leading-normal text-[#64748B]">{tu("secure")}</p>
     </form>
   );

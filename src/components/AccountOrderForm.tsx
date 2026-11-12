@@ -24,6 +24,7 @@ export function AccountOrderForm(p: {
   const total = p.price * qty;
   const short = p.balance !== null && total > p.balance;
   const ready = p.signedIn && p.available && accepted && (!p.require || req.trim()) && !short;
+  const missing = [p.require && !req.trim() && "require", !accepted && "accept", short && "funds"].filter(Boolean) as string[];
   const step = "h-11 w-11 rounded-xl border border-[#CBD2E1] bg-surface text-xl font-extrabold disabled:opacity-40 dark:border-border";
   const submit = () =>
     start(async () => {
@@ -90,7 +91,10 @@ export function AccountOrderForm(p: {
           {pending ? t("sending") : t("buy", { total: fmt(total) })}
         </button>
       ) : (
-        <Link href={`/auth/login?next=/accounts/${p.slug}`} className="flex h-[54px] items-center justify-center rounded-[14px] bg-text text-base font-bold text-surface">{t("signIn")}</Link>
+        <Link href={`/auth/register?next=${encodeURIComponent(`/accounts/${p.slug}`)}`} className="flex h-[54px] items-center justify-center rounded-[14px] bg-text text-base font-bold text-surface">{t("signIn")}</Link>
+      )}
+      {p.signedIn && p.available && !ready && !pending && missing.length > 0 && (
+        <p className="-mt-1 text-center text-[13px] leading-normal text-[#475569] dark:text-muted"><b>{t("needTitle")}</b> {missing.map((m) => t(`need_${m}`)).join(" · ")}</p>
       )}
       <p className="text-center text-xs leading-normal text-muted">{t(p.delivery === "instant" ? "afterInstant" : "after24")}</p>
     </div>

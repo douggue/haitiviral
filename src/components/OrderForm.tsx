@@ -21,6 +21,16 @@ export type OrderCatalog = {
 }[];
 
 const RISK_COLOR: Record<Risk, string> = { low: "#16A34A", med: "#D97706", high: "#DC2626" };
+const RISK_ORDER: Record<Risk, number> = { low: 0, med: 1, high: 2 };
+/** Default choice: the lowest-risk one that is not sold out. */
+const safestTier = (tiers: { soldOut: boolean; meta: ServiceMeta }[]) => {
+  let best = -1;
+  tiers.forEach((x, i) => {
+    if (x.soldOut) return;
+    if (best < 0 || RISK_ORDER[x.meta.risk] < RISK_ORDER[tiers[best].meta.risk]) best = i;
+  });
+  return Math.max(0, best);
+};
 const num = (n: number) => n.toLocaleString("en-US");
 
 /** Rounded chip: dark when selected (mockup "pill"). */
@@ -45,8 +55,8 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
   const platform = catalog.find((c) => c.slug === platformSlug) ?? catalog[0];
   const [kindPick, setKindPick] = useState<string | undefined>(initial.kind);
   const service = platform?.services.find((s) => s.kind === kindPick) ?? platform?.services[0];
-  const [tierPick, setTierPick] = useState(initial.tier ?? 1);
-  const tier = service?.tiers[Math.min(tierPick, (service?.tiers.length ?? 1) - 1)];
+  const [tierPick, setTierPick] = useState<number | null>(initial.tier ?? null);
+  const tier = service ? service.tiers[Math.min(tierPick ?? safestTier(service.tiers), service.tiers.length - 1)] : undefined;
 
   const [link, setLink] = useState("");
   const [qty, setQty] = useState("1000");
@@ -84,6 +94,15 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
   const short = balance !== null && total > balance;
   const isHigh = meta.risk === "high";
   const ready = signedIn && check?.ok && !rangeError && !short && (!isHigh || accepted) && isPublic && (meta.type !== "commentLikes" || username.trim().length > 0) && !tier.soldOut;
+  const missing = [
+    tier.soldOut && "soldOut",
+    !link.trim() ? "link" : !check?.ok && "linkFix",
+    hasComments && !commentList.length ? "comments" : rangeError && "qty",
+    meta.type === "commentLikes" && !username.trim() && "username",
+    !isPublic && "public",
+    isHigh && !accepted && "risk",
+    short && "funds",
+  ].filter(Boolean) as string[];
   const chips = meta.min >= 500 ? [1000, 5000, 10000, 50000] : [100, 500, 1000, 5000];
   const fmt = (n: number) => formatMoney(n, "HTG", locale);
   const priceLabel = hasComments ? `${(tier.rate / 100 / 1000).toFixed(2)} HTG` : fmt(tier.rate);
@@ -129,7 +148,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
               const on = p.slug === platform.slug;
               return (
                 <button key={p.slug} type="button" aria-pressed={on} className={`${pill(on)} flex flex-none items-center gap-1.5 pl-1.5 pr-3`}
-                  onClick={() => { setPlatformSlug(p.slug); setTierPick(1); setAccepted(false); }}>
+                  onClick={() => { setPlatformSlug(p.slug); setTierPick(null); setAccepted(false); }}>
                   {p.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={p.image} alt="" className="h-[26px] w-[26px] rounded-lg object-cover" />
@@ -145,7 +164,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
             {platform.services.map((s) => {
               const on = s.kind === service.kind;
               return (
-                <button key={s.kind} type="button" aria-pressed={on} onClick={() => { setKindPick(s.kind); setTierPick(1); setAccepted(false); }}
+                <button key={s.kind} type="button" aria-pressed={on} onClick={() => { setKindPick(s.kind); setTierPick(null); setAccepted(false); }}
                   className={`min-h-[38px] rounded-[10px] border-2 px-3.5 text-[13px] font-bold ${on ? "border-text bg-primary-soft text-text" : "border-border bg-surface text-text/80"}`}>
                   {t(`kind_${s.kind}`)}
                 </button>
@@ -274,6 +293,19 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
           )}
         </section>
 
+        {/* Required checks, above the total */}
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-border bg-surface p-3.5 text-[13px] leading-normal">
+          <input type="checkbox" checked={isPublic} onChange={() => setIsPublic((v) => !v)} className="m-0 h-[22px] w-[22px] flex-none accent-[#0F172A]" />
+          <span>{t("publicConfirm")}</span>
+        </label>
+
+        {isHigh && (
+          <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border-2 border-[#FCA5A5] bg-[#FEF2F2] p-3.5 text-[13px] leading-normal text-[#7F1D1D]">
+            <input type="checkbox" checked={accepted} onChange={() => setAccepted((a) => !a)} className="m-0 h-[22px] w-[22px] flex-none accent-[#DC2626]" />
+            <span>{t.rich("riskAccept", { b: (c) => <b>{c}</b> })}</span>
+          </label>
+        )}
+
         {/* Summary */}
         <section className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4">
           <div className="flex justify-between gap-2.5 text-sm"><span className="text-muted">{t("service")}</span><span className="text-right font-semibold">{`${platform.name} ${t(`kind_${service.kind}`)} · ${tier.name}`}</span></div>
@@ -290,18 +322,6 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
           )}
         </section>
 
-        <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border border-border bg-surface p-3.5 text-[13px] leading-normal">
-          <input type="checkbox" checked={isPublic} onChange={() => setIsPublic((v) => !v)} className="m-0 h-[22px] w-[22px] flex-none accent-[#0F172A]" />
-          <span>{t("publicConfirm")}</span>
-        </label>
-
-        {isHigh && (
-          <label className="flex cursor-pointer items-start gap-2.5 rounded-2xl border-2 border-[#FCA5A5] bg-[#FEF2F2] p-3.5 text-[13px] leading-normal text-[#7F1D1D]">
-            <input type="checkbox" checked={accepted} onChange={() => setAccepted((a) => !a)} className="m-0 h-[22px] w-[22px] flex-none accent-[#DC2626]" />
-            <span>{t.rich("riskAccept", { b: (c) => <b>{c}</b> })}</span>
-          </label>
-        )}
-
         {error && <p role="alert" className="rounded-[10px] bg-[#FEE2E2] px-3 py-2.5 text-[13px] text-[#991B1B]">{error}</p>}
         {signedIn ? (
           <button type="button" onClick={submit} disabled={!ready || pending}
@@ -309,7 +329,10 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
             {pending ? t("sending") : t("confirm", { total: fmt(total) })}
           </button>
         ) : (
-          <Link href={`/auth/login?next=/order`} className="flex h-[54px] items-center justify-center rounded-[14px] bg-text text-base font-bold text-surface">{t("signInToOrder")}</Link>
+          <Link href={`/auth/register?next=${encodeURIComponent(`/order?${new URLSearchParams({ platform: platformSlug, ...(service?.kind ? { kind: service.kind } : {}), ...(tierPick !== null ? { tier: String(tierPick) } : {}) })}`)}`} className="flex h-[54px] items-center justify-center rounded-[14px] bg-text text-base font-bold text-surface">{t("signInToOrder")}</Link>
+        )}
+        {signedIn && !ready && !pending && missing.length > 0 && (
+          <p className="-mt-1 text-center text-[13px] leading-normal text-[#475569] dark:text-muted"><b>{t("needTitle")}</b> {missing.map((m) => t(`need_${m}`)).join(" · ")}</p>
         )}
         <p className="text-center text-xs leading-normal text-muted">{t("autoRefund")}</p>
       </div>

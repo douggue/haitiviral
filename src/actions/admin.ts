@@ -833,7 +833,7 @@ export async function saveTrialSettings(form: FormData): Promise<R> {
     await setSetting("trialStrict", form.get("trialStrict") === "on");
     await setSetting("trialAutoApprove", form.get("trialAutoApprove") === "on");
     await setSetting("trialPerDay", num("trialPerDay", 0, 1000, 30));
-    await setSetting("trialPerIpPerDay", num("trialPerIpPerDay", 1, 50, 3));
+    await setSetting("trialPerIpPerDay", num("trialPerIpPerDay", 1, 50, 10));
     await setSetting("trialAutoPerDay", num("trialAutoPerDay", 0, 1000, 20));
     await setSetting("trialAutoBelow", autoBelow);
     await setSetting("trialRefuseAt", refuseAt);

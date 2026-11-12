@@ -44,6 +44,7 @@ export default async function PackOrderPage({ params }: { params: Promise<{ loca
         maxVideos={pack.maxVideos}
         high={pack.lines.some((l) => l.meta.risk === "high")}
         available={pack.lines.every((l) => l.active)}
+        platform={platform}
         profileExample={linkExample(platform, false)}
         videoExample={linkExample(platform, true)}
         lines={pack.lines.map((l) => ({ name: `${txt(l.productName, locale)} · ${txt(l.name, locale)}`, quantity: l.quantity, post: l.post, min: l.meta.min, avg: txt(l.meta.avg, locale) }))}

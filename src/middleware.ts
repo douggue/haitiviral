@@ -15,7 +15,8 @@ export default function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL(req.nextUrl.pathname + req.nextUrl.search, own), 308);
   }
   const res = intl(inHaitiWithoutChoice(req) ? withLanguage(req, "ht") : req);
-  const ref = req.nextUrl.searchParams.get("ref");
+  // Also the short invite link /r/CODE (the friend's welcome page).
+  const ref = req.nextUrl.searchParams.get("ref") ?? req.nextUrl.pathname.match(/^(?:\/(?:ht|fr))?\/r\/([A-Za-z0-9]+)\/?$/)?.[1];
   if (ref && /^[A-Z0-9]{6,12}$/i.test(ref)) {
     res.cookies.set("hv_ref", ref.toUpperCase(), { path: "/", maxAge: 60 * 60 * 24 * 30, sameSite: "lax", httpOnly: true });
   }

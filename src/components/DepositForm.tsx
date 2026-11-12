@@ -78,7 +78,7 @@ export function DepositForm(p: Props) {
   const crypto = m?.kind === "crypto";
   const [amount, setAmount] = useState("1000");
   const [error, setError] = useState("");
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<null | { amount: string; reference: string; method: string }>(null);
   const [captchaKey, setCaptchaKey] = useState(0);
   const [pending, start] = useTransition();
   const [guide, setGuide] = useState(false);
@@ -153,12 +153,23 @@ export function DepositForm(p: Props) {
 
   if (done)
     return (
-      <div className="card animate-rise p-8 text-center">
-        <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-success text-white shadow-[0_0_0_10px_var(--success-soft)]">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
-        </span>
-        <p className="mt-5 text-lg font-bold">{tw("depositSubmitted")}</p>
-        <button type="button" className="btn-primary mt-6" onClick={() => router.push("/account/wallet")}>{tc("wallet")}</button>
+      <div className="card animate-rise flex flex-col gap-4 p-6">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-success text-white shadow-[0_0_0_10px_var(--success-soft)]">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+          </span>
+          <p className="text-lg font-bold">{tw("depositSubmitted")}</p>
+        </div>
+        <dl className="flex flex-col divide-y divide-border rounded-xl border border-border text-sm">
+          <div className="flex justify-between gap-3 px-3.5 py-2.5"><dt className="text-muted">{tw("doneAmount")}</dt><dd className="font-bold tabular-nums">{done.amount}</dd></div>
+          <div className="flex justify-between gap-3 px-3.5 py-2.5"><dt className="text-muted">{tw("doneMethod")}</dt><dd className="font-bold">{done.method}</dd></div>
+          {done.reference && <div className="flex justify-between gap-3 px-3.5 py-2.5"><dt className="text-muted">{tw("doneRef")}</dt><dd className="break-all font-mono font-bold">{done.reference}</dd></div>}
+        </dl>
+        <p className="rounded-xl bg-surface-2 px-3.5 py-3 text-[13px] leading-normal">{tw("doneWait")}</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button type="button" className="btn-primary min-h-12" onClick={() => router.push("/order")}>{tw("doneOrder")}</button>
+          <button type="button" className="btn-secondary min-h-12" onClick={() => { router.push("/account/wallet"); router.refresh(); }}>{tw("doneHistory")}</button>
+        </div>
       </div>
     );
 
@@ -186,7 +197,7 @@ export function DepositForm(p: Props) {
             return setError(errors[r.error] ?? tc("error"));
           }
           if (r.redirect) window.location.href = r.redirect;
-          else setDone(true);
+          else setDone({ amount: formatMoney(minor ?? 0, currency, locale), reference: String(fd.get("reference") ?? "").trim(), method: m.name });
         });
       }}
     >
@@ -303,7 +314,7 @@ export function DepositForm(p: Props) {
                 spellCheck={false}
                 {...(crypto
                   ? { pattern: "(0x)?[0-9a-fA-F]{64}", maxLength: 66, placeholder: "0x…" }
-                  : { minLength: 4, maxLength: 40, placeholder: to("referencePlaceholder"), inputMode: "text" as const })}
+                  : { minLength: 4, maxLength: 40, placeholder: to("referencePlaceholder"), inputMode: m.kind === "mobile" ? ("numeric" as const) : ("text" as const), enterKeyHint: "done" as const })}
                 className={`input h-12 font-mono ${crypto ? "text-sm" : "text-base tracking-wider"}`}
               />
               {crypto ? (

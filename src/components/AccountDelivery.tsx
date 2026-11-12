@@ -1,7 +1,8 @@
 "use client";
 import { safeCall } from "@/lib/safe-call";
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { kDate } from "@/lib/kreyol-date";
 import { CopyButton } from "./CopyButton";
 import { parseCredential, parseSmsLine, totp } from "@/lib/accounts";
 import { readSmsCode } from "@/actions/sms-code";
@@ -27,7 +28,7 @@ export function AccountDelivery({ kind, lines, warrantyUntil, supportHref }: { k
         </details>
       )}
       {inWarranty ? (
-        <p className="text-xs text-muted">{t("warrantyUntil", { date: new Date(warrantyUntil!).toLocaleString(locale === "fr" ? "fr-FR" : "fr-HT", { dateStyle: "medium", timeStyle: "short" }) })} <a href={supportHref} className="font-bold text-primary underline">{t("claim")}</a></p>
+        <p className="text-xs text-muted">{t("warrantyUntil", { date: kDate(new Date(warrantyUntil!), locale) })} <a href={supportHref} className="font-bold text-primary underline">{t("claim")}</a></p>
       ) : warrantyUntil ? <p className="text-xs text-muted">{t("warrantyOver")}</p> : null}
     </div>
   );
@@ -98,17 +99,39 @@ function SmsLine({ line }: { line: Line }) {
   const tc = useTranslations("order");
   const { number } = parseSmsLine(line.text);
   const [code, setCode] = useState<string | null>(null);
+  const [seenAt, setSeenAt] = useState<Date | null>(null);
   const [state, setState] = useState<"idle" | "none" | "error">("idle");
   const [fallback, setFallback] = useState<string | null>(null);
+  // After the first tap, keep checking every 10 seconds for 10 minutes while no new code has come in.
+  const [watchUntil, setWatchUntil] = useState(0);
   const [pending, start] = useTransition();
-  const read = () =>
-    start(async () => {
-      const r = await safeCall(() => readSmsCode(line.id));
-      if (!r.ok) return setState("error");
-      setCode(r.code);
-      setFallback(r.fallback);
-      setState(r.code ? "idle" : "none");
-    });
+  const codeRef = useRef<string | null>(null);
+  const read = useCallback(
+    () =>
+      start(async () => {
+        const r = await safeCall(() => readSmsCode(line.id));
+        if (!r.ok) return setState("error");
+        if (r.code && r.code !== codeRef.current) {
+          codeRef.current = r.code;
+          setCode(r.code);
+          setSeenAt(new Date());
+          setWatchUntil(0);
+        }
+        setFallback(r.fallback);
+        setState(r.code ? "idle" : "none");
+      }),
+    [line.id],
+  );
+  useEffect(() => {
+    if (!watchUntil) return;
+    const id = setInterval(() => (Date.now() > watchUntil ? setWatchUntil(0) : read()), 10_000);
+    return () => clearInterval(id);
+  }, [watchUntil, read]);
+  const tap = () => {
+    setWatchUntil(Date.now() + 10 * 60_000);
+    read();
+  };
+  const time = (d: Date) => `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   return (
     <div className="flex flex-col gap-2 rounded-lg bg-surface p-3">
       <div className="flex items-center justify-between gap-3">
@@ -120,13 +143,17 @@ function SmsLine({ line }: { line: Line }) {
       </div>
       {code && (
         <div className="flex items-center justify-between gap-3 rounded-lg bg-[#DCFCE7] p-2.5 text-[#14532D]">
-          <span><span className="block text-[11px] font-semibold">{t("lastCode")}</span><span className="font-mono text-xl font-extrabold tracking-[3px]">{code}</span></span>
+          <span>
+            <span className="block text-[11px] font-semibold">{t("lastCode")}{seenAt ? ` · ${t("codeSeenAt", { time: time(seenAt) })}` : ""}</span>
+            <span className="font-mono text-xl font-extrabold tracking-[3px]">{code}</span>
+          </span>
           <CopyButton value={code} label={tc("copy")} done={tc("copied")} />
         </div>
       )}
       {state === "none" && <p className="text-xs text-muted">{t("noCodeYet")}{fallback && <> <a href={fallback} target="_blank" rel="noopener noreferrer" className="font-bold text-primary underline">{t("openPage")}</a></>}</p>}
+      {watchUntil > 0 && <p role="status" className="flex items-center gap-1.5 text-xs text-muted"><span className="h-2 w-2 animate-pulse rounded-full bg-[#16A34A]" aria-hidden />{t("codeWatching")}</p>}
       {state === "error" && <p className="text-xs text-danger">{t("error_generic")}</p>}
-      <button type="button" onClick={read} disabled={pending} className="min-h-11 rounded-xl bg-text text-sm font-bold text-surface disabled:opacity-60">{pending ? t("sending") : t("getCode")}</button>
+      <button type="button" onClick={tap} disabled={pending} className="min-h-11 rounded-xl bg-text text-sm font-bold text-surface disabled:opacity-60">{pending ? t("sending") : t("getCode")}</button>
     </div>
   );
 }

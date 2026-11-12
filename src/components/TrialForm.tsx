@@ -77,15 +77,28 @@ export function TrialForm({ offers, signedIn, whatsapp, existing }: { offers: Of
         </span>
         <p className="text-[22px] font-extrabold">{t(`state_${tone}_title`)}</p>
         <p className="text-sm leading-normal text-text/80">{t(`state_${tone}_body`)}</p>
-        <Link href="/account/wallet" className="mt-2 flex h-[52px] items-center rounded-[14px] bg-text px-[22px] text-[15px] font-bold text-surface">{t("doneCta")}</Link>
+        {tone === "no" ? (
+          <>
+            <p className="text-[13px] text-muted">{t("noHint")}</p>
+            <Link href="/order" className="mt-2 flex h-[52px] items-center rounded-[14px] bg-text px-[22px] text-[15px] font-bold text-surface">{t("noCta")}</Link>
+          </>
+        ) : (
+          <Link href="/account/wallet" className="mt-2 flex h-[52px] items-center rounded-[14px] bg-text px-[22px] text-[15px] font-bold text-surface">{t("doneCta")}</Link>
+        )}
         {tone !== "no" && <Link href="/account/orders" className="text-sm font-bold text-[#00209F] dark:text-primary">{t("doneOrders")}</Link>}
       </div>
     );
   }
 
+  const missing = [
+    !link.trim() ? "link" : linkBad && "linkFix",
+    !whatsapp && !phone.trim() && "phone",
+    turnstileOn && !captcha && "captcha",
+  ].filter(Boolean) as string[];
   const label = "text-[13px] font-bold uppercase tracking-[0.6px] text-muted";
   return (
     <form
+      noValidate
       className="flex flex-col gap-[18px]"
       onSubmit={(e) => {
         e.preventDefault();
@@ -126,7 +139,9 @@ export function TrialForm({ offers, signedIn, whatsapp, existing }: { offers: Of
         <h2 className={label}>{t("step2")}</h2>
         <label htmlFor="tlink" className="text-sm font-semibold">{cur.post ? t("linkPost") : t("linkProfile")}</label>
         <input id="tlink" type="url" inputMode="url" required value={link} onChange={(e) => setLink(e.target.value)} placeholder={linkExample(cur.platform, cur.post)}
+          autoCapitalize="none" autoComplete="off" aria-invalid={linkBad}
           className={`h-[50px] rounded-xl bg-surface px-3.5 text-base ${linkBad ? "border-2 border-[#DC2626]" : "border border-[#CBD2E1] dark:border-border"}`} />
+        {linkBad && <p role="alert" className="rounded-[10px] bg-[#FEE2E2] px-3 py-2.5 text-[13px] leading-normal text-[#991B1B]">{t("linkBadHelp", { example: linkExample(cur.platform, cur.post) })}</p>}
       </section>
 
       {whatsapp ? (
@@ -151,9 +166,12 @@ export function TrialForm({ offers, signedIn, whatsapp, existing }: { offers: Of
 
       {error && <p role="alert" className="rounded-[10px] bg-[#FEE2E2] px-3 py-2.5 text-[13px] text-[#991B1B]">{error}</p>}
       {signedIn ? (
-        <button disabled={pending || !link.trim() || (!whatsapp && !phone.trim()) || linkBad || (turnstileOn && !captcha)} className="h-[54px] rounded-[14px] bg-text text-base font-bold text-surface disabled:bg-[#CBD5E1] disabled:text-[#475569]">{pending ? t("sending") : whatsapp ? t("submitWa") : t("submit")}</button>
+        <button disabled={pending || missing.length > 0} className="h-[54px] rounded-[14px] bg-text text-base font-bold text-surface disabled:bg-[#CBD5E1] disabled:text-[#475569]">{pending ? t("sending") : whatsapp ? t("submitWa") : t("submit")}</button>
       ) : (
         <Link href="/auth/register?next=/trial" className="flex h-[54px] items-center justify-center rounded-[14px] bg-text text-base font-bold text-surface">{t("signIn")}</Link>
+      )}
+      {signedIn && !pending && missing.length > 0 && (
+        <p className="-mt-2 text-center text-[13px] leading-normal text-[#475569] dark:text-muted"><b>{t("needTitle")}</b> {missing.map((m) => t(`need_${m}`)).join(" · ")}</p>
       )}
       <p className="text-xs leading-normal text-muted">{t("footer")}</p>
     </form>

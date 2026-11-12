@@ -7,6 +7,7 @@ import { placePackOrder } from "@/actions/service-order";
 import { formatMoney } from "@/lib/money";
 import { withDiscount } from "@/lib/vip-math";
 import { splitEvenly } from "@/lib/pack-math";
+import { checkLink, PLATFORMS } from "@/lib/services";
 
 type Line = { name: string; quantity: number; post: boolean; min: number; avg: string };
 
@@ -16,9 +17,10 @@ type Line = { name: string; quantity: number; post: boolean; min: number; avg: s
  */
 export function PackOrderForm(p: {
   slug: string; signedIn: boolean; balance: number | null; discount: number; price: number; separate: number; discountPct: number;
-  newOnly: boolean; maxVideos: number; high: boolean; available: boolean; profileExample: string; videoExample: string; lines: Line[];
+  newOnly: boolean; maxVideos: number; platform: string; high: boolean; available: boolean; profileExample: string; videoExample: string; lines: Line[];
 }) {
   const t = useTranslations("packUi");
+  const tl = useTranslations("orderForm");
   const locale = useLocale();
   const router = useRouter();
   const [profile, setProfile] = useState("");
@@ -35,7 +37,19 @@ export function PackOrderForm(p: {
   const tooMany = list.length > p.maxVideos;
   const total = withDiscount(p.price, p.discount);
   const short = p.balance !== null && total > p.balance;
-  const ready = p.signedIn && p.available && (!needsProfile || profile.trim()) && (!needsVideos || (list.length > 0 && !tooMany)) && isPublic && (!p.high || accepted) && !short;
+  // Each link is checked as soon as it is typed, with the same checker as single orders.
+  const linkMsg = (error: string, post: boolean) => tl(`err_${error === "empty" ? "not_platform" : error}`, { platform: PLATFORMS[p.platform]?.name ?? p.platform, example: post ? p.videoExample : p.profileExample });
+  const profileCheck = needsProfile && profile.trim() ? checkLink(profile, p.platform, false) : null;
+  const profileError = profileCheck && !profileCheck.ok ? linkMsg(profileCheck.error, false) : "";
+  const videoErrors = needsVideos ? list.map((v, i) => { const c = checkLink(v, p.platform, true); return c.ok ? null : t("badVideo", { n: i + 1, error: linkMsg(c.error, true) }); }).filter(Boolean) as string[] : [];
+  const missing = [
+    needsProfile && (!profile.trim() ? "profile" : profileError && "profileFix"),
+    needsVideos && (!list.length ? "videos" : videoErrors.length && "videosFix"),
+    !isPublic && "public",
+    p.high && !accepted && "risk",
+    short && "funds",
+  ].filter(Boolean) as string[];
+  const ready = p.signedIn && p.available && !tooMany && missing.length === 0;
   const submit = () =>
     start(async () => {
       setError("");
@@ -47,6 +61,11 @@ export function PackOrderForm(p: {
   return (
     <div className="mx-auto flex w-full max-w-[560px] flex-col gap-4 px-5 pb-8 pt-4">
       <section className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-4">
+        <div className="flex items-baseline justify-between gap-2">
+          <span className="text-sm font-semibold text-muted">{t("price")}</span>
+          <span className="text-2xl font-extrabold">{fmt(total)}</span>
+        </div>
+        <div className="my-1 h-px bg-border" />
         <h2 className="text-[13px] font-bold uppercase tracking-[0.6px] text-muted">{t("inside")}</h2>
         {p.lines.map((l) => (
           <div key={l.name} className="flex items-center justify-between gap-3 text-sm">
@@ -65,7 +84,8 @@ export function PackOrderForm(p: {
       {needsProfile && (
         <section className="flex flex-col gap-2">
           <label htmlFor="profile" className="text-sm font-semibold">{t("profileLabel")}</label>
-          <input id="profile" value={profile} onChange={(e) => setProfile(e.target.value)} placeholder={p.profileExample} autoComplete="off" className={`${field} h-[50px]`} />
+          <input id="profile" value={profile} onChange={(e) => setProfile(e.target.value)} placeholder={p.profileExample} autoComplete="off" autoCapitalize="none" className={`${field} h-[50px] ${profileError ? "border-2 border-[#DC2626]" : ""}`} />
+          {profileError && <p role="alert" className="rounded-[10px] bg-[#FEE2E2] px-3 py-2.5 text-[13px] leading-normal text-[#991B1B]">{profileError}</p>}
           <p className="text-xs text-muted">{t("profileHint")}</p>
         </section>
       )}
@@ -76,7 +96,8 @@ export function PackOrderForm(p: {
             <label htmlFor="videos" className="text-sm font-semibold">{t("videosLabel")}</label>
             <span className={`text-[13px] font-bold ${tooMany ? "text-[#B91C1C]" : ""}`}>{t("videoCount", { n: list.length, max: p.maxVideos })}</span>
           </div>
-          <textarea id="videos" rows={4} value={videos} onChange={(e) => setVideos(e.target.value)} placeholder={`${p.videoExample}\n${p.videoExample}`} className={`${field} py-3 leading-normal`} />
+          <textarea id="videos" rows={4} value={videos} onChange={(e) => setVideos(e.target.value)} placeholder={`${p.videoExample}\n${p.videoExample}`} autoCapitalize="none" className={`${field} py-3 leading-normal ${videoErrors.length ? "border-2 border-[#DC2626]" : ""}`} />
+          {videoErrors.length > 0 && <div role="alert" className="flex flex-col gap-1 rounded-[10px] bg-[#FEE2E2] px-3 py-2.5 text-[13px] leading-normal text-[#991B1B]">{videoErrors.slice(0, 3).map((e) => <span key={e}>{e}</span>)}</div>}
           <p className="text-xs text-muted">{t("videosHint", { max: p.maxVideos })}</p>
           {list.length > 0 && !tooMany && (
             <div className="flex flex-col gap-1 rounded-xl bg-surface-2 p-3 text-[13px]">
@@ -114,7 +135,10 @@ export function PackOrderForm(p: {
           {pending ? t("sending") : t("confirm", { total: fmt(total) })}
         </button>
       ) : (
-        <Link href={`/auth/login?next=/order/pack/${p.slug}`} className="flex h-[54px] items-center justify-center rounded-[14px] bg-text text-base font-bold text-surface">{t("signIn")}</Link>
+        <Link href={`/auth/register?next=${encodeURIComponent(`/order/pack/${p.slug}`)}`} className="flex h-[54px] items-center justify-center rounded-[14px] bg-text text-base font-bold text-surface">{t("signIn")}</Link>
+      )}
+      {p.signedIn && p.available && !ready && !pending && missing.length > 0 && (
+        <p className="-mt-1 text-center text-[13px] leading-normal text-[#475569] dark:text-muted"><b>{t("needTitle")}</b> {missing.map((m) => t(`need_${m}`)).join(" · ")}</p>
       )}
       <p className="text-center text-xs leading-normal text-muted">{t("autoRefund")}</p>
     </div>

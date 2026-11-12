@@ -3,6 +3,7 @@ import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { formatMoney } from "@/lib/money";
+import { kAgo, kTime } from "@/lib/kreyol-date";
 import { markNotificationsRead } from "@/actions/account";
 import { PageBar } from "@/components/PageBar";
 import { InstallCard } from "@/components/InstallCard";
@@ -30,10 +31,9 @@ export default async function NotificationsPage({ params }: { params: Promise<{ 
     const min = Math.floor((now - d.getTime()) / 60000);
     if (min < 1) return t("justNow");
     if (min < 60) return t("minutesAgo", { n: min });
-    const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-    if (new Date(now).toDateString() === d.toDateString()) return t("today", { time });
-    if (new Date(now - 86400000).toDateString() === d.toDateString()) return t("yesterday");
-    return d.toLocaleDateString(locale === "fr" ? "fr-FR" : "fr-HT", { day: "numeric", month: "short" });
+    const ago = kAgo(d, locale, new Date(now));
+    // Same day: "Jodi a, 14:05"; yesterday and older come from the Kreyòl/French date helper (Haiti time, 24 h).
+    return /^(sa gen|il y a)/.test(ago) ? t("today", { time: kTime(d) }) : ago;
   };
   const items = await prisma.notification.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 50 });
   const render = (type: string, params: Record<string, string | number>) => {

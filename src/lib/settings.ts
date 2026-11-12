@@ -223,7 +223,7 @@ export const DEFAULT_SETTINGS: Settings = {
   trialEnabled: true,
   trialStrict: false,
   trialPerDay: 30,
-  trialPerIpPerDay: 3,
+  trialPerIpPerDay: 10,
   trialAutoApprove: true,
   trialAutoPerDay: 20,
   trialAutoBelow: 25,
