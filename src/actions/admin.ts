@@ -183,7 +183,7 @@ export async function resolveRisk(flagId: string, decision: "APPROVED" | "REJECT
     await audit(staff.id, `risk.${decision.toLowerCase()}`, "RiskFlag", flagId, { orderId: f.orderId });
     if (f.orderId) {
       if (decision === "APPROVED") await fulfillOrder(f.orderId, staff.id);
-      else await refundOrCancel(f.orderId, staff.id, "Rejected by risk review");
+      else await refundOrCancel(f.orderId, staff.id, "Kòmand la pa t ka aksepte apre verifikasyon sekirite. Lajan an tounen nan bous ou.");
     }
     revalidatePath("/admin/risk");
     return { ok: true };

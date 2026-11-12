@@ -272,7 +272,9 @@
     "duplicateRef": "Referans sa a te deja itilize.",
     "waitingDelivery": "N ap prepare kòmand ou. N ap avèti w lè l livre.",
     "shareStatus": "Kopye lyen swivi a",
-    "referenceBad": "Referans lan pa bon. Mete referans tranzaksyon an jan li ye nan mesaj NatCash la (omwen 4 karaktè)."
+    "referenceBad": "Referans lan pa bon. Mete referans tranzaksyon an jan li ye nan mesaj NatCash la (omwen 4 karaktè).",
+    "reason": "Rezon",
+    "autoRefundNote": "Founisè a pa t ka fè l. Nou remèt lajan an nan bous ou otomatikman."
   },
   "account": {
     "dashboard": "Tablo bò",

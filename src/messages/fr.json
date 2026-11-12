@@ -272,7 +272,9 @@
     "duplicateRef": "Cette référence a déjà été utilisée.",
     "waitingDelivery": "Nous préparons votre commande. Vous serez averti à la livraison.",
     "shareStatus": "Copier le lien de suivi",
-    "referenceBad": "Référence invalide. Saisissez la référence telle qu'elle apparaît dans le message NatCash (au moins 4 caractères)."
+    "referenceBad": "Référence invalide. Saisissez la référence telle qu'elle apparaît dans le message NatCash (au moins 4 caractères).",
+    "reason": "Raison",
+    "autoRefundNote": "Le fournisseur n’a pas pu le faire. L’argent a été remis dans votre portefeuille automatiquement."
   },
   "account": {
     "dashboard": "Tableau de bord",

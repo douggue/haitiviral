@@ -74,7 +74,25 @@ export default async function PricingAdmin({ searchParams }: { searchParams: Pro
           <h2 className="text-base font-bold">Real profit per 1,000 (worst case: Diamond customer, referred by a top-tier friend, + payment fee)</h2>
           <span className="text-xs text-muted">{n("ok")} OK · {n("low")} low margin · {n("loss")} losing{s.autoPauseLoss ? " (paused)" : ""} · {n("nocost")} not linked</span>
         </div>
-        <div className="overflow-x-auto">
+        <div className="flex flex-col divide-y divide-[#EEF0F5] sm:hidden dark:divide-border">
+          {rows.map(({ c, p }) => {
+            const st = STATUS[p.status];
+            return (
+              <div key={c.id} className="flex flex-col gap-1.5 py-3">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-sm font-bold">{txt(c.product.name, "ht")} · {txt(c.name, "ht")}{!c.isActive && <span className="ml-1.5 text-[11px] font-semibold text-muted">OFF</span>}</span>
+                  <span className={pill} style={{ background: st[1], color: st[2] }}>{p.status === "loss" && c.meta.pausedLoss ? "Loss: auto-paused" : st[0]}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+                  <span>Price: <ActionButton label={g(p.sell)} prompt={`New selling price per 1,000 in gourdes (now ${(p.sell / 100).toLocaleString("en-US")})`} className="inline-flex min-h-10 items-center rounded-md px-1 font-bold tabular-nums underline decoration-dotted underline-offset-4" action={setChoicePrice.bind(null, c.id)} /></span>
+                  <span className="text-muted">Cost: {c.provider ? g(p.costHtg) : "—"}</span>
+                  <span className="font-extrabold" style={{ color: st[3] }}>Profit: {p.status === "nocost" ? "—" : `${g(p.profit)} (${Math.round(p.pct)}%)`}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[860px] border-collapse text-[13px]">
             <thead>
               <tr className="text-right text-xs text-muted">
@@ -111,7 +129,7 @@ export default async function PricingAdmin({ searchParams }: { searchParams: Pro
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-muted">Tap a selling price to change it. The referral column is the highest tier&apos;s commission; there is no top-up bonus.</p>
+        <p className="text-xs text-muted">Tap a selling price to change it. A change of more than 30% asks you to confirm. The referral column is the highest tier&apos;s commission; there is no top-up bonus.</p>
       </section>
 
       <section className="flex flex-wrap gap-4">

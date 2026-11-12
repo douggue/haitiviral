@@ -54,6 +54,10 @@ export default async function OrderStatusPage({ params, searchParams }: { params
             <li key={e.id} className="relative">
               <span className="absolute -left-[26px] top-1 h-3 w-3 rounded-full border-2 border-surface bg-primary" aria-hidden />
               <p className="text-sm font-medium">{to(`status.${e.status}`)}</p>
+              {(() => {
+                const why = (e.status === "REFUNDED" || e.status === "CANCELED") ? (e.actorId ? e.note : to("autoRefundNote")) : e.note?.startsWith("Payment rejected: ") ? e.note.slice(18) : null;
+                return why ? <p className="mt-0.5 text-[13px]"><span className="text-muted">{to("reason")}:</span> {why}</p> : null;
+              })()}
               <p className="text-xs text-muted">{fmt.dateTime(e.createdAt, { dateStyle: "medium", timeStyle: "short" })}</p>
             </li>
           ))}
@@ -62,7 +66,7 @@ export default async function OrderStatusPage({ params, searchParams }: { params
       <div className="flex flex-wrap gap-3">
         <Link href={`/account/orders/${order.id}`} className="btn-primary">{tc("signIn")} → {to("yourCodes")}</Link>
         <a href={`https://wa.me/${settings.whatsappNumber}?text=${help}`} target="_blank" rel="noopener" className="btn-secondary">
-          <WhatsAppIcon width={18} height={18} className="text-[#1fa855]" /> {to("getHelp")}
+          <WhatsAppIcon width={18} height={18} className="text-[#15803D]" /> {to("getHelp")}
         </a>
       </div>
     </div>

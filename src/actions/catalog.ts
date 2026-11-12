@@ -126,6 +126,10 @@ export async function setChoicePrice(variantId: string, gourdes: string): Promis
     const v = Math.round(Number(gourdes.replace(/[^\d.]/g, "")) * 100);
     if (!Number.isFinite(v) || v <= 0) return { ok: false, error: "Write a price in gourdes, like 420" };
     const before = await prisma.productVariant.findUniqueOrThrow({ where: { id: variantId }, select: { priceHtg: true } });
+    const change = before.priceHtg ? Math.abs(v - before.priceHtg) / before.priceHtg : 0;
+    if (change > 0.3 && !gourdes.trim().endsWith("!")) {
+      return { ok: false, error: `That is ${Math.round(change * 100)}% ${v > before.priceHtg ? "higher" : "lower"} than now (${(before.priceHtg / 100).toLocaleString("en-US")}). If it is right, type it again with ! at the end, like ${v / 100}!` };
+    }
     await prisma.productVariant.update({ where: { id: variantId }, data: { priceHtg: v } });
     if (v !== before.priceHtg) await postServiceUpdate(v > before.priceHtg ? "price_up" : "price_down", variantId, v);
     await syncPackPrices();

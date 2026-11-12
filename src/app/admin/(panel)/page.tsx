@@ -190,7 +190,23 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
           <h2 className="text-base font-bold">Latest orders</h2>
           <Link href="/admin/orders" className="text-[13px] font-bold text-[#00209F] dark:text-primary">All orders →</Link>
         </div>
-        <div className="overflow-x-auto">
+        <div className="flex flex-col divide-y divide-[#EEF0F5] sm:hidden dark:divide-border">
+          {recent.map((o) => {
+            const item = o.items[0];
+            const fv = (item?.fieldValues ?? {}) as Record<string, string>;
+            const st = statusOf(o);
+            return (
+              <Link key={o.id} href={`/admin/orders/${o.id}`} className="flex items-center gap-3 py-2.5">
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm font-bold">#{o.number} · {item ? t(item.productName, "fr") : "—"}{fv.quantity ? ` · ${Number(fv.quantity).toLocaleString("en-US")}` : ""}</span>
+                  <span className="truncate text-xs text-muted">{o.user.name || o.user.email.split("@")[0]} · {o.total === 0 ? "Free" : g(o.total)}</span>
+                </span>
+                <span className="whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold" style={st.style}>{st.text}</span>
+              </Link>
+            );
+          })}
+        </div>
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full min-w-[640px] border-collapse text-sm">
             <thead>
               <tr className="text-left text-xs text-muted">
