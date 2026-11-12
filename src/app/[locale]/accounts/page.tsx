@@ -37,7 +37,7 @@ export default async function AccountsPage({ params, searchParams }: { params: P
           <p className="text-[13px] leading-normal text-muted">{t(kind === "sms" ? "introSms" : "introAccounts")}</p>
           {items.length === 0 && <p className="py-8 text-center text-muted">{t("empty")}</p>}
           {items.map(({ product, variant, meta }) => (
-            <Link key={product.id} href={`/accounts/${product.slug}`} className={`flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5 ${variant.soldOut ? "opacity-60" : ""}`}>
+            <Card key={product.id} soldOut={variant.soldOut} href={`/accounts/${product.slug}`}>
               {(() => {
                 const b = accountBadge(product.tags, meta.kind);
                 return <span className="grid h-11 w-11 flex-none place-items-center rounded-xl text-sm font-extrabold text-white" style={{ background: b.color }}>{b.letters}</span>;
@@ -47,17 +47,23 @@ export default async function AccountsPage({ params, searchParams }: { params: P
                 <span className="flex flex-wrap gap-1.5 text-[11px] font-bold">
                   <span className={`rounded-full px-2 py-0.5 ${meta.delivery === "instant" ? "bg-[#DCFCE7] text-[#166534]" : "bg-[#FEF3C7] text-[#92400E]"}`}>{t(meta.delivery === "instant" ? "instant" : "within24")}</span>
                   <span className={`rounded-full px-2 py-0.5 ${meta.warrantyHours ? "bg-[#E0E7FF] text-[#3730A3]" : "bg-[#F1F5F9] text-[#475569]"}`}>{meta.warrantyHours ? t("warrantyH", { h: meta.warrantyHours }) : t("noWarranty")}</span>
-                  {variant.soldOut && <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[#991B1B]">{t("soldOut")}</span>}
+                  {variant.soldOut && <span className="rounded-full bg-[#334155] px-2 py-0.5 text-white">{t("soldOut")}</span>}
                 </span>
               </span>
               <span className="flex flex-none flex-col items-end">
                 <span className="text-base font-extrabold">{fmt(variant.salePriceHtg ?? variant.priceHtg)}</span>
                 <span className="text-[11px] text-muted">{t("perPiece")}</span>
               </span>
-            </Link>
+            </Card>
           ))}
         </>}
       </div>
     </>
   );
+}
+
+/** A sold-out item is shown but can't be opened (no link, greyed, "Fini" badge). */
+function Card({ soldOut, href, children }: { soldOut: boolean; href: string; children: React.ReactNode }) {
+  const cls = "flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5";
+  return soldOut ? <div aria-disabled className={`${cls} opacity-55 grayscale`}>{children}</div> : <Link href={href} className={cls}>{children}</Link>;
 }

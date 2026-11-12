@@ -895,7 +895,14 @@
     "refillUntil": "Refill disponib jiska {date}.",
     "refillRunning": "Refill an kou kay founisè a.",
     "refillWait": "Refill la fèk mande. Ou ka mande ankò demen.",
-    "refillOver": "Peryòd refill la fini."
+    "refillOver": "Peryòd refill la fini.",
+    "sending": "N ap voye…",
+    "cancelSure": "Ou sèten ou vle anile?",
+    "cancelSureBody": "Nou pral mande founisè a anile. Si l aksepte, kòb sa ki pa livre a ap tounen nan bous ou.",
+    "cancelYes": "Wi, anile l",
+    "cancelNo": "Non, kite l",
+    "cancelPending": "Demann anilasyon an voye. N ap tann repons founisè a.",
+    "helpNetwork": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò."
   },
   "walletUi": {
     "title": "Bous mwen",
@@ -1299,6 +1306,8 @@
     "need_accept": "tcheke kare kondisyon yo",
     "need_require": "ranpli enfòmasyon ki mande a",
     "need_funds": "ajoute kòb nan bous ou",
-    "need_soldOut": "pwodui sa a fini"
+    "need_soldOut": "pwodui sa a fini",
+    "codeSeenAt": "rive a {time}",
+    "codeWatching": "N ap tcheke otomatikman chak 10 segonn…"
   }
 }

@@ -895,7 +895,14 @@
     "refillUntil": "Recharge possible jusqu'au {date}.",
     "refillRunning": "Recharge en cours chez le fournisseur.",
     "refillWait": "Recharge déjà demandée. Réessayez demain.",
-    "refillOver": "La période de recharge est terminée."
+    "refillOver": "La période de recharge est terminée.",
+    "sending": "Envoi…",
+    "cancelSure": "Voulez-vous vraiment annuler ?",
+    "cancelSureBody": "Nous allons demander l’annulation au fournisseur. S’il accepte, l’argent non livré revient dans votre portefeuille.",
+    "cancelYes": "Oui, annuler",
+    "cancelNo": "Non, garder",
+    "cancelPending": "Demande d’annulation envoyée. Nous attendons la réponse du fournisseur.",
+    "helpNetwork": "La connexion a été coupée. Vérifiez internet et réessayez."
   },
   "walletUi": {
     "title": "Mon portefeuille",
@@ -1299,6 +1306,8 @@
     "need_accept": "cochez la case des conditions",
     "need_require": "remplissez l’information demandée",
     "need_funds": "ajoutez des fonds",
-    "need_soldOut": "produit épuisé"
+    "need_soldOut": "produit épuisé",
+    "codeSeenAt": "reçu à {time}",
+    "codeWatching": "Vérification automatique toutes les 10 secondes…"
   }
 }
