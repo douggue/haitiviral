@@ -371,7 +371,8 @@
     "cryptoSteps1": "Copiez l'adresse ou scannez le QR.",
     "cryptoSteps2": "Envoyez de l'USDT sur {network} uniquement.",
     "cryptoSteps3": "Collez le hash de la transaction et envoyez. Nous le vérifions sur la blockchain.",
-    "methodAuto": "Automatique"
+    "methodAuto": "Automatique",
+    "tooMany": "Vous avez déjà 3 dépôts en attente de vérification. Attendez que l’équipe les vérifie avant d’en envoyer un autre."
   },
   "auth": {
     "loginTitle": "Se connecter",
@@ -1141,7 +1142,8 @@
     "err_verify_email": "Vérifiez d'abord votre e-mail.",
     "err_generic": "Un problème est survenu. Réessayez.",
     "tierGap": "Encore <b>{friends} amis actifs</b> ou <b>{amount}</b> de commandes pour atteindre {next}",
-    "err_network": "La connexion a été coupée. Vérifiez internet et réessayez : ce que vous avez saisi est conservé et vous ne serez pas débité deux fois."
+    "err_network": "La connexion a été coupée. Vérifiez internet et réessayez : ce que vous avez saisi est conservé et vous ne serez pas débité deux fois.",
+    "err_restricted": "Votre compte est en vérification : retrait impossible pour le moment. Contactez le support."
   },
   "refPublic": {
     "metaTitle": "Parrainage : gagnez de l'argent | HaitiViral",

@@ -56,7 +56,7 @@ if [ ! -f .env ]; then
     -e "s|^DOMAIN=.*|DOMAIN=$domain|" \
     -e "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(key)|" \
     -e "s|^BETTER_AUTH_SECRET=.*|BETTER_AUTH_SECRET=$(key)|" \
-    -e "s|^ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$(key)|" \
+    -e "s|^ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$(openssl rand -base64 32)|" \
     -e "s|^CRON_SECRET=.*|CRON_SECRET=$(key)|" \
     -e "s|^EMAIL_FROM=.*|EMAIL_FROM=HaitiViral <noreply@$domain>|" \
     .env
@@ -78,6 +78,8 @@ if [ "$dns" != "$ip" ]; then
   echo "  At your domain seller, add an A record: $domain → $ip  (and www → $ip)."
   echo "  The site starts anyway; HTTPS works a few minutes after the domain points here."
 fi
+
+mkdir -p backups && chmod 700 backups
 
 say "Building and starting (the first time takes 5–10 minutes)"
 docker compose up -d --build

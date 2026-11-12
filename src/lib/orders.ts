@@ -27,7 +27,7 @@ export type FieldDef = {
 export const cartItemSchema = z.object({
   variantId: z.string().min(1).max(64),
   quantity: z.number().int().min(1).max(10),
-  fields: z.record(z.string().max(200)).default({}),
+  fields: z.record(z.string(), z.string().max(200)).default({}),
   /** USD cents the customer typed, for "customer enters the amount" products */
   amount: z.number().int().positive().max(100_000_00).optional(),
 });
@@ -48,7 +48,7 @@ export async function onceOnly<T extends { id: string }>(userId: string, request
   try {
     return await create();
   } catch (e) {
-    if (rid && e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+    if (rid && (e as { code?: string })?.code === "P2002") {
       const done = await prisma.order.findFirst({ where: { requestId: rid, userId }, select: { id: true } });
       if (done) return done;
     }

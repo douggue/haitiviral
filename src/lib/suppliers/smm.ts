@@ -53,10 +53,14 @@ export async function smmCall(s: Row, action: string, params: Record<string, str
   } catch (e) {
     error = e instanceof Error ? e.message : "Request failed";
   }
-  const hide = (x: string) => (key.length >= 4 ? x.split(key).join("•••") : x).slice(0, MAX_LOG);
+  // The API key is hidden in both its plain and its form-encoded spelling.
+  const encodedKey = new URLSearchParams({ k: key }).toString().slice(2);
+  const hide = (x: string) => (key.length >= 4 ? x.split(key).join("•••").split(encodedKey).join("•••") : x).slice(0, MAX_LOG);
+  // Delivered accounts (logins, passwords) are stored encrypted on the order only, never in this log.
+  const response = action === "result_product" && !error ? `[delivered lines hidden: ${Array.isArray((data as { result?: unknown })?.result) ? (data as { result: unknown[] }).result.length : 0}]` : hide(text || error || "");
   if (action !== "services" && action !== "products") {
     await prisma.supplierLog
-      .create({ data: { supplierId: s.id, supplierOrderId, op: action, request: hide(`POST ${url}\n\n${form.toString()}`), response: hide(text || error || ""), httpStatus: http, ms: Date.now() - started, outcome: error ? "ERROR" : "OK" } })
+      .create({ data: { supplierId: s.id, supplierOrderId, op: action, request: hide(`POST ${url}\n\n${form.toString()}`), response, httpStatus: http, ms: Date.now() - started, outcome: error ? "ERROR" : "OK" } })
       .catch((e) => console.error("supplier log failed", e));
   }
   return { http, data, error };

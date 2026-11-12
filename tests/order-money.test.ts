@@ -77,13 +77,14 @@ describe("double tap (onceOnly)", () => {
   it("the same requestId returns the first order and never creates a second", async () => {
     const { userId } = await setup();
     let created = 0;
-    const make = () => onceOnly(userId, "req12345678", async () => {
+    const rid = `req${Math.random().toString(36).slice(2, 12)}`;
+    const make = () => onceOnly(userId, rid, async () => {
       created++;
-      return prisma.order.create({ data: { userId, currency: "HTG", subtotal: 1, total: 1, paymentMethod: "WALLET", accessToken: `t${Math.random()}`, requestId: "req12345678" } });
+      return prisma.order.create({ data: { userId, currency: "HTG", subtotal: 1, total: 1, paymentMethod: "WALLET", accessToken: `t${Math.random()}`, requestId: rid } });
     });
     const [a, b] = await Promise.all([make(), make()]);
     expect(a.id).toBe(b.id);
-    expect(await prisma.order.count({ where: { requestId: "req12345678" } })).toBe(1);
+    expect(await prisma.order.count({ where: { requestId: rid } })).toBe(1);
     const c = await make();
     expect(c.id).toBe(a.id);
     expect(created).toBeGreaterThanOrEqual(1);

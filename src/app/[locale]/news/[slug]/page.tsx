@@ -1,3 +1,4 @@
+import { jsonLd as safeJsonLd } from "@/lib/json-ld";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -36,7 +37,7 @@ export default async function ArticlePage({ params }: { params: P }) {
   };
   return (
     <article className="container-page max-w-3xl py-8 sm:py-12">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <Link href="/news" className="text-sm text-muted hover:text-text">← {tn("back")}</Link>
       <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
       {a.publishedAt && <time className="mt-2 block text-sm text-muted" dateTime={a.publishedAt.toISOString()}>{formatDate(a.publishedAt, locale, "long")}</time>}

@@ -40,7 +40,8 @@ export async function saveMediaAlt(id: string, alt: string): Promise<R> {
 
 /** Where an image URL is still referenced. An image in use cannot be deleted. */
 export async function mediaUsage(url: string): Promise<string[]> {
-  const like = `%${url}%`;
+  await assertStaff("catalog.manage");
+  const like = `%${url.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
   const [products, categories, news, methods, settings, pages] = await Promise.all([
     prisma.$queryRaw<{ slug: string }[]>`SELECT slug FROM "Product" WHERE image = ${url} OR gallery::text LIKE ${like}`,
     prisma.category.findMany({ where: { OR: [{ image: url }, { cover: url }] }, select: { slug: true } }),

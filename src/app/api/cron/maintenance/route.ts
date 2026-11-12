@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
+import { bearerMatches } from "@/lib/crypto";
 import { verifyMoncashIntent } from "@/lib/payments/verify";
 import { releaseHold, usdDepositToHtg } from "@/lib/wallet";
 import { notify } from "@/lib/notify";
@@ -26,7 +27,7 @@ import { smmBalance } from "@/lib/suppliers/smm";
  *   no supplier order still running)
  */
 export async function GET(req: NextRequest) {
-  if (!process.env.CRON_SECRET || req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!bearerMatches(req.headers.get("authorization"), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const now = new Date();
@@ -101,6 +102,14 @@ export async function GET(req: NextRequest) {
     data: { status: "EXPIRED" },
   });
   result.expired = expired.count;
+
+  // Provider request logs: delivered account lines are never kept, and logs older than 30 days are removed.
+  try {
+    await prisma.supplierLog.updateMany({ where: { op: "result_product", NOT: { response: { startsWith: "[delivered lines hidden" } } }, data: { response: "[delivered lines hidden]" } });
+    result.logsCleaned = (await prisma.supplierLog.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - 30 * 86_400_000) } } })).count;
+  } catch (e) {
+    console.error("Log cleanup failed", e);
+  }
 
   // Paid but never sent (server restarted between payment and sending): send them now.
   try {

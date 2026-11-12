@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   }
   const intent = await prisma.paymentIntent.findUnique({ where: { id: ref }, include: { user: { select: { locale: true } } } });
   // No language picked on this device: use the one the account was created in.
-  if (!saved && intent?.user?.locale) locale = intent.user.locale;
+  if (!saved && (intent?.user?.locale === "ht" || intent?.user?.locale === "fr")) locale = intent.user.locale;
   const dest = intent?.orderId ? `/${locale}/account/orders/${intent.orderId}` : `/${locale}/account/wallet`;
   return NextResponse.redirect(new URL(dest, url));
 }

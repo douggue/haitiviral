@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { bearerMatches } from "@/lib/crypto";
 import { prisma } from "@/lib/db";
 import { checkDatabase, serviceStatus } from "@/lib/health";
 
@@ -13,7 +14,7 @@ export async function GET(req: Request) {
   const status = db.ok ? 200 : 503;
   const headers = { "Cache-Control": "no-store" };
   const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!bearerMatches(req.headers.get("authorization"), secret)) {
     return NextResponse.json({ ok: db.ok, db: db.ok ? "up" : "down" }, { status, headers });
   }
   let queues: Record<string, number> | null = null;

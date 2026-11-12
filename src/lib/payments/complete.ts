@@ -82,9 +82,10 @@ export async function rejectPayment(intentId: string, actorId: string, note: str
   const intent = await prisma.$transaction(async (tx) => {
     const i = await tx.paymentIntent.findUniqueOrThrow({ where: { id: intentId } });
     if (!["PENDING", "REVIEW"].includes(i.status)) throw new Error(`Payment is ${i.status}`);
+    // The reference is freed so the customer can send it again (corrected) after a rejection.
     const updated = await tx.paymentIntent.update({
       where: { id: intentId },
-      data: { status: "REJECTED", reviewedById: actorId, reviewNote: note.slice(0, 500) },
+      data: { status: "REJECTED", reviewedById: actorId, reviewNote: `${note}${i.providerRef ? ` (ref ${i.providerRef})` : ""}`.slice(0, 500), providerRef: i.providerRef ? `${i.providerRef}~rejected~${i.id.slice(-6)}` : null },
     });
     if (i.orderId) {
       const order = await tx.order.findUniqueOrThrow({ where: { id: i.orderId } });

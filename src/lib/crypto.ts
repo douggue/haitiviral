@@ -1,9 +1,10 @@
-import { createCipheriv, createDecipheriv, createHmac, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
 function key(): Buffer {
   const raw = process.env.ENCRYPTION_KEY;
   if (!raw) throw new Error("ENCRYPTION_KEY is not set");
-  const buf = Buffer.from(raw, "base64");
+  // 32 bytes, written as base64 (openssl rand -base64 32) or as 64 hex characters (openssl rand -hex 32).
+  const buf = /^[0-9a-fA-F]{64}$/.test(raw.trim()) ? Buffer.from(raw.trim(), "hex") : Buffer.from(raw, "base64");
   if (buf.length !== 32) throw new Error("ENCRYPTION_KEY must be 32 bytes, base64-encoded");
   return buf;
 }
@@ -30,4 +31,12 @@ export function hmac(value: string): string {
 
 export function randomToken(bytes = 24): string {
   return randomBytes(bytes).toString("base64url");
+}
+
+/** "Authorization: Bearer <secret>" check that takes the same time whatever the guess (no timing hints). */
+export function bearerMatches(header: string | null, secret: string | undefined): boolean {
+  if (!secret || !header) return false;
+  const a = createHmac("sha256", "bearer").update(header).digest();
+  const b = createHmac("sha256", "bearer").update(`Bearer ${secret}`).digest();
+  return timingSafeEqual(a, b);
 }

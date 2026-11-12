@@ -133,8 +133,14 @@ export async function earningsBalance(userId: string) {
   return { available: acct?.balance ?? 0, pending: pending._sum.amount ?? 0 };
 }
 
+/** Restricted or suspended accounts (fraud review) can't move earnings out. */
+async function assertActive(userId: string) {
+  const u = await prisma.user.findUnique({ where: { id: userId }, select: { status: true } });
+  if (u?.status !== "ACTIVE") throw new PayoutError("restricted");
+}
+
 export class PayoutError extends Error {
-  constructor(public code: "min" | "balance" | "open" | "phone" | "method") {
+  constructor(public code: "min" | "balance" | "open" | "phone" | "method" | "restricted") {
     super(code);
   }
 }
@@ -142,6 +148,7 @@ export class PayoutError extends Error {
 /** Withdrawal request: the amount is set aside at once (so it can't be spent twice); staff send it, or reject it back. */
 export async function requestPayout(userId: string, input: { amount: number; method: string; phone: string }) {
   const s = await getSettings();
+  await assertActive(userId);
   if (input.method !== "MONCASH" && input.method !== "NATCASH") throw new PayoutError("method");
   const phone = normalizePhone(input.phone);
   if (!phone) throw new PayoutError("phone");
@@ -186,6 +193,7 @@ export async function decidePayout(id: string, sent: boolean, staffId: string, t
 /** Earnings → wallet, at once and without a minimum (to order with it). */
 export async function earningsToWallet(userId: string, amount: number) {
   if (!Number.isInteger(amount) || amount <= 0) throw new PayoutError("balance");
+  await assertActive(userId);
   try {
     await prisma.$transaction(async (tx) => {
       const earnings = await earningsAccount(tx, userId);

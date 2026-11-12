@@ -371,7 +371,8 @@
     "cryptoSteps1": "Kopye adrès la oswa eskane QR la.",
     "cryptoSteps2": "Voye USDT sou {network} sèlman.",
     "cryptoSteps3": "Kole hash tranzaksyon an epi voye. N ap verifye l sou blockchain lan.",
-    "methodAuto": "Otomatik"
+    "methodAuto": "Otomatik",
+    "tooMany": "Ou gen 3 depo k ap tann verifikasyon deja. Tann ekip la tcheke yo anvan ou voye yon lòt."
   },
   "auth": {
     "loginTitle": "Konekte",
@@ -1141,7 +1142,8 @@
     "err_verify_email": "Verifye imèl ou anvan.",
     "err_generic": "Gen yon pwoblèm. Eseye ankò.",
     "tierGap": "Ankò <b>{friends} zanmi aktif</b> oswa <b>{amount}</b> kòmand pou w rive {next}",
-    "err_network": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò: sa w te ekri a la toujou, epi nou p ap chaje w de fwa."
+    "err_network": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò: sa w te ekri a la toujou, epi nou p ap chaje w de fwa.",
+    "err_restricted": "Kont ou an ap verifye: ou pa ka retire kounye a. Kontakte sipò."
   },
   "refPublic": {
     "metaTitle": "Envite zanmi, touche lajan | HaitiViral",

@@ -8,16 +8,19 @@ import { getBalances } from "@/lib/ledger";
 import { parseMeta } from "@/lib/services";
 import { requestSmmCancel, requestSmmRefill } from "@/lib/suppliers/smm-orders";
 import { audit } from "@/lib/audit";
-import { savePrivateImage, uploadsEnabled } from "@/lib/storage";
+import { savePrivateImage, uploadsEnabled, UploadError } from "@/lib/storage";
 
 type R = { ok: true; id?: string } | { ok: false; error: string };
 
 // ───────────── Support tickets ─────────────
 
-async function attachment(form: FormData) {
+async function attachment(form: FormData, userId: string) {
   const file = form.get("attachment");
-  if (file instanceof File && file.size > 0 && uploadsEnabled()) return savePrivateImage(file, "support");
-  return null;
+  if (!(file instanceof File) || file.size === 0 || !uploadsEnabled()) return null;
+  // At most 10 photos an hour per customer, so a script can't fill the server's disk.
+  const recent = await prisma.supportMessage.count({ where: { authorId: userId, attachmentPath: { not: null }, createdAt: { gt: new Date(Date.now() - 3_600_000) } } });
+  if (recent >= 10) throw new UploadError("too_many");
+  return savePrivateImage(file, "support");
 }
 
 export async function createTicket(form: FormData): Promise<R> {
@@ -31,7 +34,7 @@ export async function createTicket(form: FormData): Promise<R> {
   if (orderId && !(await prisma.order.findFirst({ where: { id: orderId, userId: user.id } }))) return { ok: false, error: "missing" };
   let path: string | null = null;
   try {
-    path = await attachment(form);
+    path = await attachment(form, user.id);
   } catch {
     return { ok: false, error: "upload" };
   }
@@ -51,7 +54,7 @@ export async function replyTicket(form: FormData): Promise<R> {
   if (!ticket) return { ok: false, error: "missing" };
   let path: string | null = null;
   try {
-    path = await attachment(form);
+    path = await attachment(form, user.id);
   } catch {
     return { ok: false, error: "upload" };
   }
@@ -78,13 +81,13 @@ const cartLine = z.object({
   key: z.string().max(400),
   variantId: z.string().max(64),
   productSlug: z.string().max(120),
-  productName: z.record(z.string().max(200)),
-  variantName: z.record(z.string().max(200)),
+  productName: z.record(z.string(), z.string().max(200)),
+  variantName: z.record(z.string(), z.string().max(200)),
   accent: z.string().max(20).nullable().optional(),
   image: z.string().max(500).nullable().optional(),
   priceHtg: z.number().int().nonnegative(),
   quantity: z.number().int().min(1).max(10),
-  fields: z.record(z.string().max(200)),
+  fields: z.record(z.string(), z.string().max(200)),
   amount: z.number().int().positive().optional(),
   priceUsd: z.number().int().nonnegative().optional(),
 });

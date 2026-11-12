@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const L = z.record(z.string().max(5000));
+const L = z.record(z.string(), z.string().max(5000));
 
 export const blockSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("heading"), text: L }),

@@ -22,9 +22,38 @@ const fail = (e: unknown): R => ({ ok: false, error: e instanceof Error ? e.mess
 
 // ───────────── Payments ─────────────
 
-export async function approvePayment(intentId: string, note: string): Promise<R> {
+/**
+ * Approve a deposit the staff member saw arrive. Large deposits (from the approval limit) need the 2FA re-check, and
+ * a second staff member unless the approver is the owner (Super Admin). `amountText` lets staff credit the amount
+ * that really arrived when the customer typed a different one.
+ */
+export async function approvePayment(intentId: string, note: string, amountText?: string): Promise<R> {
   try {
     const staff = await assertStaff("payments.review");
+    const intent = await prisma.paymentIntent.findUniqueOrThrow({ where: { id: intentId } });
+    let amount = intent.amount;
+    if (amountText !== undefined && amountText.trim()) {
+      const a = parseAmount(amountText);
+      if (!a) return { ok: false, error: "Enter the amount that really arrived" };
+      amount = a;
+    }
+    const settings = await (await import("@/lib/settings")).getSettings();
+    const htg = intent.currency === "HTG" ? amount : Math.round(amount * settings.htgPerUsd);
+    if (htg >= settings.approvalThresholdHtg) {
+      await assertStepUp();
+      if (staff.role !== "SUPER_ADMIN") {
+        await prisma.pendingApproval.create({
+          data: { kind: "payment.approve", payload: { intentId, amount, note }, summary: `Approve deposit ${(amount / 100).toFixed(2)} ${intent.currency} (${intent.provider})`, requestedBy: staff.id },
+        });
+        await audit(staff.id, "payment.approve.requested", "PaymentIntent", intentId, { amount });
+        return { ok: true, message: "Above the approval limit: sent to a second staff member (Admin → Approvals)." };
+      }
+    }
+    if (amount !== intent.amount) {
+      if (intent.status !== "REVIEW" && intent.status !== "PENDING") return { ok: false, error: `Payment is ${intent.status}` };
+      await prisma.paymentIntent.update({ where: { id: intentId }, data: { amount } });
+      await audit(staff.id, "payment.amount_corrected", "PaymentIntent", intentId, { from: intent.amount, to: amount });
+    }
     const r = await completePayment(intentId, { actorId: staff.id, note: note.slice(0, 500) || undefined });
     await audit(staff.id, "payment.approve", "PaymentIntent", intentId, { held: r.held, already: r.already });
     revalidatePath("/admin/payments");
@@ -138,7 +167,7 @@ const localized = (form: FormData, prefix: string) => ({
 const fieldDefSchema = z.array(
   z.object({
     key: z.string().regex(/^[a-zA-Z][a-zA-Z0-9_]{0,30}$/),
-    label: z.record(z.string().max(60)),
+    label: z.record(z.string(), z.string().max(60)),
     type: z.enum(["text", "email", "number", "tel"]),
     required: z.boolean(),
     placeholder: z.string().max(60).optional(),
@@ -362,6 +391,12 @@ export async function setCustomerStatus(userId: string, status: "ACTIVE" | "REST
   try {
     const staff = await assertStaff("customers.manage");
     if (userId === staff.id) return { ok: false, error: "You cannot change your own status" };
+    // Staff accounts are only changed by someone who manages staff, after the 2FA re-check.
+    const target = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { role: true } });
+    if (target.role !== "CUSTOMER") {
+      await assertStaff("staff.manage");
+      await assertStepUp();
+    }
     await prisma.user.update({ where: { id: userId }, data: { status } });
     if (status === "SUSPENDED") await prisma.session.deleteMany({ where: { userId } });
     await audit(staff.id, "customer.status", "User", userId, { status });
@@ -555,7 +590,19 @@ export async function verifyStepUp(code: string): Promise<R> {
     if (!s) return { ok: false, error: "Not signed in" };
     const clean = code.replace(/\s/g, "");
     if (!/^\d{6}$/.test(clean)) return { ok: false, error: "Enter the 6-digit code" };
-    await auth.api.verifyTOTP({ body: { code: clean }, headers: await headers() });
+    // At most 5 wrong codes in 10 minutes; after 10 wrong codes in an hour the session is signed out.
+    const failures = (ms: number) => prisma.auditEvent.count({ where: { actorId: s.user.id, action: "staff.step_up_failed", createdAt: { gt: new Date(Date.now() - ms) } } });
+    if ((await failures(10 * 60_000)) >= 5) return { ok: false, error: "Too many wrong codes. Wait 10 minutes." };
+    try {
+      await auth.api.verifyTOTP({ body: { code: clean }, headers: await headers() });
+    } catch {
+      await audit(s.user.id, "staff.step_up_failed", "User", s.user.id);
+      if ((await failures(60 * 60_000)) >= 10) {
+        await prisma.session.deleteMany({ where: { token: s.session.token } });
+        await audit(s.user.id, "staff.session_revoked", "User", s.user.id, { reason: "too many wrong 2FA codes" });
+      }
+      return { ok: false, error: "Invalid code" };
+    }
     await prisma.stepUp.upsert({
       where: { sessionToken: s.session.token },
       create: { sessionToken: s.session.token, userId: s.user.id, until: new Date(Date.now() + 10 * 60_000) },
@@ -577,6 +624,12 @@ export async function decideApproval(id: string, decision: "APPROVED" | "REJECTE
     const a = await prisma.pendingApproval.findUniqueOrThrow({ where: { id } });
     if (a.status !== "PENDING") return { ok: false, error: "Already decided" };
     if (a.requestedBy === staff.id) return { ok: false, error: "A different staff member must approve this" };
+    if (decision === "APPROVED" && a.kind === "payment.approve") {
+      const p = a.payload as { intentId: string; amount: number; note: string };
+      const intent = await prisma.paymentIntent.findUniqueOrThrow({ where: { id: p.intentId } });
+      if (p.amount !== intent.amount) await prisma.paymentIntent.update({ where: { id: p.intentId }, data: { amount: p.amount } });
+      await completePayment(p.intentId, { actorId: staff.id, note: `${p.note} (approved by ${staff.name})`.slice(0, 500) });
+    }
     if (decision === "APPROVED" && a.kind === "wallet.adjust") {
       const p = a.payload as { userId: string; currency: "HTG" | "USD"; amount: number; reason: string; idempotencyKey: string };
       await prisma.$transaction(async (tx) => {

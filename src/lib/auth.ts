@@ -10,6 +10,7 @@ import { isPasswordBreached } from "./password-check";
 import { recordReferral } from "./referrals";
 import { recordDevice } from "./devices";
 import { verifyTurnstile } from "./turnstile";
+import { normalizePhone } from "./phone";
 import { onSiteDomain, ownDomain, siteUrl } from "./site-url";
 
 // Argon2id parameters (OWASP recommended minimums)
@@ -91,6 +92,15 @@ export const auth = betterAuth({
   hooks: {
     // Bot check on the forms bots attack (no-op until Turnstile keys are set).
     before: createAuthMiddleware(async (ctx) => {
+      // Profile fields customers can send directly: only clean values are kept (language, currency, phone, name).
+      if ((ctx.path === "/sign-up/email" || ctx.path === "/update-user") && ctx.body && typeof ctx.body === "object") {
+        const b = ctx.body as Record<string, unknown>;
+        if ("locale" in b && b.locale !== "ht" && b.locale !== "fr") b.locale = "ht";
+        if ("displayCurrency" in b && b.displayCurrency !== "HTG" && b.displayCurrency !== "USD") b.displayCurrency = "HTG";
+        if ("phone" in b) b.phone = b.phone ? normalizePhone(String(b.phone)) ?? undefined : undefined;
+        if (typeof b.name === "string") b.name = b.name.replace(/[<>]/g, "").trim().slice(0, 80);
+        if (ctx.path === "/update-user") delete b.image; // pictures only come from Google sign-in
+      }
       if (!["/sign-up/email", "/sign-in/email", "/request-password-reset"].includes(ctx.path)) return;
       if (!ctx.request) return; // server-side calls (first-run setup, scripts) have no browser to challenge
       const h = ctx.headers;
@@ -125,8 +135,10 @@ export const auth = betterAuth({
           if (u && (u.status === "SUSPENDED" || u.status === "CLOSED")) {
             throw APIError.from("FORBIDDEN", { code: "ACCOUNT_BLOCKED", message: "This account is not active." });
           }
-          // Staff must sign in with password + 2FA code: Google sign-in would skip the code.
-          if (u && u.role !== "CUSTOMER" && (ctx as { path?: string } | null)?.path?.startsWith("/callback/")) {
+          // Staff must sign in with password + 2FA code. Every other way of getting a session (Google, the
+          // automatic sign-in after confirming an email…) would skip the code, so only these two are allowed.
+          const path = (ctx as { path?: string } | null)?.path;
+          if (u && u.role !== "CUSTOMER" && path && path !== "/sign-in/email" && !path.startsWith("/two-factor/")) {
             throw APIError.from("FORBIDDEN", { code: "STAFF_PASSWORD_ONLY", message: "Staff accounts sign in with email and password." });
           }
         },

@@ -66,6 +66,8 @@ export async function createDeposit(form: FormData): Promise<ActionResult<{ redi
   }
 
   if (method === "NATCASH" || method === "MANUAL") {
+    // At most 3 deposits waiting for staff at a time, so real payments are never buried under fake ones.
+    if ((await prisma.paymentIntent.count({ where: { userId: user.id, status: "REVIEW" } })) >= 3) return { ok: false, error: "too_many" };
     let manualMethodId: string | null = null;
     if (method === "NATCASH" && !settings.natcashEnabled) return { ok: false, error: "method_unavailable" };
     if (method === "MANUAL") {

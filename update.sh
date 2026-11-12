@@ -7,8 +7,13 @@ cd "$(dirname "$0")"
 [ -f .env ] || { echo "No .env here: run install.sh first."; exit 1; }
 
 echo "==> Saving a database copy first"
+umask 077
+mkdir -p backups && chmod 700 backups
 d=$(date +%Y-%m-%d_%H%M)
-docker compose exec -T db pg_dump -U haitiviral -d haitiviral -Fc > "backups/before-update_$d.dump" && echo "    backups/before-update_$d.dump"
+f="backups/before-update_$d.dump"
+docker compose exec -T db pg_dump -U haitiviral -d haitiviral -Fc > "$f"
+if [ ! -s "$f" ]; then echo "✖ The database copy is empty: update stopped, nothing was changed."; exit 1; fi
+echo "    $f"
 
 echo "==> Downloading the latest version"
 git pull --ff-only

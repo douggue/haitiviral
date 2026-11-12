@@ -57,8 +57,9 @@ export async function notify(
   try {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true, locale: true, status: true, notifyPrefs: true } });
     if (!user || user.status === "CLOSED") return;
-    const text = render(type, params, user.locale);
-    const path = `/${user.locale}${link ?? "/account/notifications"}`;
+    const loc = user.locale === "fr" ? "fr" : "ht";
+    const text = render(type, params, loc);
+    const path = `/${loc}${link ?? "/account/notifications"}`;
     await sendPush(userId, { title: "HaitiViral", body: text, url: path, tag: type });
     const prefs = (user.notifyPrefs ?? {}) as { email?: boolean };
     if (!emailEnabled() || prefs.email === false) return;
