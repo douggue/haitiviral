@@ -1,4 +1,5 @@
 "use client";
+import { safeCall } from "@/lib/safe-call";
 import { useEffect, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CopyButton } from "./CopyButton";
@@ -102,7 +103,7 @@ function SmsLine({ line }: { line: Line }) {
   const [pending, start] = useTransition();
   const read = () =>
     start(async () => {
-      const r = await readSmsCode(line.id);
+      const r = await safeCall(() => readSmsCode(line.id));
       if (!r.ok) return setState("error");
       setCode(r.code);
       setFallback(r.fallback);

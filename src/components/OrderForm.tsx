@@ -1,5 +1,6 @@
 "use client";
-import { useState, useTransition } from "react";
+import { newRequestId, safeCall } from "@/lib/safe-call";
+import { useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { placeServiceOrder } from "@/actions/service-order";
@@ -54,6 +55,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
   const [isPublic, setIsPublic] = useState(false);
   const [comments, setComments] = useState("");
   const [username, setUsername] = useState("");
+  const requestId = useRef(newRequestId());
   const [sheet, setSheet] = useState<null | "drip" | "risk">(null);
   const [dripOn, setDripOn] = useState(false);
   const [tab, setTab] = useState<"info" | "read" | "updates">("info");
@@ -94,7 +96,8 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
   const submit = () => {
     setError("");
     start(async () => {
-      const r = await placeServiceOrder({
+      const r = await safeCall(() => placeServiceOrder({
+        requestId: requestId.current,
         variantId: tier.id,
         link,
         quantity,
@@ -104,7 +107,7 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
         drip: !!drip && dripOn,
         acceptRisk: accepted,
         publicOk: isPublic,
-      });
+      }));
       if (r.ok) router.push(`/account/orders/${r.orderId}`);
       else if (r.error.startsWith("link_")) setError(t(`err_${r.error.slice(5)}`, { platform: platform.name, example: linkExample(platform.slug, post) }));
       else setError(t.has(`error_${r.error}`) ? t(`error_${r.error}`) : t("error_generic"));

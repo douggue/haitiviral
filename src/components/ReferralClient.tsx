@@ -1,4 +1,5 @@
 "use client";
+import { safeCall } from "@/lib/safe-call";
 import { useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -65,7 +66,7 @@ export function EarningsCard({ available, pending, min, name, phone }: { availab
   const error = (code: string) => (t.has(`err_${code}`) ? t(`err_${code}`, { min: fmt(min) }) : t("err_generic"));
   const withdraw = () =>
     start(async () => {
-      const r = await withdrawEarnings({ amount, method, phone: tel });
+      const r = await safeCall(() => withdrawEarnings({ amount, method, phone: tel }));
       if (r.ok) {
         setSent(true);
         router.refresh();
@@ -73,7 +74,7 @@ export function EarningsCard({ available, pending, min, name, phone }: { availab
     });
   const toWallet = () =>
     start(async () => {
-      const r = await earningsToWalletAction(String(available / 100));
+      const r = await safeCall(() => earningsToWalletAction(String(available / 100)));
       setMsg(r.ok ? { ok: true, text: t("walletDone", { amount: fmt(available) }) } : { ok: false, text: error(r.error) });
       router.refresh();
     });

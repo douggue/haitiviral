@@ -1,4 +1,5 @@
 "use client";
+import { safeCall } from "@/lib/safe-call";
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { submitReview } from "@/actions/reviews";
@@ -25,14 +26,16 @@ export function ReviewRequest({ orderId, city }: { orderId: string; city: string
   return (
     <form
       className="card space-y-4 border-primary/40 p-5"
-      action={(fd) =>
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
         start(async () => {
           fd.set("rating", String(rating));
-          const r = await submitReview(orderId, fd);
+          const r = await safeCall(() => submitReview(orderId, fd));
           if (r.ok) setDone(true);
           else setError(t("ratingMissing"));
-        })
-      }
+        });
+      }}
     >
       <div>
         <h2 className="text-lg font-bold">{t("askTitle")}</h2>

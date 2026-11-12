@@ -1,4 +1,5 @@
 "use client";
+import { safeCall } from "@/lib/safe-call";
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { deleteAccount, savePrefs } from "@/actions/customer";
@@ -12,15 +13,17 @@ export function DeleteAccountForm({ hasPassword = true }: { hasPassword?: boolea
   return (
     <form
       className="card space-y-3 border-danger/40 p-5"
-      action={(fd) =>
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
         start(async () => {
           setError("");
           if (!window.confirm(t("deleteTitle") + "?")) return;
-          const r = await deleteAccount(String(fd.get("password")));
+          const r = await safeCall(() => deleteAccount(String(fd.get("password"))));
           if (r.ok) window.location.href = "/";
           else setError(t.has(r.error) ? t(r.error as "wrongPassword") : tc("error"));
-        })
-      }
+        });
+      }}
     >
       <h2 className="font-semibold text-danger">{t("deleteTitle")}</h2>
       <p className="text-sm text-muted">{t("deleteBody")}</p>
@@ -42,7 +45,7 @@ export function PrefsForm({ prefs, emailOn }: { prefs: { email?: boolean; whatsa
   const [msg, setMsg] = useState("");
   const [pending, start] = useTransition();
   return (
-    <form className="card space-y-3 p-5" action={(fd) => start(async () => { const r = await savePrefs(fd); setMsg(r.ok ? t("saved") : tc("error")); })}>
+    <form className="card space-y-3 p-5" action={(fd) => start(async () => { const r = await safeCall(() => savePrefs(fd)); setMsg(r.ok ? t("saved") : tc("error")); })}>
       <h2 className="font-semibold">{t("title")}</h2>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="email" defaultChecked={prefs.email !== false} disabled={!emailOn && false} /> {t("email")}</label>
       <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="whatsapp" defaultChecked={prefs.whatsapp !== false} /> {t("whatsapp")}</label>

@@ -43,7 +43,17 @@ export async function notify(
   link?: string,
   db: Tx = prisma,
 ) {
-  await db.notification.create({ data: { userId, type, params, link } });
+  if (db === prisma) {
+    // Outside a transaction a failed notification must never break the order or payment that triggered it.
+    try {
+      await prisma.notification.create({ data: { userId, type, params, link } });
+    } catch (e) {
+      console.error("notification save failed", e);
+      return;
+    }
+  } else {
+    await db.notification.create({ data: { userId, type, params, link } });
+  }
   try {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true, locale: true, status: true, notifyPrefs: true } });
     if (!user || user.status === "CLOSED") return;

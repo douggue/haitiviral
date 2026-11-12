@@ -110,7 +110,7 @@ export async function saveAccountSettings(form: FormData): Promise<R> {
 }
 
 /** Customer: buy accounts / SMS numbers from the wallet. */
-export async function placeAccountOrder(input: { variantId: string; quantity: number; require?: string; accepted: boolean }): Promise<{ ok: true; orderId: string } | { ok: false; error: string }> {
+export async function placeAccountOrder(input: { variantId: string; quantity: number; require?: string; accepted: boolean; requestId?: string }): Promise<{ ok: true; orderId: string } | { ok: false; error: string }> {
   let user;
   try {
     user = await assertUser();
@@ -119,7 +119,7 @@ export async function placeAccountOrder(input: { variantId: string; quantity: nu
   }
   if (await mustVerifyEmail(user.id)) return { ok: false, error: "verify_email" };
   try {
-    const order = await createAccountOrder({ userId: user.id, variantId: String(input.variantId).slice(0, 40), quantity: Number(input.quantity), require: String(input.require ?? "").slice(0, 200), accepted: !!input.accepted });
+    const order = await createAccountOrder({ userId: user.id, variantId: String(input.variantId).slice(0, 40), quantity: Number(input.quantity), require: String(input.require ?? "").slice(0, 200), accepted: !!input.accepted, requestId: typeof input.requestId === "string" ? input.requestId.slice(0, 64) : undefined });
     return { ok: true, orderId: order.id };
   } catch (e) {
     if (e instanceof OrderError) return { ok: false, error: e.code };

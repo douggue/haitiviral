@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyMoncashIntent } from "@/lib/payments/verify";
-import { releaseHold } from "@/lib/wallet";
+import { releaseHold, usdDepositToHtg } from "@/lib/wallet";
 import { notify } from "@/lib/notify";
 import { getSettings } from "@/lib/settings";
-import { refundOrCancel } from "@/lib/orders";
+import { fulfillOrder, refundOrCancel } from "@/lib/orders";
 import { OPEN, runSupplierCron } from "@/lib/suppliers/orders";
 import { syncAllProviders } from "@/lib/suppliers/catalog";
 import { matureCommissions } from "@/lib/referrals";
@@ -67,8 +67,10 @@ export async function GET(req: NextRequest) {
     console.error("Provider sync failed", e);
   }
 
+  // Newest first, so a real payment isn't stuck behind abandoned attempts.
   const pending = await prisma.paymentIntent.findMany({
     where: { provider: "MONCASH", status: "PENDING", createdAt: { gte: new Date(now.getTime() - 86_400_000) } },
+    orderBy: { createdAt: "desc" },
     take: 50,
   });
   for (const p of pending) {
@@ -84,6 +86,7 @@ export async function GET(req: NextRequest) {
   for (const h of held) {
     const released = await prisma.$transaction(async (tx) => {
       const r = await releaseHold(tx, h);
+      await usdDepositToHtg(tx, h, (await getSettings()).htgPerUsd);
       await tx.paymentIntent.update({ where: { id: h.id }, data: { holdUntil: null } });
       return !r.duplicate;
     });
@@ -99,6 +102,22 @@ export async function GET(req: NextRequest) {
   });
   result.expired = expired.count;
 
+  // Paid but never sent (server restarted between payment and sending): send them now.
+  try {
+    const unsent = await prisma.order.findMany({
+      where: {
+        status: "PAID", paidAt: { lt: new Date(now.getTime() - 2 * 60_000) },
+        riskFlags: { none: { status: "OPEN" } },
+        items: { some: { status: "PENDING", supplierOrders: { none: {} } } },
+      },
+      select: { id: true }, orderBy: { paidAt: "asc" }, take: 20,
+    });
+    for (const o of unsent) await fulfillOrder(o.id).catch((e) => console.error("re-send failed", o.id, e));
+    result.resent = unsent.length;
+  } catch (e) {
+    console.error("Re-send of paid orders failed", e);
+  }
+
   const settings = await getSettings();
   if (settings.autoRefundHours > 0) {
     const cutoff = new Date(now.getTime() - settings.autoRefundHours * 3_600_000);
@@ -111,6 +130,7 @@ export async function GET(req: NextRequest) {
         NOT: { items: { some: { supplierOrders: { some: { status: { in: OPEN } } } } } },
       },
       select: { id: true },
+      orderBy: { paidAt: "asc" },
       take: 50,
     });
     for (const o of stuck) {

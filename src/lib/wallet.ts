@@ -54,8 +54,23 @@ export async function chargeOrder(tx: Tx, order: Order) {
   });
 }
 
-/** Refund an order back to the customer's wallet in the currency it was charged. */
+/** What has already gone back to the customer's wallet for this order (full and partial refunds). */
+export async function refundedSoFar(tx: Tx, order: Pick<Order, "id" | "userId" | "currency">) {
+  const wallet = await walletAccount(tx, order.userId, order.currency);
+  const sum = await tx.ledgerEntry.aggregate({
+    where: { accountId: wallet.id, amount: { gt: 0 }, transaction: { type: "REFUND", metadata: { path: ["orderId"], equals: order.id } } },
+    _sum: { amount: true },
+  });
+  return sum._sum.amount ?? 0;
+}
+
+/**
+ * Refund an order back to the customer's wallet in the currency it was charged: only what was not already
+ * given back (a pack line or a partial delivery refunded earlier is never paid twice). Nothing to post for 0.
+ */
 export async function refundOrder(tx: Tx, order: Order, actorId: string | null, reason: string) {
+  const amount = order.total - (await refundedSoFar(tx, order));
+  if (amount <= 0) return null;
   const wallet = await walletAccount(tx, order.userId, order.currency);
   const revenue = await systemAccount(tx, "revenue", order.currency);
   return post(tx, {
@@ -65,14 +80,16 @@ export async function refundOrder(tx: Tx, order: Order, actorId: string | null, 
     createdById: actorId,
     metadata: { orderId: order.id, reason },
     entries: [
-      { accountId: revenue.id, currency: order.currency, amount: -order.total },
-      { accountId: wallet.id, currency: order.currency, amount: order.total },
+      { accountId: revenue.id, currency: order.currency, amount: -amount },
+      { accountId: wallet.id, currency: order.currency, amount },
     ],
   });
 }
 
 /** Give back part of an order (the provider delivered only part of it). Once per order line. */
-export async function refundPart(tx: Tx, order: Order, amount: number, lineId: string, reason: string) {
+export async function refundPart(tx: Tx, order: Order, requested: number, lineId: string, reason: string) {
+  // Never more than what is left of the order after earlier refunds.
+  const amount = Math.min(requested, order.total - (await refundedSoFar(tx, order)));
   if (amount <= 0) return null;
   const wallet = await walletAccount(tx, order.userId, order.currency);
   const revenue = await systemAccount(tx, "revenue", order.currency);
@@ -108,6 +125,15 @@ export async function postExchange(
       { accountId: toWallet.id, currency: q.toCurrency, amount: q.toAmount },
     ],
   });
+}
+
+/**
+ * Crypto deposits arrive in USD, but everything on the site is priced in HTG: once spendable, the USD is changed
+ * to HTG at the day's rate (Admin → Pricing), so the money is never stuck in a wallet nothing can be bought with.
+ */
+export async function usdDepositToHtg(tx: Tx, intent: PaymentIntent, htgPerUsd: number) {
+  if (intent.currency !== "USD" || intent.orderId) return null;
+  return postExchange(tx, { id: `deposit-${intent.id}`, userId: intent.userId, fromCurrency: "USD", toCurrency: "HTG", fromAmount: intent.amount, toAmount: Math.round(intent.amount * htgPerUsd) });
 }
 
 /** Staff correction with a reason; positive credits the customer, negative debits. */

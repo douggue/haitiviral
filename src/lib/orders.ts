@@ -11,7 +11,7 @@ import { t } from "./text";
 import { moncashAvailable } from "./payments/moncash";
 import { createCommission } from "./referrals";
 import { amountInRange, isExchangeProduct, quoteAmount } from "./amount";
-import { hasOpenSupplierOrder, queueSupplierLines, sendQueued } from "./suppliers/orders";
+import { hasOpenSupplierOrder, OPEN as OPEN_SUPPLIER, queueSupplierLines, sendQueued } from "./suppliers/orders";
 import { vipStatus, withDiscount } from "./vip";
 import { resolveShortLink } from "./link-resolve";
 import { checkLink, dripPlan, isShortLink, LIVE_DURATIONS, parseComments, parseMeta, productKind, servicePrice, wantsPost } from "./services";
@@ -33,6 +33,28 @@ export const cartItemSchema = z.object({
 });
 export const cartSchema = z.array(cartItemSchema).min(1).max(20);
 export type CartItemInput = z.infer<typeof cartItemSchema>;
+
+/**
+ * Same tap arriving twice (slow data): the order screen sends a one-time requestId. A second request with it
+ * returns the first order instead of charging again; two at the same moment collide on the unique index and the
+ * loser's transaction (charge included) is rolled back.
+ */
+export async function onceOnly<T extends { id: string }>(userId: string, requestId: string | undefined, create: () => Promise<T>): Promise<T | { id: string }> {
+  const rid = requestId && /^[A-Za-z0-9_-]{8,64}$/.test(requestId) ? requestId : undefined;
+  if (rid) {
+    const done = await prisma.order.findFirst({ where: { requestId: rid, userId }, select: { id: true } });
+    if (done) return done;
+  }
+  try {
+    return await create();
+  } catch (e) {
+    if (rid && e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const done = await prisma.order.findFirst({ where: { requestId: rid, userId }, select: { id: true } });
+      if (done) return done;
+    }
+    throw e;
+  }
+}
 
 export class OrderError extends Error {
   constructor(public code: string) {
@@ -169,13 +191,19 @@ export type ServiceOrderInput = {
   acceptRisk?: boolean;
   /** The customer ticked "my account is public" */
   publicOk?: boolean;
+  /** One-time code from the order screen (see onceOnly) */
+  requestId?: string;
 };
 
 /**
  * Order one social media service, paid from the HTG wallet. Everything is checked again here (never trusted from the
  * browser): link, quantity limits, comments, live duration, high-risk consent; the price is computed on the server.
  */
-export async function createServiceOrder(input: ServiceOrderInput) {
+export function createServiceOrder(input: ServiceOrderInput) {
+  return onceOnly(input.userId, input.requestId, () => createServiceOrderOnce(input));
+}
+
+async function createServiceOrderOnce(input: ServiceOrderInput) {
   const v = await prisma.productVariant.findFirst({
     where: { id: input.variantId, isActive: true, product: { isPublished: true } },
     include: { product: { include: { category: { select: { slug: true } } } } },
@@ -253,6 +281,7 @@ export async function createServiceOrder(input: ServiceOrderInput) {
         total: unitHtg,
         paymentMethod: "WALLET",
         accessToken: randomToken(),
+        requestId: input.requestId && /^[A-Za-z0-9_-]{8,64}$/.test(input.requestId) ? input.requestId : null,
         items: {
           create: [{ variantId: v.id, productName: v.product.name as Prisma.InputJsonValue, variantName, quantity: 1, unitPrice: unitHtg, fieldValues }],
         },
@@ -361,6 +390,9 @@ export async function fulfillOrder(orderId: string, actorId?: string | null): Pr
 
 /** Staff marks a manual item delivered with a note shown to the customer. */
 export async function deliverItemManually(itemId: string, note: string, actorId: string) {
+  // A provider still working on this line could later cancel it and refund part of it: close that first.
+  const open = await prisma.supplierOrder.count({ where: { orderItemId: itemId, status: { in: OPEN_SUPPLIER } } });
+  if (open) throw new OrderError("supplier_open");
   const item = await prisma.orderItem.update({ where: { id: itemId }, data: { status: "DELIVERED", deliveryNote: note.slice(0, 2000) } });
   return fulfillOrder(item.orderId, actorId);
 }
@@ -380,6 +412,12 @@ export async function refundOrCancel(orderId: string, actorId: string | null, re
     // Delivered codes cannot be taken back; only refund when nothing was delivered.
     const delivered = await tx.orderItem.count({ where: { orderId, status: "DELIVERED" } });
     if (delivered > 0) throw new OrderError("partially_delivered");
+    // A free order (trial) has nothing to give back: it is simply canceled.
+    if (order.total === 0) {
+      await tx.order.update({ where: { id: orderId }, data: { status: "CANCELED" } });
+      await addEvent(tx, orderId, "CANCELED", reason, actorId);
+      return "canceled" as const;
+    }
     await refundOrder(tx, order, actorId, reason);
     await tx.order.update({ where: { id: orderId }, data: { status: "REFUNDED" } });
     await addEvent(tx, orderId, "REFUNDED", reason, actorId);

@@ -7,7 +7,7 @@ import { chargeOrder } from "./wallet";
 import { notify } from "./notify";
 import { assertWithinNewAccountLimit, flag } from "./risk";
 import { vipStatus, withDiscount } from "./vip";
-import { addEvent, fulfillOrder, OrderError } from "./orders";
+import { addEvent, fulfillOrder, onceOnly, OrderError } from "./orders";
 import { checkLink, parseMeta, productKind, wantsPost, type Kind, type ServiceMeta } from "./services";
 import { maxVideosFor, packPrice, splitEvenly, tiktokHandle, type PackConfig } from "./pack-math";
 
@@ -26,7 +26,7 @@ export function packConfig(service: unknown): PackConfig {
   return { items, discountPct: n(o.discountPct, 10, 0, 80), maxVideos: n(o.maxVideos, 10, 1, 50), newOnly: o.newOnly === true };
 }
 
-export type PackLine = { variantId: string; quantity: number; name: Record<string, string>; productName: Record<string, string>; kind: Kind | null; post: boolean; rate: number; meta: ServiceMeta; platform: string; active: boolean };
+export type PackLine = { variantId: string; productId: string; quantity: number; name: Record<string, string>; productName: Record<string, string>; kind: Kind | null; post: boolean; rate: number; meta: ServiceMeta; platform: string; active: boolean };
 
 /** A published pack with its contents (active service choices only). */
 export async function loadPack(slug: string) {
@@ -42,7 +42,7 @@ export async function loadPack(slug: string) {
     if (!c || !meta) continue;
     const kind = productKind(c.product.tags);
     lines.push({
-      variantId: c.id, quantity: it.quantity, name: c.name as Record<string, string>, productName: c.product.name as Record<string, string>, kind,
+      variantId: c.id, productId: c.productId, quantity: it.quantity, name: c.name as Record<string, string>, productName: c.product.name as Record<string, string>, kind,
       post: wantsPost(kind, meta.type), rate: c.salePriceHtg ?? c.priceHtg, meta, platform: c.product.category.slug, active: c.isActive && c.product.isPublished,
     });
   }
@@ -61,10 +61,14 @@ export async function syncPackPrices() {
   }
 }
 
-export type PackOrderInput = { userId: string; slug: string; profileLink?: string; videoLinks?: string; publicOk?: boolean; acceptRisk?: boolean };
+export type PackOrderInput = { userId: string; slug: string; profileLink?: string; videoLinks?: string; publicOk?: boolean; acceptRisk?: boolean; requestId?: string };
 
 /** Order a pack from the wallet: one order, one line per service and per video, each sent to its provider. */
-export async function createPackOrder(input: PackOrderInput) {
+export function createPackOrder(input: PackOrderInput) {
+  return onceOnly(input.userId, input.requestId, () => createPackOrderOnce(input));
+}
+
+async function createPackOrderOnce(input: PackOrderInput) {
   const pack = await loadPack(input.slug);
   if (!pack || !pack.lines.length || pack.lines.some((l) => !l.active)) throw new OrderError("unavailable");
   if (!input.publicOk) throw new OrderError("not_public");
@@ -107,7 +111,7 @@ export async function createPackOrder(input: PackOrderInput) {
   }
   if (parts.some((p) => p.quantity < p.line.meta.min || p.quantity > p.line.meta.max)) throw new OrderError("invalid_quantity");
   for (const p of parts) {
-    const running = await prisma.orderItem.count({ where: { variantId: p.line.variantId, fieldValues: { path: ["link"], equals: p.link }, order: { status: { in: ["PAID", "PROCESSING"] } } } });
+    const running = await prisma.orderItem.count({ where: { variant: { productId: p.line.productId }, fieldValues: { path: ["link"], equals: p.link }, order: { status: { in: ["PAID", "PROCESSING"] } } } });
     if (running) throw new OrderError("same_link");
   }
 
@@ -128,6 +132,7 @@ export async function createPackOrder(input: PackOrderInput) {
     const created = await tx.order.create({
       data: {
         userId: input.userId, currency: "HTG", subtotal: total, total, paymentMethod: "WALLET", accessToken: randomToken(),
+        requestId: input.requestId && /^[A-Za-z0-9_-]{8,64}$/.test(input.requestId) ? input.requestId : null,
         items: {
           create: parts.map((p, i) => ({
             variantId: p.line.variantId,

@@ -1,4 +1,5 @@
 "use client";
+import { safeCall } from "@/lib/safe-call";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -128,6 +129,7 @@ export function DepositForm(p: Props) {
     upload: tw("uploadBad"),
     captcha: tc("captcha"),
     verify_email: tco("errors.verify_email"),
+    network: tc("network"),
   };
 
   async function pickShot(f: File | undefined) {
@@ -168,22 +170,24 @@ export function DepositForm(p: Props) {
   return (
     <form
       className="flex flex-col gap-[18px]"
-      action={(fd) =>
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
         start(async () => {
           setError("");
           fd.set("method", m.manualId ? "MANUAL" : m.key);
           if (m.manualId) fd.set("manualMethodId", m.manualId);
           fd.delete("evidence");
           if (shot) fd.set("evidence", shot.file);
-          const r = await createDeposit(fd);
+          const r = await safeCall(() => createDeposit(fd));
           if (!r.ok) {
             setCaptchaKey((k) => k + 1); // bot-check tokens are single-use
             return setError(errors[r.error] ?? tc("error"));
           }
           if (r.redirect) window.location.href = r.redirect;
           else setDone(true);
-        })
-      }
+        });
+      }}
     >
       {/* Amount (mockup: four quick amounts, another amount below) */}
       <section className="flex flex-col gap-2.5">

@@ -17,6 +17,7 @@ const input = z.object({
   drip: z.boolean().optional(),
   acceptRisk: z.boolean().optional(),
   publicOk: z.boolean().optional(),
+  requestId: z.string().max(64).optional(),
 });
 
 export type ServiceOrderResult = { ok: true; orderId: string } | { ok: false; error: string };
@@ -50,6 +51,7 @@ const packInput = z.object({
   videoLinks: z.string().max(10_000).optional(),
   publicOk: z.boolean().optional(),
   acceptRisk: z.boolean().optional(),
+  requestId: z.string().max(64).optional(),
 });
 
 /** Starter pack screen: the whole pack, paid from the wallet, split into one order line per service and video. */

@@ -134,6 +134,7 @@ export default async function SupplierPage({ params }: { params: Promise<{ id: s
             <td className="space-x-1 whitespace-nowrap">
               {["PENDING", "UNKNOWN", "FAILED"].includes(o.status) && <ActionButton action={supplierOrderAction.bind(null, o.id, "check")} label="Check now" />}
               {o.status === "FAILED" && <ActionButton action={supplierOrderAction.bind(null, o.id, "retry")} label="Send again" confirm="Send this order to the supplier again with a new reference?" />}
+              {o.status === "UNKNOWN" && <ActionButton action={supplierOrderAction.bind(null, o.id, "retry")} label="Not there: send again" confirm="Only if you checked on the provider's site that this order does NOT exist there. Send it again with a new reference?" />}
               {["PENDING", "UNKNOWN", "FAILED"].includes(o.status) && (
                 <ActionButton action={supplierOrderAction.bind(null, o.id, "close")} label="Close" prompt="What happened? (delivered by hand, refunded, confirmed on the supplier's site…)" />
               )}

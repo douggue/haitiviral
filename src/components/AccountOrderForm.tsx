@@ -1,5 +1,6 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
+import { newRequestId, safeCall } from "@/lib/safe-call";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { placeAccountOrder } from "@/actions/accounts";
@@ -18,6 +19,7 @@ export function AccountOrderForm(p: {
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const requestId = useRef(newRequestId());
   const fmt = (n: number) => formatMoney(n, "HTG", locale);
   const total = p.price * qty;
   const short = p.balance !== null && total > p.balance;
@@ -26,7 +28,7 @@ export function AccountOrderForm(p: {
   const submit = () =>
     start(async () => {
       setError("");
-      const r = await placeAccountOrder({ variantId: p.variantId, quantity: qty, require: req, accepted });
+      const r = await safeCall(() => placeAccountOrder({ requestId: requestId.current, variantId: p.variantId, quantity: qty, require: req, accepted }));
       if (r.ok) router.push(`/account/orders/${r.orderId}`);
       else setError(t.has(`error_${r.error}`) ? t(`error_${r.error}`) : t("error_generic"));
     });

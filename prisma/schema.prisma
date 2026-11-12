@@ -314,6 +314,8 @@ enum PaymentMethodKind {
 model Order {
   id            String            @id @default(cuid())
   number        Int               @unique @default(autoincrement())
+  /// One-time code sent by the order screen: the same tap arriving twice (slow data) creates one order only
+  requestId     String?           @unique
   userId        String
   user          User              @relation(fields: [userId], references: [id])
   status        OrderStatus       @default(AWAITING_PAYMENT)

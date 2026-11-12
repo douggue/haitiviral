@@ -1,6 +1,6 @@
 import { prisma } from "../db";
 import { getSettings } from "../settings";
-import { creditPayment, chargeOrder } from "../wallet";
+import { creditPayment, chargeOrder, usdDepositToHtg } from "../wallet";
 import { usdToHtg } from "../money";
 import { addEvent, fulfillOrder } from "../orders";
 import { notify } from "../notify";
@@ -22,7 +22,9 @@ export async function completePayment(
     if (!locked) throw new Error("Payment not found");
     const intent = await tx.paymentIntent.findUniqueOrThrow({ where: { id: intentId } });
     if (intent.status === "SUCCEEDED") return { already: true, intent, held: false };
-    if (!["PENDING", "REVIEW"].includes(intent.status)) throw new Error(`Payment is ${intent.status}`);
+    // An EXPIRED MonCash attempt that MonCash itself confirms as paid (late payment) is still credited.
+    const lateButConfirmed = intent.status === "EXPIRED" && opts.verifiedAmount !== undefined;
+    if (!["PENDING", "REVIEW"].includes(intent.status) && !lateButConfirmed) throw new Error(`Payment is ${intent.status}`);
     if (opts.verifiedAmount !== undefined && opts.verifiedAmount !== intent.amount) {
       await tx.riskFlag.create({
         data: { reason: `Amount mismatch: expected ${intent.amount}, provider reported ${opts.verifiedAmount}`, userId: intent.userId, paymentIntentId: intent.id },
@@ -45,6 +47,7 @@ export async function completePayment(
       },
     });
     await creditPayment(tx, updated, { hold, actorId: opts.actorId });
+    if (!hold) await usdDepositToHtg(tx, updated, settings.htgPerUsd);
 
     if (intent.orderId) {
       const order = await tx.order.findUniqueOrThrow({ where: { id: intent.orderId } });

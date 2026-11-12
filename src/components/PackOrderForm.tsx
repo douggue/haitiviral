@@ -1,5 +1,6 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
+import { newRequestId, safeCall } from "@/lib/safe-call";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { placePackOrder } from "@/actions/service-order";
@@ -26,6 +27,7 @@ export function PackOrderForm(p: {
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  const requestId = useRef(newRequestId());
   const fmt = (n: number) => formatMoney(n, "HTG", locale);
   const needsProfile = p.lines.some((l) => !l.post);
   const needsVideos = p.lines.some((l) => l.post);
@@ -37,7 +39,7 @@ export function PackOrderForm(p: {
   const submit = () =>
     start(async () => {
       setError("");
-      const r = await placePackOrder({ slug: p.slug, profileLink: profile, videoLinks: list.join("\n"), publicOk: isPublic, acceptRisk: accepted });
+      const r = await safeCall(() => placePackOrder({ requestId: requestId.current, slug: p.slug, profileLink: profile, videoLinks: list.join("\n"), publicOk: isPublic, acceptRisk: accepted }));
       if (r.ok) router.push(`/account/orders/${r.orderId}`);
       else setError(t.has(`error_${r.error}`) ? t(`error_${r.error}`, { max: p.maxVideos }) : t("error_generic"));
     });

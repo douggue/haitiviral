@@ -1,4 +1,5 @@
 "use client";
+import { safeCall } from "@/lib/safe-call";
 import { PhotoPicker } from "./PhotoPicker";
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
@@ -16,14 +17,16 @@ export function NewTicketForm({ orders, defaultOrder }: { orders: { id: string; 
   return (
     <form
       className="card space-y-4 p-5"
-      action={(fd) =>
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
         start(async () => {
           setError("");
-          const r = await createTicket(fd);
+          const r = await safeCall(() => createTicket(fd));
           if (r.ok && r.id) router.push(`/account/support/${r.id}`);
-          else setError(tc("error"));
-        })
-      }
+          else setError(!r.ok && r.error === "network" ? tc("network") : tc("error"));
+        });
+      }}
     >
       <h2 className="font-semibold">{t("new")}</h2>
       <label className="block"><span className="label">{t("subject")}</span><input name="subject" required minLength={3} maxLength={120} className="input" /></label>
@@ -50,16 +53,18 @@ export function ReplyForm({ ticketId }: { ticketId: string }) {
   return (
     <form
       className="card space-y-3 p-4"
-      action={(fd) =>
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
         start(async () => {
           setError("");
-          const r = await replyTicket(fd);
+          const r = await safeCall(() => replyTicket(fd));
           if (r.ok) {
             (document.getElementById("reply-form") as HTMLFormElement | null)?.reset();
             router.refresh();
-          } else setError(tc("error"));
-        })
-      }
+          } else setError(!r.ok && r.error === "network" ? tc("network") : tc("error"));
+        });
+      }}
       id="reply-form"
     >
       <input type="hidden" name="ticketId" value={ticketId} />

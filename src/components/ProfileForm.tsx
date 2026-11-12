@@ -1,4 +1,5 @@
 "use client";
+import { safeCall } from "@/lib/safe-call";
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
@@ -17,13 +18,15 @@ export function ProfileForm({ user }: { user: { name: string; email: string; pho
   return (
     <form
       className="card mt-6 space-y-4 p-5 sm:p-6"
-      action={(fd) =>
+      onSubmit={(e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
         start(async () => {
-          const r = await updateProfile(fd);
+          const r = await safeCall(() => updateProfile(fd));
           setMsg(r.ok ? tp("saved") : tc("error"));
           if (r.ok) router.replace("/account/profile", { locale: fd.get("locale") as Locale });
-        })
-      }
+        });
+      }}
     >
       <div>
         <label className="label" htmlFor="name">{ta("name")}</label>

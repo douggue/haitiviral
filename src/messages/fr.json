@@ -77,7 +77,8 @@
     "accountsShort": "Comptes & SMS",
     "inviteShort": "Parrainage",
     "hoursShort": "Horaires",
-    "helpCenter": "Centre d'aide"
+    "helpCenter": "Centre d'aide",
+    "network": "La connexion a été coupée. Vérifiez internet et réessayez : ce que vous avez saisi est conservé et vous ne serez pas débité deux fois."
   },
   "home": {
     "eyebrow": "Fait en Haïti, pour les créateurs",
@@ -841,7 +842,8 @@
     "publicConfirm": "Je confirme que mon compte est PUBLIC (pas privé) et que je ne change pas mon nom d'utilisateur pendant la commande.",
     "error_not_public": "Confirmez que votre compte est public avant de commander.",
     "okHandle": "Nous utiliserons ce profil.",
-    "dripAuto": "Livré en {runs} fois · {each} toutes les {minutes} minutes, pour un rendu naturel"
+    "dripAuto": "Livré en {runs} fois · {each} toutes les {minutes} minutes, pour un rendu naturel",
+    "error_network": "La connexion a été coupée. Vérifiez internet et réessayez : ce que vous avez saisi est conservé et vous ne serez pas débité deux fois."
   },
   "ordersUi": {
     "title": "Mes commandes",
@@ -1034,7 +1036,8 @@
     "state_no_title": "Cet essai ne peut pas être accordé",
     "state_no_body": "Votre demande n'a pas passé nos vérifications. Vous pouvez toujours essayer nos services avec un petit montant.",
     "error_captcha": "La vérification anti-robot a échoué. Réessayez.",
-    "error_email": "Les e-mails temporaires ne sont pas acceptés pour l'essai gratuit. Utilisez un vrai e-mail."
+    "error_email": "Les e-mails temporaires ne sont pas acceptés pour l'essai gratuit. Utilisez un vrai e-mail.",
+    "error_network": "La connexion a été coupée. Vérifiez internet et réessayez : ce que vous avez saisi est conservé et vous ne serez pas débité deux fois."
   },
   "orderDetail": {
     "link": "Lien",
@@ -1084,7 +1087,8 @@
     "error_invalid_quantity": "Trop de vidéos pour les quantités du pack.",
     "error_generic": "Un problème est survenu. Réessayez.",
     "error_verify_email": "Vérifiez d'abord votre e-mail.",
-    "error_new_account_limit": "Compte trop récent pour ce montant aujourd'hui."
+    "error_new_account_limit": "Compte trop récent pour ce montant aujourd'hui.",
+    "error_network": "La connexion a été coupée. Vérifiez internet et réessayez : ce que vous avez saisi est conservé et vous ne serez pas débité deux fois."
   },
   "refUi": {
     "how": "Comment ça marche ?",
@@ -1136,7 +1140,8 @@
     "err_method": "Choisissez MonCash ou NatCash.",
     "err_verify_email": "Vérifiez d'abord votre e-mail.",
     "err_generic": "Un problème est survenu. Réessayez.",
-    "tierGap": "Encore <b>{friends} amis actifs</b> ou <b>{amount}</b> de commandes pour atteindre {next}"
+    "tierGap": "Encore <b>{friends} amis actifs</b> ou <b>{amount}</b> de commandes pour atteindre {next}",
+    "err_network": "La connexion a été coupée. Vérifiez internet et réessayez : ce que vous avez saisi est conservé et vous ne serez pas débité deux fois."
   },
   "refPublic": {
     "metaTitle": "Parrainage : gagnez de l'argent | HaitiViral",
@@ -1252,6 +1257,7 @@
     "lastCode": "Dernier code",
     "getCode": "Voir le code",
     "noCodeYet": "Pas encore de code. Demandez le code dans l'application, attendez une minute et réessayez.",
-    "openPage": "Ouvrir la page des codes"
+    "openPage": "Ouvrir la page des codes",
+    "error_network": "La connexion a été coupée. Vérifiez internet et réessayez : ce que vous avez saisi est conservé et vous ne serez pas débité deux fois."
   }
 }

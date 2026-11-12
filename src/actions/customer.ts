@@ -192,26 +192,26 @@ export async function changeUnverifiedEmail(newEmail: string, callbackURL: strin
 
 export async function requestOrderHelp(orderId: string, kind: "refill" | "cancel"): Promise<{ ok: true; how: "provider" | "ticket" } | { ok: false; error: string }> {
   const user = await assertUser();
-  const order = await prisma.order.findFirst({ where: { id: orderId, userId: user.id }, include: { items: { take: 1, include: { variant: { select: { service: true } } } } } });
+  const order = await prisma.order.findFirst({ where: { id: orderId, userId: user.id }, include: { items: { include: { variant: { select: { service: true } } } } } });
   if (!order || !["refill", "cancel"].includes(kind)) return { ok: false, error: "missing" };
-  const item = order.items[0];
-  // Linked to an SMM provider: ask the provider directly. Otherwise (or if the provider says no) staff gets a ticket.
-  if (item) {
+  // Every line linked to a provider is asked (a pack has several); lines the provider can't take go to staff.
+  let sent = 0;
+  let lastError: "expired" | "too_soon" | null = null;
+  if (kind === "cancel" && order.status !== "PROCESSING" && order.status !== "PAID") return { ok: false, error: "missing" };
+  for (const item of order.items) {
     if (kind === "refill") {
       const r = await requestSmmRefill(item.id, parseMeta(item.variant.service)?.refillDays ?? 0);
-      if (r === "sent") return { ok: true, how: "provider" };
-      if (r === "expired" || r === "too_soon") return { ok: false, error: r };
-    } else {
-      if (order.status !== "PROCESSING" && order.status !== "PAID") return { ok: false, error: "missing" };
-      const r = await requestSmmCancel(item.id);
-      if (r === "sent") return { ok: true, how: "provider" };
-    }
+      if (r === "sent") sent++;
+      else if (r === "expired" || r === "too_soon") lastError = r;
+    } else if ((await requestSmmCancel(item.id)) === "sent") sent++;
   }
-  const subject = `${kind === "refill" ? "Refill" : "Cancel"} #${order.number}`;
+  if (sent > 0) return { ok: true, how: "provider" };
+  if (lastError) return { ok: false, error: lastError };
+  const subject = `${kind === "refill" ? "Refill" : "Anile"} #${order.number}`;
   const existing = await prisma.supportTicket.findFirst({ where: { userId: user.id, orderId, subject, status: { not: "CLOSED" } } });
   if (existing) return { ok: true, how: "ticket" };
   await prisma.supportTicket.create({
-    data: { userId: user.id, subject, orderId, messages: { create: { authorId: user.id, body: kind === "refill" ? "Customer asked for a refill from My orders." : "Customer asked to cancel from My orders." } } },
+    data: { userId: user.id, subject, orderId, messages: { create: { authorId: user.id, body: kind === "refill" ? "Kliyan an mande yon refill nan Kòmand mwen yo." : "Kliyan an mande pou anile kòmand lan nan Kòmand mwen yo." } } },
   });
   return { ok: true, how: "ticket" };
 }

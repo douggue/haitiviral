@@ -53,7 +53,7 @@ export async function createDeposit(form: FormData): Promise<ActionResult<{ redi
 
   const dbUser = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
   try {
-    await assertWithinNewAccountLimit(prisma, dbUser, amountHtg, settings);
+    await assertWithinNewAccountLimit(prisma, dbUser, amountHtg, settings, "deposit");
   } catch (e) {
     if (e instanceof LimitExceededError) return { ok: false, error: "new_account_limit" };
     throw e;

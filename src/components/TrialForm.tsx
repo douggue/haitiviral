@@ -1,4 +1,5 @@
 "use client";
+import { safeCall } from "@/lib/safe-call";
 import { useEffect, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
@@ -91,7 +92,7 @@ export function TrialForm({ offers, signedIn, whatsapp, existing }: { offers: Of
         setError("");
         start(async () => {
           const [localId, fp] = await Promise.all([getLocalId(), getFingerprint()]);
-          const r = await submitTrial({ offer: cur.key, link, phone: whatsapp ? undefined : phone, localId, fp, captcha });
+          const r = await safeCall(() => submitTrial({ offer: cur.key, link, phone: whatsapp ? undefined : phone, localId, fp, captcha }));
           if (r.ok) setSent({ status: r.status, code: r.code, wa: r.wa });
           else {
             setError(t.has(`error_${r.error}`) ? t(`error_${r.error}`) : t("error_generic"));

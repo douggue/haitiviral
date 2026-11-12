@@ -1,33 +1,33 @@
 import type { Tx } from "./db";
 import type { Settings } from "./settings";
+import { haitiDayStart } from "./haiti-time";
 
-/** HTG-equivalent volume (deposits + orders) a user created since midnight UTC. */
+/**
+ * HTG-equivalent money a user put in today (Haiti day): deposits being checked or credited.
+ * Abandoned MonCash attempts don't count, and spending one's own wallet on orders is not counted again.
+ */
 async function todaysVolumeHtg(tx: Tx, userId: string, htgPerUsd: number) {
-  const since = new Date();
-  since.setUTCHours(0, 0, 0, 0);
-  const [deposits, orders] = await Promise.all([
-    tx.paymentIntent.aggregate({
-      where: { userId, orderId: null, createdAt: { gte: since }, status: { in: ["PENDING", "REVIEW", "SUCCEEDED"] } },
-      _sum: { amount: true },
-    }),
-    tx.order.findMany({
-      where: { userId, createdAt: { gte: since }, status: { notIn: ["CANCELED", "FAILED", "REFUNDED"] } },
-      select: { total: true, currency: true },
-    }),
-  ]);
-  const orderHtg = orders.reduce((s, o) => s + (o.currency === "HTG" ? o.total : Math.round(o.total * htgPerUsd)), 0);
-  return (deposits._sum.amount ?? 0) + orderHtg;
+  const intents = await tx.paymentIntent.findMany({
+    where: { userId, orderId: null, createdAt: { gte: haitiDayStart() }, status: { in: ["REVIEW", "SUCCEEDED"] } },
+    select: { amount: true, currency: true },
+  });
+  return intents.reduce((s, i) => s + (i.currency === "HTG" ? i.amount : Math.round(i.amount * htgPerUsd)), 0);
 }
 
 export class LimitExceededError extends Error {}
 
-/** New accounts get a lower daily limit (blueprint §8). */
+/**
+ * New accounts get a lower daily limit on money coming in (blueprint §8). Orders paid from the wallet use money
+ * that was already checked when deposited, so they pass (kind "order").
+ */
 export async function assertWithinNewAccountLimit(
   tx: Tx,
   user: { id: string; createdAt: Date },
   addHtg: number,
   s: Settings,
+  kind: "deposit" | "order" = "order",
 ) {
+  if (kind === "order") return;
   const ageDays = (Date.now() - user.createdAt.getTime()) / 86_400_000;
   if (ageDays >= s.newAccountDays) return;
   const used = await todaysVolumeHtg(tx, user.id, s.htgPerUsd);

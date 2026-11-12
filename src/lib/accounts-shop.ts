@@ -6,7 +6,7 @@ import { getSettings } from "./settings";
 import { chargeOrder } from "./wallet";
 import { assertWithinNewAccountLimit, flag } from "./risk";
 import { notify } from "./notify";
-import { addEvent, fulfillOrder, OrderError } from "./orders";
+import { addEvent, fulfillOrder, onceOnly, OrderError } from "./orders";
 import { accountPrice, parseAccountMeta, type AccountMeta } from "./accounts";
 import { smmBalance } from "./suppliers/smm";
 import { inStock, isAccounts, ytProducts } from "./suppliers/ytseller";
@@ -136,7 +136,13 @@ export async function stockFor(v: { supplierId: string | null; supplierSku: stri
  * provider's required input, and the warranty consent. One order line: unitPrice = total, fieldValues.quantity = N
  * (same as social services, so partial deliveries refund the missing pieces automatically).
  */
-export async function createAccountOrder(input: { userId: string; variantId: string; quantity: number; require?: string; accepted: boolean }) {
+type AccountOrderInput = { userId: string; variantId: string; quantity: number; require?: string; accepted: boolean; requestId?: string };
+
+export function createAccountOrder(input: AccountOrderInput) {
+  return onceOnly(input.userId, input.requestId, () => createAccountOrderOnce(input));
+}
+
+async function createAccountOrderOnce(input: AccountOrderInput) {
   const s = await getSettings();
   if (!s.accountsEnabled) throw new OrderError("unavailable");
   const v = await prisma.productVariant.findFirst({ where: { id: input.variantId, isActive: true, product: { isPublished: true } }, include: { product: true, supplier: true } });
@@ -165,6 +171,7 @@ export async function createAccountOrder(input: { userId: string; variantId: str
     const created = await tx.order.create({
       data: {
         userId: input.userId, currency: "HTG", subtotal: total, total, paymentMethod: "WALLET", accessToken: randomToken(),
+        requestId: input.requestId && /^[A-Za-z0-9_-]{8,64}$/.test(input.requestId) ? input.requestId : null,
         items: { create: [{ variantId: v.id, productName: v.product.name as Prisma.InputJsonValue, variantName, quantity: 1, unitPrice: total, fieldValues }] },
       },
     });

@@ -69,11 +69,16 @@ export async function sendSmm(so: SmmOrder): Promise<void> {
     : ({ result: "refused", message: "No provider service linked to this choice" } as const);
 
   if (r.result === "ok") {
+    // Save the provider's order id first: if anything below fails, the order is still followed.
+    await prisma.supplierOrder.update({ where: { id: so.id }, data: { status: "PENDING", supplierOrderId: r.orderId, message: null, lockedUntil: null, nextCheckAt: nextCheck(0) } });
     // Estimated cost from the provider's price list; replaced by the provider's own "charge" on status checks.
-    const ps = await prisma.providerService.findUnique({ where: { supplierId_serviceId: { supplierId: so.supplierId, serviceId: service } }, select: { rate: true } });
-    const units = drip ? Number(drip[1]) * Number(drip[2]) : qty;
-    const costUsd = ps ? (Number(ps.rate) * units) / 1000 : null;
-    await prisma.supplierOrder.update({ where: { id: so.id }, data: { status: "PENDING", supplierOrderId: r.orderId, message: null, lockedUntil: null, nextCheckAt: nextCheck(0), ...(costUsd !== null ? await costData(costUsd) : {}) } });
+    try {
+      const ps = await prisma.providerService.findUnique({ where: { supplierId_serviceId: { supplierId: so.supplierId, serviceId: service } }, select: { rate: true } });
+      const units = drip ? Number(drip[1]) * Number(drip[2]) : qty;
+      if (ps) await prisma.supplierOrder.update({ where: { id: so.id }, data: await costData((Number(ps.rate) * units) / 1000) });
+    } catch (e) {
+      console.error("cost estimate failed", so.id, e);
+    }
     return;
   }
   if (r.result === "unknown") {
@@ -139,6 +144,11 @@ export async function refundUndelivered(so: SmmOrder, remains: number, reason: s
     return;
   }
   const amount = partialRefund(so.orderItem.unitPrice * so.orderItem.quantity, qty, remains);
+  if (amount <= 0) {
+    // "Partial" without a usable number: count it as delivered, no 0 HTG notice.
+    await prisma.orderItem.update({ where: { id: so.orderItemId }, data: { status: "DELIVERED" } });
+    return;
+  }
   await prisma.$transaction(async (tx) => {
     await refundPart(tx, order, amount, so.orderItemId, reason);
     await tx.supplierOrder.update({ where: { id: so.id }, data: { refundedPartial: amount } });

@@ -77,7 +77,8 @@
     "accountsShort": "Kont & SMS",
     "inviteShort": "Envite zanmi",
     "hoursShort": "Lè",
-    "helpCenter": "Sant èd"
+    "helpCenter": "Sant èd",
+    "network": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò: sa w te ekri a la toujou, epi nou p ap chaje w de fwa."
   },
   "home": {
     "eyebrow": "Fèt an Ayiti, pou kreyatè yo",
@@ -841,7 +842,8 @@
     "publicConfirm": "Mwen konfime kont mwen PIBLIK (pa prive) epi m pap chanje non itilizatè m pandan kòmand lan.",
     "error_not_public": "Konfime kont ou piblik anvan w kòmande.",
     "okHandle": "Nou pral itilize pwofil sa a.",
-    "dripAuto": "Livre an {runs} fwa · {each} chak {minutes} minit, pou li parèt natirèl"
+    "dripAuto": "Livre an {runs} fwa · {each} chak {minutes} minit, pou li parèt natirèl",
+    "error_network": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò: sa w te ekri a la toujou, epi nou p ap chaje w de fwa."
   },
   "ordersUi": {
     "title": "Kòmand mwen yo",
@@ -1034,7 +1036,8 @@
     "state_no_title": "Nou pa ka bay esè sa a",
     "state_no_body": "Demann ou a pa pase verifikasyon nou yo. Ou ka toujou eseye sèvis yo ak yon ti montan.",
     "error_captcha": "Verifikasyon anti-robo a pa pase. Eseye ankò.",
-    "error_email": "Imèl tanporè pa aksepte pou esè gratis. Sèvi ak yon imèl tout bon."
+    "error_email": "Imèl tanporè pa aksepte pou esè gratis. Sèvi ak yon imèl tout bon.",
+    "error_network": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò: sa w te ekri a la toujou, epi nou p ap chaje w de fwa."
   },
   "orderDetail": {
     "link": "Lyen",
@@ -1084,7 +1087,8 @@
     "error_invalid_quantity": "Twòp videyo pou kantite ki nan pake a.",
     "error_generic": "Gen yon pwoblèm. Eseye ankò.",
     "error_verify_email": "Verifye imèl ou anvan.",
-    "error_new_account_limit": "Kont ou twò nouvo pou montan sa a jodi a."
+    "error_new_account_limit": "Kont ou twò nouvo pou montan sa a jodi a.",
+    "error_network": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò: sa w te ekri a la toujou, epi nou p ap chaje w de fwa."
   },
   "refUi": {
     "how": "Kijan sa mache?",
@@ -1136,7 +1140,8 @@
     "err_method": "Chwazi MonCash oswa NatCash.",
     "err_verify_email": "Verifye imèl ou anvan.",
     "err_generic": "Gen yon pwoblèm. Eseye ankò.",
-    "tierGap": "Ankò <b>{friends} zanmi aktif</b> oswa <b>{amount}</b> kòmand pou w rive {next}"
+    "tierGap": "Ankò <b>{friends} zanmi aktif</b> oswa <b>{amount}</b> kòmand pou w rive {next}",
+    "err_network": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò: sa w te ekri a la toujou, epi nou p ap chaje w de fwa."
   },
   "refPublic": {
     "metaTitle": "Envite zanmi, touche lajan | HaitiViral",
@@ -1252,6 +1257,7 @@
     "lastCode": "Dènye kòd la",
     "getCode": "Wè kòd la",
     "noCodeYet": "Pa gen kòd ankò. Voye kòd la sou aplikasyon an, tann yon minit epi eseye ankò.",
-    "openPage": "Louvri paj kòd yo"
+    "openPage": "Louvri paj kòd yo",
+    "error_network": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò: sa w te ekri a la toujou, epi nou p ap chaje w de fwa."
   }
 }

@@ -1,4 +1,5 @@
 "use client";
+import { safeCall } from "@/lib/safe-call";
 import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { requestOrderHelp } from "@/actions/customer";
@@ -17,7 +18,7 @@ export function OrderHelpButton({ orderId, kind, label, className, children }: {
         className={className}
         onClick={() =>
           start(async () => {
-            const r = await requestOrderHelp(orderId, kind);
+            const r = await safeCall(() => requestOrderHelp(orderId, kind));
             if (r.ok) setNote({ ok: true, text: r.how === "ticket" ? t("requested") : kind === "refill" ? t("refillSent") : t("cancelSent") });
             else setNote({ ok: false, text: r.error === "expired" ? t("refillExpired") : r.error === "too_soon" ? t("refillTooSoon") : t("helpError") });
           })

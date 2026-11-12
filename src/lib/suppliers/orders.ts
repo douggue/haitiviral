@@ -217,10 +217,11 @@ export async function finishOrders(orderIds: string[]) {
 
 /** Staff: send a failed line again with a new reference (the old one stays failed at the supplier). */
 export async function retrySupplierLine(supplierOrderId: string) {
-  const so = await prisma.supplierOrder.findUniqueOrThrow({ where: { id: supplierOrderId }, include: { orderItem: { select: { status: true, orderId: true, supplierOrders: { select: { status: true } } } } } });
-  if (so.status !== "FAILED") throw new Error("Only a failed supplier order can be sent again");
+  const so = await prisma.supplierOrder.findUniqueOrThrow({ where: { id: supplierOrderId }, include: { orderItem: { select: { status: true, orderId: true, supplierOrders: { select: { id: true, status: true } } } } } });
+  // UNKNOWN = no clear answer when sending: staff confirmed on the provider's site that it isn't there.
+  if (so.status !== "FAILED" && so.status !== "UNKNOWN") throw new Error("Only a failed or unclear supplier order can be sent again");
   if (so.orderItem.status !== "PENDING") throw new Error("This line is already delivered");
-  if (so.orderItem.supplierOrders.some((x) => OPEN.includes(x.status))) throw new Error("Another attempt for this line is still open");
+  if (so.orderItem.supplierOrders.some((x) => x.id !== so.id && OPEN.includes(x.status))) throw new Error("Another attempt for this line is still open");
   const attempt = so.orderItem.supplierOrders.length + 1;
   await prisma.$transaction([
     prisma.supplierOrder.update({ where: { id: so.id }, data: { status: "CLOSED" } }),
