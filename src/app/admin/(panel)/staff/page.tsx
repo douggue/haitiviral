@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
 import { PERMISSION_LABELS, PERMISSIONS, ROLE_PERMISSIONS } from "@/lib/permissions";
+import { roleLabel } from "@/lib/admin-labels";
 import { deleteCustomRole, resetStaffTwoFactor, saveCustomRole, setStaffRole } from "@/actions/admin";
 import { ActionButton, ActionForm } from "@/components/admin/ActionButton";
 import { PageTitle, Table } from "@/components/admin/ui";
@@ -39,8 +40,9 @@ export default async function StaffPage() {
       <ActionForm action={assign} className="card mb-6 flex flex-wrap items-end gap-3 p-5" resetOnSuccess>
         <label className="flex-1"><span className="label">Account email</span><input name="email" type="email" required className="input" /></label>
         <label><span className="label">Role</span>
-          <select name="role" className="input">
-            {BUILT_IN.map((r) => <option key={r} value={r}>{r === "CUSTOMER" ? "CUSTOMER (remove staff access)" : r}</option>)}
+          <select name="role" required defaultValue="" className="input">
+            <option value="" disabled>Choose a role…</option>
+            {BUILT_IN.map((r) => <option key={r} value={r}>{r === "CUSTOMER" ? "Customer (remove staff access)" : roleLabel(r)}</option>)}
             {customRoles.map((r) => <option key={r.id} value={`CUSTOM:${r.id}`}>Custom: {r.name}</option>)}
           </select>
         </label>
@@ -84,7 +86,7 @@ export default async function StaffPage() {
 
       <h2 className="mb-3 mt-10 font-semibold">Built-in roles</h2>
       <Table head={["Role", "Permissions"]}>
-        {BUILT_IN.filter((r) => r !== "CUSTOMER").map((r) => <tr key={r}><td className="px-4 py-3 text-xs font-semibold">{r}</td><td className="px-4 py-3 text-xs text-muted">{ROLE_PERMISSIONS[r].map((p) => PERMISSION_LABELS[p]).join(" · ")}</td></tr>)}
+        {BUILT_IN.filter((r) => r !== "CUSTOMER").map((r) => <tr key={r}><td className="px-4 py-3 text-xs font-semibold">{roleLabel(r)}</td><td className="px-4 py-3 text-xs text-muted">{ROLE_PERMISSIONS[r].map((p) => PERMISSION_LABELS[p]).join(" · ")}</td></tr>)}
       </Table>
     </>
   );

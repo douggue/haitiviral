@@ -5,6 +5,7 @@ import { earningsAccount, post, systemAccount, walletAccount, InsufficientFundsE
 import { notify } from "./notify";
 import { linkedAccounts } from "./devices";
 import { normalizePhone } from "./phone";
+import { alertStaff } from "./staff-alerts";
 
 /**
  * Referral program ("Envite zanmi"): a % of every completed order of a direct friend (no multi-level), by the
@@ -156,7 +157,7 @@ export async function requestPayout(userId: string, input: { amount: number; met
   if (await prisma.payout.count({ where: { userId, status: "REQUESTED" } })) throw new PayoutError("open");
   const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { name: true } });
   try {
-    return await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx) => {
       const p = await tx.payout.create({ data: { userId, amount: input.amount, method: input.method, phone, name: user.name } });
       const earnings = await earningsAccount(tx, userId);
       const pending = await systemAccount(tx, "clearing", "HTG", "payouts");
@@ -166,6 +167,8 @@ export async function requestPayout(userId: string, input: { amount: number; met
       });
       return p;
     });
+    await alertStaff("referrals.manage", { title: "Demann retrè", body: `${user.name}: ${(input.amount / 100).toLocaleString("en-US")} HTG · ${input.method === "MONCASH" ? "MonCash" : "NatCash"}`, url: "/admin/referrals", tag: "payout" });
+    return created;
   } catch (e) {
     if (e instanceof InsufficientFundsError) throw new PayoutError("balance");
     throw e;

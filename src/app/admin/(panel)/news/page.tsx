@@ -12,7 +12,7 @@ export default async function NewsAdmin() {
   const now = new Date();
   return (
     <>
-      <PageTitle title="News" sub="Articles appear on /news and in the homepage's latest-news section. A future publish date schedules the article." actions={<Link href="/admin/news/new" className="btn-primary">New article</Link>} />
+      <PageTitle title="Updates (news)" sub="Articles appear on /news and in the homepage's latest-news section. A future publish date schedules the article." actions={<Link href="/admin/news/new" className="btn-primary">New article</Link>} />
       <Table head={["Title", "Status", "Publish date"]} empty={articles.length === 0}>
         {articles.map((a) => (
           <tr key={a.id} className="hover:bg-surface-2">

@@ -7,6 +7,9 @@ import { t as txt } from "@/lib/text";
 import { decidePayoutAction, saveReferralSettings, setReferralBlocked } from "@/actions/referrals";
 import { ActionButton, ActionForm } from "@/components/admin/ActionButton";
 import { PageTitle, Table } from "@/components/admin/ui";
+import { CopyButton } from "@/components/CopyButton";
+import { formatPhone } from "@/lib/phone";
+import { haitiDate, statusLabel } from "@/lib/admin-labels";
 
 export const metadata = { title: "Referrals" };
 
@@ -33,24 +36,34 @@ export default async function ReferralsAdmin() {
     <>
       <PageTitle title="Referrals" sub={`${s.referralEnabled ? "Program on" : "Program OFF"} · commissions waiting ${money(sum("PENDING"))} · paid into earnings ${money(sum("AVAILABLE"))} · ${open.length} withdrawal(s) to send`} />
 
-      <h2 className="mb-2 text-lg font-bold">Withdrawals to send</h2>
+      <h2 className="mb-2 text-lg font-bold">Withdrawals to send ({open.length})</h2>
       <p className="mb-3 text-xs text-muted">Send the amount by MonCash or NatCash to the number shown (the name must match the account), then press &quot;Sent&quot; and paste the transaction reference. &quot;Reject&quot; puts the money back in the customer&apos;s earnings.</p>
-      <Table head={["Customer", "Amount", "To", "Asked", "Status", ""]} empty={!payouts.length}>
-        {payouts.map((p) => (
+      <div className="space-y-3">
+        {!open.length && <p className="card p-6 text-center text-sm text-muted">Nothing to send right now.</p>}
+        {open.map((p) => (
+          <div key={p.id} className="card flex flex-wrap items-center justify-between gap-3 p-4">
+            <div className="space-y-1 text-sm">
+              <p className="text-lg font-bold tabular-nums">{money(p.amount)} <span className="text-sm font-semibold text-muted">by {p.method === "MONCASH" ? "MonCash" : "NatCash"}</span></p>
+              <p className="flex flex-wrap items-center gap-2"><span className="font-mono text-base font-bold">{formatPhone(p.phone)}</span><CopyButton value={p.phone.replace(/^\+509/, "")} label="Copy number" done="Copied" className="btn-ghost min-h-9 px-2 text-xs" /></p>
+              <p className="text-muted">Name on the account: <b className="text-text">{p.name}</b> · <Link href={`/admin/customers/${p.userId}`} className="text-primary">{users.get(p.userId) ?? "customer"}</Link> · asked {haitiDate(p.createdAt)}</p>
+            </div>
+            <div className="flex gap-2">
+              <ActionButton label="Sent" prompt="MonCash / NatCash transaction reference" className="btn-primary min-h-11 px-4 text-sm" action={decidePayoutAction.bind(null, p.id, true)} />
+              <ActionButton label="Reject…" prompt="Reason the customer will read (Kreyòl)" className="btn-ghost min-h-11 px-4 text-sm text-danger" action={decidePayoutAction.bind(null, p.id, false)} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <h2 className="mb-2 mt-8 text-lg font-bold">Past withdrawals</h2>
+      <Table head={["Customer", "Amount", "To", "Asked", "Status"]} empty={!payouts.some((p) => p.status !== "REQUESTED")}>
+        {payouts.filter((p) => p.status !== "REQUESTED").map((p) => (
           <tr key={p.id}>
-            <td className="px-4 py-3"><Link href={`/admin/customers/${p.userId}`} className="text-primary">{users.get(p.userId) ?? p.name}</Link><span className="block text-xs text-muted">{p.name}</span></td>
-            <td className="px-4 py-3 font-bold">{money(p.amount)}</td>
-            <td className="px-4 py-3">{p.method === "MONCASH" ? "MonCash" : "NatCash"} · <span className="font-mono">{p.phone}</span></td>
-            <td className="px-4 py-3 text-muted">{p.createdAt.toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" })}</td>
-            <td className="px-4 py-3 text-xs font-semibold">{p.status}{p.reference ? ` · ${p.reference}` : ""}{p.note ? ` · ${p.note}` : ""}</td>
-            <td className="px-4 py-3">
-              {p.status === "REQUESTED" && (
-                <div className="flex gap-2">
-                  <ActionButton label="Sent" prompt="MonCash / NatCash transaction reference" className="btn-primary min-h-9 px-3 text-xs" action={decidePayoutAction.bind(null, p.id, true)} />
-                  <ActionButton label="Reject" prompt="Reason (shown in the log)" className="btn-ghost min-h-9 px-3 text-xs text-danger" action={decidePayoutAction.bind(null, p.id, false)} />
-                </div>
-              )}
-            </td>
+            <td className="px-4 py-3"><Link href={`/admin/customers/${p.userId}`} className="text-primary">{users.get(p.userId) ?? p.name}</Link></td>
+            <td className="px-4 py-3 font-bold tabular-nums">{money(p.amount)}</td>
+            <td className="px-4 py-3">{p.method === "MONCASH" ? "MonCash" : "NatCash"} · {formatPhone(p.phone)}</td>
+            <td className="px-4 py-3 text-muted">{haitiDate(p.createdAt)}</td>
+            <td className="px-4 py-3 text-xs font-semibold">{statusLabel(p.status)}{p.reference ? ` · ${p.reference}` : ""}{p.note ? ` · ${p.note}` : ""}</td>
           </tr>
         ))}
       </Table>
@@ -92,7 +105,7 @@ export default async function ReferralsAdmin() {
             <td className="px-4 py-3"><Link href={`/admin/orders/${c.orderId}`} className="text-primary">{money(c.orderTotal)}</Link></td>
             <td className="px-4 py-3 text-xs">{c.tier} · {c.pct}%</td>
             <td className="px-4 py-3 font-semibold">{money(c.amount)}</td>
-            <td className="px-4 py-3 text-xs font-semibold">{c.status}</td>
+            <td className="px-4 py-3 text-xs font-semibold">{statusLabel(c.status)}</td>
             <td className="px-4 py-3 text-muted">{c.availableAt.toLocaleDateString("en-US")}</td>
           </tr>
         ))}

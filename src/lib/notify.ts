@@ -18,7 +18,8 @@ export type NotificationType =
   | "wallet_adjusted"
   | "referral_rewarded"
   | "payout_sent"
-  | "payout_rejected";
+  | "payout_rejected"
+  | "ticket_reply";
 
 const CATALOGS: Record<string, { notifications: Record<string, string> }> = { ht, fr };
 

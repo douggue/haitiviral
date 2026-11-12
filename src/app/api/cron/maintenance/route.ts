@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { bearerMatches } from "@/lib/crypto";
+import { alertStaffOnce } from "@/lib/staff-alerts";
 import { verifyMoncashIntent } from "@/lib/payments/verify";
 import { releaseHold, usdDepositToHtg } from "@/lib/wallet";
 import { notify } from "@/lib/notify";
@@ -30,6 +31,25 @@ export async function GET(req: NextRequest) {
   if (!bearerMatches(req.headers.get("authorization"), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  // One run at a time: a slow run (provider sync) is never overlapped by the next one.
+  if (!(await takeLock())) return NextResponse.json({ busy: true }, { status: 409 });
+  try {
+    return await maintenance();
+  } finally {
+    await prisma.siteSetting.update({ where: { key: LOCK }, data: { value: { until: new Date(0).toISOString() } } }).catch(() => undefined);
+  }
+}
+
+const LOCK = "cron:lock";
+async function takeLock() {
+  await prisma.siteSetting.createMany({ data: [{ key: LOCK, value: { until: new Date(0).toISOString() } }], skipDuplicates: true });
+  const until = new Date(Date.now() + 10 * 60_000).toISOString();
+  // Atomic: only one caller can move "until" forward while it is in the past.
+  const n = await prisma.$executeRaw`UPDATE "SiteSetting" SET value = jsonb_build_object('until', ${until}::text) WHERE key = ${LOCK} AND (value->>'until')::timestamptz < now()`;
+  return n === 1;
+}
+
+async function maintenance() {
   const now = new Date();
   const result: Record<string, number> = { moncashChecked: 0, holdsReleased: 0, expired: 0, autoRefunded: 0 };
   try {
@@ -150,6 +170,17 @@ export async function GET(req: NextRequest) {
         console.error("Auto-refund failed", o.id, e);
       }
     }
+  }
+  // Heartbeat (shown on the dashboard) and the owner's alerts for things that need a person.
+  await prisma.siteSetting.upsert({ where: { key: "cron:last" }, create: { key: "cron:last", value: { at: now.toISOString() } }, update: { value: { at: now.toISOString() } } }).catch(() => undefined);
+  try {
+    const stuck = await prisma.supplierOrder.count({ where: { OR: [{ status: "UNKNOWN" }, { status: "FAILED", orderItem: { status: "PENDING" } }] } });
+    if (stuck) await alertStaffOnce("stuck", 180, "orders.manage", { title: `${stuck} kòmand bloke`, body: "Founisè a pa bay yon repons klè. Tcheke yo nan admin lan.", url: "/admin/orders?f=stuck" });
+    for (const sup of await prisma.supplier.findMany({ where: { isEnabled: true, balance: { not: null } } })) {
+      if (Number(sup.balance) < Number(sup.lowBalance ?? 10)) await alertStaffOnce(`lowbal:${sup.id}`, 360, "settings.manage", { title: `Balans ${sup.name} ba`, body: `Rete ${Number(sup.balance).toFixed(2)} ${sup.balanceCurrency ?? "USD"}. Mete kòb anvan kòmand yo bloke.`, url: `/admin/suppliers/${sup.id}` });
+    }
+  } catch (e) {
+    console.error("Staff alerts failed", e);
   }
   return NextResponse.json(result);
 }

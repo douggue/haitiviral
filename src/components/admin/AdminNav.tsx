@@ -40,7 +40,7 @@ export function AdminNav({ items, user }: { items: { href: string; label: string
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const theme = useAdminTheme();
-  const active = (h: string) => (h === "/admin" ? pathname === "/admin" : pathname.startsWith(h));
+  const active = (link: string) => { const h = link.split("?")[0]; return h === "/admin" ? pathname === "/admin" : pathname.startsWith(h); };
   const nav = (
     <nav className="flex flex-col gap-0.5" aria-label="Admin">
       {items.map((i, n) => (

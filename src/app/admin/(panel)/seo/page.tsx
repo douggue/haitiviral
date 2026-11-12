@@ -24,7 +24,7 @@ export default async function SeoPage() {
       <PageTitle title="SEO" sub="Product, category and news SEO fields are on their own edit pages. Here: titles for fixed pages and redirects for old links." />
       <h2 className="mb-3 font-semibold">Redirects</h2>
       <ActionForm action={saveRedirect} className="card mb-4 flex flex-wrap items-end gap-3 p-4" resetOnSuccess>
-        <label className="flex-1"><span className="label">Old path</span><input name="from" required placeholder="/old-free-fire-page" className="input" /></label>
+        <label className="flex-1"><span className="label">Old path</span><input name="from" required placeholder="/old-page" className="input" /></label>
         <label className="flex-1"><span className="label">New path or URL</span><input name="to" required placeholder="/products/free-fire-diamonds" className="input" /></label>
         <label className="flex items-center gap-2 pb-3 text-sm"><input type="checkbox" name="permanent" defaultChecked /> Permanent (301)</label>
         <button className="btn-primary">Add redirect</button>

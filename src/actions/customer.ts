@@ -9,6 +9,7 @@ import { parseMeta } from "@/lib/services";
 import { requestSmmCancel, requestSmmRefill } from "@/lib/suppliers/smm-orders";
 import { audit } from "@/lib/audit";
 import { savePrivateImage, uploadsEnabled, UploadError } from "@/lib/storage";
+import { alertStaff } from "@/lib/staff-alerts";
 
 type R = { ok: true; id?: string } | { ok: false; error: string };
 
@@ -41,6 +42,7 @@ export async function createTicket(form: FormData): Promise<R> {
   const ticket = await prisma.supportTicket.create({
     data: { userId: user.id, subject, orderId, messages: { create: { authorId: user.id, body, attachmentPath: path } } },
   });
+  await alertStaff("support.manage", { title: "Nouvo tikè sipò", body: `${user.name}: ${subject}`, url: `/admin/support/${ticket.id}`, tag: "ticket" });
   revalidatePath("/[locale]/account/support", "page");
   return { ok: true, id: ticket.id };
 }
@@ -62,6 +64,7 @@ export async function replyTicket(form: FormData): Promise<R> {
     prisma.supportMessage.create({ data: { ticketId, authorId: user.id, body, attachmentPath: path } }),
     prisma.supportTicket.update({ where: { id: ticketId }, data: { status: "OPEN" } }),
   ]);
+  await alertStaff("support.manage", { title: "Kliyan an reponn", body: `${user.name}: ${body.slice(0, 80)}`, url: `/admin/support/${ticketId}`, tag: "ticket" });
   revalidatePath(`/[locale]/account/support/${ticketId}`, "page");
   return { ok: true };
 }

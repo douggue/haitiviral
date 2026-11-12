@@ -7,20 +7,23 @@ export const dynamic = "force-dynamic";
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const user = await requireStaff();
-  const [reviews, risks, processing, approvals, tickets, newReviews, supplierIssues] = await Promise.all([
+  const [reviews, risks, stuckOrders, approvals, tickets, newReviews, supplierIssues, payouts, trials] = await Promise.all([
     prisma.paymentIntent.count({ where: { status: "REVIEW" } }),
     prisma.riskFlag.count({ where: { status: "OPEN" } }),
-    prisma.order.count({ where: { status: "PROCESSING" } }),
+    // Orders that need a person (provider gave no clear answer, or failed), not every order in progress.
+    prisma.order.count({ where: { status: { in: ["PAID", "PROCESSING"] }, items: { some: { status: "PENDING", supplierOrders: { some: { status: { in: ["UNKNOWN", "FAILED"] } } } } } } }),
     prisma.pendingApproval.count({ where: { status: "PENDING" } }),
     prisma.supportTicket.count({ where: { status: "OPEN" } }),
     prisma.review.count({ where: { status: "pending" } }),
     // Supplier orders staff must look at: failed, or no longer checked automatically
     // (a failed attempt only counts while its line is still undelivered and not refunded)
     prisma.supplierOrder.count({ where: { OR: [{ status: "FAILED", orderItem: { status: "PENDING", order: { status: { in: ["PAID", "PROCESSING"] } } } }, { status: { in: ["PENDING", "UNKNOWN"] }, nextCheckAt: null }] } }),
+    prisma.payout.count({ where: { status: "REQUESTED" } }),
+    prisma.trialRequest.count({ where: { status: "PENDING" } }),
   ]);
   const all: { href: string; label: string; group: string; perm: Permission; badge?: number }[] = [
     { href: "/admin", label: "Dashboard", group: "", perm: "dashboard.view" },
-    { href: "/admin/orders", label: "Orders", group: "Operations", perm: "orders.view", badge: processing },
+    { href: stuckOrders ? "/admin/orders?f=stuck" : "/admin/orders", label: "Orders", group: "Operations", perm: "orders.view", badge: stuckOrders },
     { href: "/admin/payments", label: "Payments", group: "Operations", perm: "payments.review", badge: reviews },
     { href: "/admin/reconciliation", label: "Reconciliation", group: "Operations", perm: "payments.review" },
     { href: "/admin/risk", label: "Risk queue", group: "Operations", perm: "risk.manage", badge: risks },
@@ -36,8 +39,8 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     { href: "/admin/trust", label: "Reviews", group: "Catalog", perm: "catalog.manage", badge: newReviews },
     { href: "/admin/customers", label: "Customers", group: "Customers", perm: "customers.view" },
     { href: "/admin/wallet", label: "Ledger", group: "Customers", perm: "wallet.view" },
-    { href: "/admin/referrals", label: "Referrals", group: "Customers", perm: "referrals.manage" },
-    { href: "/admin/trials", label: "Free trials", group: "Customers", perm: "orders.view" },
+    { href: "/admin/referrals", label: "Referrals", group: "Customers", perm: "referrals.manage", badge: payouts },
+    { href: "/admin/trials", label: "Free trials", group: "Customers", perm: "orders.view", badge: trials },
     { href: "/admin/analytics", label: "Reports", group: "Customers", perm: "analytics.view" },
     { href: "/admin/homepage", label: "Homepage", group: "Content", perm: "content.manage" },
     { href: "/admin/news", label: "Updates", group: "Content", perm: "content.manage" },

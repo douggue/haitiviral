@@ -19,7 +19,7 @@ export default async function CodesPage({ searchParams }: { searchParams: Promis
   const count = (v: string, s: string) => counts.find((c) => c.variantId === v && c.status === s)?._count ?? 0;
   return (
     <>
-      <PageTitle title="Code inventory" sub="Codes are encrypted when imported and never shown in lists. Duplicates are skipped automatically." />
+      <PageTitle title="Own stock (codes)" sub="Codes are encrypted when imported and never shown in lists. Duplicates are skipped automatically." />
       <div className="grid gap-6 xl:grid-cols-[1fr_1.2fr]">
         <ActionForm action={importCodes} className="card h-fit space-y-4 p-5" resetOnSuccess>
           <h2 className="font-semibold">Import codes</h2>

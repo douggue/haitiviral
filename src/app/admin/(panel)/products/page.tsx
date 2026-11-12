@@ -19,7 +19,7 @@ export default async function AdminProducts() {
   ]);
   return (
     <>
-      <PageTitle title="Products" actions={<Link href="/admin/products/new" className="btn-primary">New product</Link>} />
+      <PageTitle title="Catalog editor" actions={<Link href="/admin/products/new" className="btn-primary">New product</Link>} />
       <Table head={["Product", "Category", "Fulfillment", "Variants", "From", "Status"]} empty={products.length === 0}>
         {products.map((p) => (
           <tr key={p.id} className="hover:bg-surface-2">

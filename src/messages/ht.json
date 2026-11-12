@@ -442,7 +442,8 @@
     "referral_rewarded": "{amount} komisyon parennaj antre nan kòb ou ka retire a.",
     "order_partial": "Kòmand #{number}: founisè a pa t ka fini. {amount} tounen nan bous ou otomatikman.",
     "payout_sent": "Nou voye {amount} sou {method} ou. Gade telefòn ou.",
-    "payout_rejected": "Nou pa t ka voye retrè {amount} an. Kòb la tounen nan kòb ou touche a. Ekri nou si w gen kesyon."
+    "payout_rejected": "Nou pa t ka voye retrè {amount} an. Kòb la tounen nan kòb ou touche a. Ekri nou si w gen kesyon.",
+    "ticket_reply": "Ekip la reponn demann ou an: «{subject}». Peze pou w li repons lan."
   },
   "pages": {
     "aboutTitle": "Konsènan HaitiViral",

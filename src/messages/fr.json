@@ -442,7 +442,8 @@
     "referral_rewarded": "{amount} de commission de parrainage ajoutés à vos gains.",
     "order_partial": "Commande n° {number} : le fournisseur n'a pas pu terminer. {amount} sont revenus automatiquement dans votre portefeuille.",
     "payout_sent": "Nous avons envoyé {amount} sur votre {method}. Vérifiez votre téléphone.",
-    "payout_rejected": "Le retrait de {amount} n'a pas pu être envoyé. L'argent est revenu dans vos gains. Écrivez-nous si besoin."
+    "payout_rejected": "Le retrait de {amount} n'a pas pu être envoyé. L'argent est revenu dans vos gains. Écrivez-nous si besoin.",
+    "ticket_reply": "L’équipe a répondu à votre demande : « {subject} ». Touchez pour lire la réponse."
   },
   "pages": {
     "aboutTitle": "À propos de HaitiViral",

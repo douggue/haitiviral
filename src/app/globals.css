@@ -478,7 +478,7 @@ html[data-can-install] .install-link { display: inline-flex; }
 :where(.dark) .bg-\[\#FEE2E2\]:not([class*="dark:bg"]) { background-color: var(--danger-soft); }
 :where(.dark) :is(.bg-\[\#FEF3C7\], .bg-\[\#FFFBEB\]):not([class*="dark:bg"]) { background-color: var(--warning-soft); }
 :where(.dark) .bg-\[\#DBEAFE\]:not([class*="dark:bg"]) { background-color: #172554; }
-:where(.dark) .bg-\[\#0F172A\]:not([class*="dark:bg"]) { background-color: var(--primary); }
+:where(.dark) .bg-\[\#0F172A\]:not([class*="dark:bg"]) { background-color: #18213a; box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08); }
 :where(.dark) .divide-\[\#EEF0F5\] > :not(:last-child) { border-color: var(--border); }
 :where(.dark) .bg-\[\#FEF2F2\]:not([class*="dark:bg"]) { background-color: var(--danger-soft); }
 :where(.dark) .bg-\[\#FFEDD5\]:not([class*="dark:bg"]) { background-color: var(--warning-soft); }

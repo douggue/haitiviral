@@ -14,6 +14,7 @@ import { linkedAccounts } from "./devices";
 import { checkIp } from "./ip-check";
 import { isDisposableEmail, scoreTrial, socialHandle, trialDecision } from "./trial-risk";
 import { whatsappLink, whatsappVerifyOn } from "./whatsapp";
+import { alertStaff } from "./staff-alerts";
 
 export class TrialError extends Error {
   constructor(public code: "off" | "first_topup" | "used" | "link" | "phone" | "limit" | "offer" | "captcha" | "email" | "verify_email") {
@@ -146,6 +147,7 @@ export async function assessTrial(id: string) {
   await prisma.trialRequest.update({ where: { id }, data: { risk: score, reasons: reasons as Prisma.InputJsonValue, ipInfo: ipInfo as Prisma.InputJsonValue } });
   if (decision === "approve") return decideTrial(id, true, null, "Low risk: sent automatically", true);
   if (decision === "refuse") return decideTrial(id, false, null, `High risk (${score} points)`, true);
+  await alertStaff("orders.view", { title: "Esè gratis pou verifye", body: `Risk ${score} pwen`, url: "/admin/trials", tag: "trial" });
   return prisma.trialRequest.findUniqueOrThrow({ where: { id } });
 }
 

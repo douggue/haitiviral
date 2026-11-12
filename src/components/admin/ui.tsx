@@ -1,5 +1,5 @@
 import { Children, Fragment, cloneElement, isValidElement } from "react";
-export function PageTitle({ title, sub, actions }: { title: string; sub?: string; actions?: React.ReactNode }) {
+export function PageTitle({ title, sub, actions }: { title: React.ReactNode; sub?: string; actions?: React.ReactNode }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
@@ -30,7 +30,7 @@ function labelCells(children: React.ReactNode, head: string[]): React.ReactNode 
 export function Table({ head, children, empty }: { head: string[]; children: React.ReactNode; empty?: boolean }) {
   return (
     <div className="card rtable overflow-x-auto">
-      <table className="w-full text-left text-sm sm:min-w-[640px]">
+      <table className="w-full text-left text-sm">
         <thead className="border-b border-border text-xs uppercase tracking-wide text-muted">
           <tr>{head.map((h) => <th key={h} className="px-4 py-3 font-semibold">{h}</th>)}</tr>
         </thead>

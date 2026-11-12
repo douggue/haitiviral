@@ -41,7 +41,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly Permission[]> = {
 export const PERMISSION_LABELS: Record<Permission, string> = {
   "dashboard.view": "See the admin dashboard",
   "catalog.manage": "Edit products, variants and categories",
-  "codes.manage": "Import gift-card codes",
+  "codes.manage": "Manage own stock (codes)",
   "codes.reveal": "Reveal delivered codes (audited)",
   "orders.view": "View orders",
   "orders.manage": "Deliver, cancel and refund orders",

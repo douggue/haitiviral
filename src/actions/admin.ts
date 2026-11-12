@@ -8,9 +8,9 @@ import { assertStaff, assertStepUp } from "@/lib/session";
 import { audit } from "@/lib/audit";
 import { encrypt, hmac, randomToken } from "@/lib/crypto";
 import { completePayment, rejectPayment } from "@/lib/payments/complete";
-import { deliverItemManually, fulfillOrder, refundOrCancel, revealCode } from "@/lib/orders";
-import { adjustWallet } from "@/lib/wallet";
-import { parseAmount } from "@/lib/money";
+import { addEvent, deliverItemManually, fulfillOrder, refundOrCancel, revealCode } from "@/lib/orders";
+import { adjustWallet, refundPart } from "@/lib/wallet";
+import { formatMoney, parseAmount } from "@/lib/money";
 import { DEFAULT_SETTINGS, getSettings, setSetting, type Settings } from "@/lib/settings";
 import { quoteAmount } from "@/lib/amount";
 import { notify } from "@/lib/notify";
@@ -102,6 +102,41 @@ export async function deliverItem(itemId: string, note: string): Promise<R> {
     await audit(staff.id, "order.item.deliver", "OrderItem", itemId, { orderId: item.orderId });
     revalidatePath(`/admin/orders/${item.orderId}`);
     return { ok: true };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/**
+ * Refund one line of an order (a pack line that will never come, a service the provider dropped…). The rest of the
+ * order carries on. Never more than what's left of the order; a provider still working on the line must be closed first.
+ */
+export async function refundLine(itemId: string, reason: string): Promise<R> {
+  try {
+    const staff = await assertStaff("orders.manage");
+    if (reason.trim().length < 3) return { ok: false, error: "A reason is required" };
+    const item = await prisma.orderItem.findUniqueOrThrow({ where: { id: itemId }, include: { order: true, supplierOrders: { select: { status: true } } } });
+    const { order } = item;
+    if (!["PAID", "PROCESSING", "FULFILLED"].includes(order.status)) return { ok: false, error: `Order is ${order.status}` };
+    if (item.status !== "PENDING") return { ok: false, error: "Only a line not delivered yet can be refunded" };
+    if (item.supplierOrders.some((x) => ["QUEUED", "SENDING", "PENDING", "UNKNOWN"].includes(x.status))) return { ok: false, error: "The provider is still on this line: check it, or close it first" };
+    const amount = item.unitPrice * item.quantity;
+    const allFailed = await prisma.$transaction(async (tx) => {
+      await refundPart(tx, order, amount, item.id, `Line refunded by staff: ${reason.trim()}`);
+      await tx.orderItem.update({ where: { id: item.id }, data: { status: "FAILED" } });
+      await addEvent(tx, order.id, "PROCESSING", `One line refunded (${formatMoney(amount, order.currency, "en")}): ${reason.trim()}`, staff.id);
+      const left = await tx.orderItem.count({ where: { orderId: order.id, status: { not: "FAILED" } } });
+      if (left === 0) {
+        await tx.order.update({ where: { id: order.id }, data: { status: "REFUNDED" } });
+        await addEvent(tx, order.id, "REFUNDED", reason.trim(), staff.id);
+      }
+      return left === 0;
+    });
+    await notify(order.userId, allFailed ? "order_refunded" : "order_partial", { number: order.number, amount, currency: order.currency }, `/account/orders/${order.id}`);
+    if (!allFailed) await fulfillOrder(order.id, staff.id);
+    await audit(staff.id, "order.line.refund", "OrderItem", itemId, { orderId: order.id, amount, reason });
+    revalidatePath(`/admin/orders/${order.id}`);
+    return { ok: true, message: "Line refunded to the wallet" };
   } catch (e) {
     return fail(e);
   }
@@ -700,6 +735,8 @@ export async function staffReply(form: FormData): Promise<R> {
       prisma.supportTicket.update({ where: { id: ticketId }, data: { status, assignedTo: staff.id } }),
     ]);
     await audit(staff.id, "support.reply", "SupportTicket", ticketId, { status });
+    const ticket = await prisma.supportTicket.findUnique({ where: { id: ticketId }, select: { userId: true, subject: true } });
+    if (ticket) await notify(ticket.userId, "ticket_reply", { subject: ticket.subject.slice(0, 60) }, `/account/support/${ticketId}`);
     revalidatePath(`/admin/support/${ticketId}`);
     return { ok: true, message: "Reply sent" };
   } catch (e) {

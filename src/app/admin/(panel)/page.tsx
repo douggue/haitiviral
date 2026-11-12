@@ -8,6 +8,8 @@ import { providerAlerts } from "@/lib/suppliers/catalog";
 import { isSmm } from "@/lib/suppliers/smm-orders";
 import { checkOrdersNow, syncProvidersAction } from "@/actions/catalog";
 import { ActionButton } from "@/components/admin/ActionButton";
+import { AdminPushToggle } from "@/components/admin/AdminPushToggle";
+import { HAITI_TZ, haitiDayStart } from "@/lib/haiti-time";
 
 export const metadata = { title: "Dashboard" };
 
@@ -30,17 +32,18 @@ const SOLD: OrderStatus[] = ["PAID", "PROCESSING", "FULFILLED"];
 export default async function AdminDashboard({ searchParams }: { searchParams: Promise<{ denied?: string }> }) {
   await requireStaff();
   const sp = await searchParams;
-  const since = new Date();
-  since.setHours(0, 0, 0, 0);
+  // "Today" is the Haiti day, whatever time zone the server runs in.
+  const since = haitiDayStart();
   const s = await getSettings();
 
-  const [todays, topups, rewards, suppliers, linked, soToday, recent, reviews, risks, wallets, alerts] = await Promise.all([
+  const [todays, topups, rewards, suppliers, linked, soToday, recent, reviews, risks, wallets, alerts, payouts, trials, tickets, approvals, cronLast] = await Promise.all([
     prisma.order.findMany({
       where: { createdAt: { gte: since }, currency: "HTG", status: { in: SOLD } },
-      select: { total: true, items: { select: { supplierOrders: { select: { costHtg: true, refundedPartial: true, status: true } } } } },
+      select: { total: true, items: { select: { variant: { select: { supplierId: true } }, supplierOrders: { select: { costHtg: true, refundedPartial: true, status: true } } } } },
     }),
     prisma.paymentIntent.groupBy({ by: ["provider"], where: { orderId: null, currency: "HTG", status: "SUCCEEDED", updatedAt: { gte: since } }, _sum: { amount: true } }),
-    prisma.referral.aggregate({ where: { rewardedAt: { gte: since } }, _sum: { rewardAmount: true } }),
+    // Referral commissions earned on today's orders (paid out later): a real cost of the sale.
+    prisma.referralCommission.aggregate({ where: { createdAt: { gte: since }, status: { not: "CANCELED" } }, _sum: { amount: true } }),
     prisma.supplier.findMany({ orderBy: { createdAt: "asc" } }),
     prisma.productVariant.groupBy({ by: ["supplierId"], where: { isActive: true, supplierId: { not: null } }, _count: true }),
     prisma.supplierOrder.groupBy({ by: ["supplierId"], where: { createdAt: { gte: since } }, _count: true }),
@@ -53,6 +56,11 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
     prisma.riskFlag.count({ where: { status: "OPEN" } }),
     prisma.ledgerAccount.aggregate({ where: { currency: "HTG", type: { in: ["CUSTOMER_WALLET", "CUSTOMER_HELD"] } }, _sum: { balance: true } }),
     providerAlerts().catch(() => []),
+    prisma.payout.count({ where: { status: "REQUESTED" } }),
+    prisma.trialRequest.count({ where: { status: "PENDING" } }),
+    prisma.supportTicket.count({ where: { status: "OPEN" } }),
+    prisma.pendingApproval.count({ where: { status: "PENDING" } }),
+    prisma.siteSetting.findUnique({ where: { key: "cron:last" } }),
   ]);
 
   // Sales = what customers paid today, less what went back to them for undelivered parts.
@@ -60,7 +68,9 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const sales = todays.reduce((a, o) => a + o.total, 0) - lines.reduce((a, x) => a + (x.refundedPartial ?? 0), 0);
   const cost = lines.reduce((a, x) => a + (x.status === "FAILED" || x.status === "CLOSED" ? 0 : x.costHtg ?? 0), 0);
   const fees = Math.round((sales * s.paymentFeePct) / 100);
-  const referral = rewards._sum.rewardAmount ?? 0;
+  const referral = rewards._sum.amount ?? 0;
+  // Lines delivered by hand have no provider cost recorded: profit can't count it.
+  const noCost = todays.filter((o) => o.total > 0 && o.items.some((i) => !i.variant.supplierId)).length;
   const profit = sales - cost - fees - referral;
   const topTotal = topups.reduce((a, x) => a + (x._sum.amount ?? 0), 0);
   const split = (["MONCASH", "NATCASH", "MANUAL"] as const)
@@ -71,15 +81,21 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
   const kpis = [
     { label: "Sales", value: g(sales), sub: `${todays.length} order${todays.length === 1 ? "" : "s"} today` },
     { label: "Provider cost", value: g(cost), sub: `$${(cost / 100 / s.htgPerUsd).toFixed(2)} at ${s.htgPerUsd} HTG/$` },
-    { label: "Real profit", value: g(profit), sub: `after referral, fees${sales ? ` · ${Math.round((profit / sales) * 100)}%` : ""}` },
+    { label: "Real profit", value: g(profit), sub: `after referral, fees${sales ? ` · ${Math.round((profit / sales) * 100)}%` : ""}${noCost ? ` · cost unknown for ${noCost} hand-delivered order${noCost > 1 ? "s" : ""}` : ""}` },
     { label: "Wallet top-ups", value: g(topTotal), sub: split.join(" · ") || "none yet today" },
   ];
 
   const attention = [
-    ...alerts,
-    ...(reviews ? [{ title: `${reviews} payment${reviews > 1 ? "s" : ""} to review`, text: "NatCash and bank transfers waiting for a check.", href: "/admin/payments", tone: "amber" as const }] : []),
+    ...(reviews ? [{ title: `${reviews} deposit${reviews > 1 ? "s" : ""} to check`, text: "NatCash and bank transfers waiting. Customers wait for this money.", href: "/admin/payments", tone: "amber" as const }] : []),
+    ...(payouts ? [{ title: `${payouts} referral withdrawal${payouts > 1 ? "s" : ""} to send`, text: "Send by MonCash / NatCash, then press Sent.", href: "/admin/referrals", tone: "amber" as const }] : []),
+    ...(tickets ? [{ title: `${tickets} support ticket${tickets > 1 ? "s" : ""} to answer`, text: "Customers waiting for a reply.", href: "/admin/support", tone: "amber" as const }] : []),
+    ...(trials ? [{ title: `${trials} free trial${trials > 1 ? "s" : ""} to review`, text: "Middle-risk requests waiting for you.", href: "/admin/trials", tone: "blue" as const }] : []),
+    ...(approvals ? [{ title: `${approvals} approval${approvals > 1 ? "s" : ""} waiting`, text: "Large actions waiting for a second staff member.", href: "/admin/approvals", tone: "amber" as const }] : []),
     ...(risks ? [{ title: `${risks} risk flag${risks > 1 ? "s" : ""}`, text: "Orders or top-ups held for a look.", href: "/admin/risk", tone: "red" as const }] : []),
+    ...alerts,
   ];
+  const lastRun = cronLast ? new Date((cronLast.value as { at: string }).at) : null;
+  const cronLate = !lastRun || Date.now() - lastRun.getTime() > 15 * 60_000;
 
   const statusOf = (o: (typeof recent)[number]) => {
     const so = o.items[0]?.supplierOrders[0];
@@ -97,14 +113,30 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold">Dashboard</h1>
-          <p className="mt-1 text-[13px] text-muted">Today · {since.toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" })}</p>
+          <p className="mt-1 text-[13px] text-muted">Today (Haiti) · {new Date().toLocaleDateString("en-US", { timeZone: HAITI_TZ, weekday: "long", day: "numeric", month: "long" })}</p>
+          <p className={`mt-0.5 text-xs font-semibold ${cronLate ? "text-danger" : "text-muted"}`}>
+            {lastRun ? `Automatic order checks: last run ${lastRun.toLocaleTimeString("en-US", { timeZone: HAITI_TZ, hour: "numeric", minute: "2-digit" })}` : "Automatic order checks: never ran"}
+            {cronLate ? " · not running every 5 minutes! See docs/DEPLOY.md step 6" : ""}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <AdminPushToggle />
+          <Link href="/admin/payments" className="inline-flex min-h-10 items-center rounded-[10px] bg-[#00209F] px-3.5 text-[13px] font-bold text-white">Check deposits{reviews ? ` (${reviews})` : ""}</Link>
           <ActionButton label="Check orders now" className={btn} action={checkOrdersNow} />
           <ActionButton label="Sync services" className={btn} action={syncProvidersAction.bind(null, null)} />
-          <Link href="/admin/suppliers" className="inline-flex min-h-10 items-center rounded-[10px] bg-[#00209F] px-3.5 text-[13px] font-bold text-white">Add provider</Link>
         </div>
       </div>
+
+      <section className={`${card} flex flex-col gap-2.5 p-[18px]`}>
+        <h2 className="text-base font-bold">Needs attention</h2>
+        {attention.map((a) => (
+          <Link key={a.title} href={a.href} className={`flex flex-col gap-[3px] rounded-[10px] px-3 py-2.5 ${TONE[a.tone]}`}>
+            <span className="text-[13px] font-bold">{a.title}</span>
+            <span className="text-xs leading-[1.45]">{a.text}</span>
+          </Link>
+        ))}
+        {!attention.length && <p className="rounded-[10px] bg-[#DCFCE7] px-3 py-2.5 text-[13px] font-bold text-[#166534]">All good. Nothing waiting for you.</p>}
+      </section>
 
       <section className="grid gap-3.5 grid-cols-2 lg:[grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
         {kpis.map((k) => (
@@ -118,7 +150,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
 
       <section className="flex flex-wrap gap-4">
         <div className={`${card} flex min-w-0 flex-[2_1_420px] flex-col gap-3 p-[18px]`}>
-          <h2 className="text-base font-bold">Providers</h2>
+          <div className="flex items-center justify-between gap-2"><h2 className="text-base font-bold">Providers</h2><Link href="/admin/suppliers" className="text-[13px] font-bold text-[#00209F] dark:text-primary">Add provider →</Link></div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[460px] border-collapse text-sm">
               <thead>
@@ -128,7 +160,7 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
               </thead>
               <tbody>
                 {suppliers.map((x) => {
-                  const low = x.lowBalance != null && x.balance != null && Number(x.balance) < Number(x.lowBalance);
+                  const low = x.balance != null && Number(x.balance) < Number(x.lowBalance ?? 10);
                   const st = !x.isEnabled ? ["Off", B.off] : low ? ["Low balance", B.low] : ["OK", B.ok];
                   return (
                     <tr key={x.id} className="border-t border-[#EEF0F5] dark:border-border">
@@ -146,16 +178,10 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
           </div>
         </div>
 
-        <div className={`${card} flex min-w-0 flex-[1_1_280px] flex-col gap-2.5 p-[18px]`}>
-          <h2 className="text-base font-bold">Needs attention</h2>
-          {attention.map((a) => (
-            <Link key={a.title} href={a.href} className={`flex flex-col gap-[3px] rounded-[10px] px-3 py-2.5 ${TONE[a.tone]}`}>
-              <span className="text-[13px] font-bold">{a.title}</span>
-              <span className="text-xs leading-[1.45]">{a.text}</span>
-            </Link>
-          ))}
-          {!attention.length && <p className="rounded-[10px] bg-[#DCFCE7] px-3 py-2.5 text-[13px] font-bold text-[#166534]">All good. Nothing waiting for you.</p>}
-          <p className="mt-auto pt-2 text-xs text-muted">Customers hold {g(wallets._sum.balance ?? 0)} in their wallets.</p>
+        <div className={`${card} flex min-w-0 flex-[1_1_220px] flex-col justify-between gap-2.5 p-[18px]`}>
+          <h2 className="text-base font-bold">Customer money</h2>
+          <p className="text-[22px] font-extrabold tabular-nums">{g(wallets._sum.balance ?? 0)}</p>
+          <p className="text-xs text-muted">held in customers&apos; wallets (owed to them).</p>
         </div>
       </section>
 

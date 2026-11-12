@@ -148,14 +148,14 @@ export function ThemeEditor({ initial, defaults, history }: { initial: ThemeConf
         <p className="text-sm font-semibold">Live preview</p>
         <div className="overflow-hidden rounded-2xl p-6 text-white" style={{ background: `radial-gradient(420px 220px at 85% 0%, rgba(47,116,255,${glowA}), transparent 65%), ${th.midnight}` }}>
           <p className="text-xs font-bold uppercase tracking-wider opacity-70">Homepage hero</p>
-          <p className="mt-2 text-3xl font-bold leading-tight" style={{ fontFamily: displayFont }}>Rechaje jwèt ou an kèk segonn</p>
+          <p className="mt-2 text-3xl font-bold leading-tight" style={{ fontFamily: displayFont }}>Fè kont ou vin viral</p>
           <span className="mt-4 inline-flex min-h-11 items-center rounded-xl px-5 text-sm font-bold text-white" style={{ background: th.primaryDark, boxShadow: `0 14px 34px -14px rgba(47,116,255,${glowA + 0.1})` }}>Achte kounye a →</span>
         </div>
         {(["light", "dark"] as const).map((mode) => (
           <div key={mode} className="rounded-2xl border border-border p-4" style={{ background: mode === "light" ? th.lightBg : th.midnight, color: mode === "light" ? "#0b1426" : "#eef3ff" }}>
             <p className="mb-3 text-xs uppercase tracking-wide opacity-70">{mode} mode {th.defaultMode === mode && "· default"}</p>
             <div className="p-4" style={{ background: mode === "light" ? "#fff" : th.navy, borderRadius: th.radius, border: `1px solid ${mode === "light" ? "#dbe3f1" : "#1f2f57"}` }}>
-              <p className="font-bold" style={{ fontFamily: displayFont }}>Dyaman Free Fire</p>
+              <p className="font-bold" style={{ fontFamily: displayFont }}>1,000 abòne TikTok</p>
               <p className="text-sm opacity-70">310 dyaman · 450 HTG</p>
               <div className="mt-3 flex gap-2">
                 <span className="inline-flex min-h-10 items-center rounded-xl px-4 text-sm font-semibold text-white" style={{ background: mode === "light" ? th.primary : th.primaryDark }}>Chwazi</span>

@@ -18,7 +18,7 @@ export default async function SuppliersPage() {
   const count = (id: string, st: string) => counts.find((c) => c.supplierId === id && c.status === st)?._count ?? 0;
   return (
     <>
-      <PageTitle title="Suppliers" sub="Products linked to a supplier are ordered from it automatically once the customer has paid." />
+      <PageTitle title="Providers" sub="Services linked to a provider are ordered from it automatically once the customer has paid." />
       <Table head={["Supplier", "Type", "Status", "Balance", "Options linked", "Needs attention"]} empty={!suppliers.length}>
         {suppliers.map((s) => (
           <tr key={s.id}>

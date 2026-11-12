@@ -64,7 +64,7 @@ export default async function SettingsPage() {
           </div>
         </section>
         <section className="card space-y-4 p-5">
-          <h2 className="font-semibold">Referral program</h2>
+          <h2 className="font-semibold">Customer accounts &amp; newsletter</h2>
           <p className="text-sm text-muted">Referral program (tiers, withdrawals, minimum payout): <a href="/admin/referrals" className="font-semibold text-primary">Admin → Referrals</a>.</p>
           <label className="flex items-start gap-2 text-sm">
             <input type="checkbox" name="requireEmailVerification" defaultChecked={s.requireEmailVerification} className="mt-1" />

@@ -249,17 +249,20 @@ export async function updateRealAverages() {
 
 /** Dashboard "Needs attention" (mockup): low balance, stuck orders, losing or vanished services, nothing linked yet. */
 export async function providerAlerts() {
-  const [suppliers, choices, s, stuck] = await Promise.all([
+  const [suppliers, choices, s, stuck, allProviders] = await Promise.all([
     prisma.supplier.findMany({ where: { isEnabled: true, preset: { in: SMM } } }),
     listChoices(),
     getSettings(),
-    prisma.supplierOrder.count({ where: { supplier: { preset: { in: SMM } }, OR: [{ status: "UNKNOWN" }, { status: "PENDING", nextCheckAt: null }, { status: "PENDING", createdAt: { lt: new Date(Date.now() - 6 * 3_600_000) }, remains: null }] } }),
+    prisma.supplierOrder.count({ where: { OR: [{ status: "UNKNOWN" }, { status: "FAILED", orderItem: { status: "PENDING" } }, { status: "PENDING", nextCheckAt: null }, { status: "PENDING", createdAt: { lt: new Date(Date.now() - 6 * 3_600_000) }, remains: null }] } }),
+    // Every provider, accounts (YTSeller) included, for the low-balance warning.
+    prisma.supplier.findMany({ where: { isEnabled: true } }),
   ]);
   const alerts: { title: string; text: string; href: string; tone: "red" | "amber" | "blue" }[] = [];
-  if (stuck) alerts.push({ title: `${stuck} stuck order${stuck > 1 ? "s" : ""}`, text: "No clear answer from the provider (or none for over 6 hours). Re-check on the provider's site, then close or refund.", href: "/admin/suppliers", tone: "red" });
-  for (const x of suppliers) {
-    if (x.lowBalance != null && x.balance != null && Number(x.balance) < Number(x.lowBalance))
-      alerts.push({ title: `${x.name} balance low`, text: `${Number(x.balance)} ${x.balanceCurrency ?? ""} left (warning under ${Number(x.lowBalance)}). Top up before it runs out: orders it refuses go to the backup or are refunded.`, href: `/admin/suppliers/${x.id}`, tone: "amber" });
+  if (stuck) alerts.push({ title: `${stuck} stuck order${stuck > 1 ? "s" : ""}`, text: "No clear answer from the provider (or none for over 6 hours). Open them, check on the provider's site, then send again, close or refund.", href: "/admin/orders?f=stuck", tone: "red" });
+  for (const x of allProviders) {
+    // No warning level set: warn under 10 (USD).
+    if (x.balance != null && Number(x.balance) < Number(x.lowBalance ?? 10))
+      alerts.push({ title: `${x.name} balance low`, text: `${Number(x.balance)} ${x.balanceCurrency ?? ""} left (warning under ${Number(x.lowBalance ?? 10)}). Top up before it runs out: orders it refuses go to the backup or are refunded.`, href: `/admin/suppliers/${x.id}`, tone: "amber" });
   }
   const losing = choices.filter((c) => c.provider && profitOf(c.priceHtg, Number(c.provider.rate), s).status === "loss").length;
   if (losing) alerts.push({ title: `${losing} service${losing > 1 ? "s" : ""} ${s.autoPauseLoss ? "paused" : "losing money"}`, text: "The provider's price is above your selling price. Review prices.", href: "/admin/pricing", tone: "blue" });

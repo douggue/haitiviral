@@ -37,7 +37,7 @@ export default async function TrustAdmin({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageTitle title="Trust" sub="Recent sale popup, customer reviews and the “stock is low” message. Everything shown to customers comes from real sales and real comments." />
+      <PageTitle title="Reviews" sub="Recent sale popup, customer reviews and the “stock is low” message. Everything shown to customers comes from real sales and real comments." />
       <nav className="mb-6 flex flex-wrap gap-1 self-start rounded-2xl bg-surface-2 p-1" aria-label="Sections">
         {TABS.map(([id, label]) => (
           <Link key={id} href={`/admin/trust?tab=${id}`} aria-current={tab === id ? "page" : undefined} className={`rounded-xl px-4 py-2 text-sm font-bold ${tab === id ? "bg-primary text-white" : "text-muted hover:text-text"}`}>

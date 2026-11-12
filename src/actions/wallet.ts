@@ -12,6 +12,7 @@ import { addEvent } from "@/lib/orders";
 import { savePrivateImage, uploadsEnabled } from "@/lib/storage";
 import { normalizePhone } from "@/lib/phone";
 import { mustVerifyEmail } from "@/lib/verify-email";
+import { alertStaff } from "@/lib/staff-alerts";
 
 export type ActionResult<T = object> = ({ ok: true } & T) | { ok: false; error: string };
 
@@ -90,6 +91,7 @@ export async function createDeposit(form: FormData): Promise<ActionResult<{ redi
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") return { ok: false, error: "duplicate_ref" };
       throw e;
     }
+    await alertStaff("payments.review", { title: "Nouvo depo pou verifye", body: `${user.name}: ${(amount / 100).toLocaleString("en-US")} ${currency} · ${manual?.name ?? method}`, url: "/admin/payments", tag: "deposit" });
     revalidatePath("/[locale]/account/wallet", "page");
     return { ok: true };
   }
