@@ -7,9 +7,10 @@ export function DataSaverToggle() {
   const [on, setOn] = useState(false);
   useEffect(() => setOn(document.documentElement.classList.contains("data-saver")), []);
   return (
-    <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
+    <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-sm text-muted">
       <input
         type="checkbox"
+        className="h-5 w-5 flex-none accent-[#4F6BFF]"
         checked={on}
         onChange={(e) => {
           const v = e.target.checked;

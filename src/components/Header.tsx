@@ -47,11 +47,11 @@ export async function Header() {
             </Link>
           )}
           {balances ? (
-            <Link href="/account/wallet" className="ml-1 inline-flex h-10 items-center rounded-full bg-primary-soft px-3 text-[13px] font-bold text-primary dark:text-text" aria-label={t("balance")}>
+            <Link href="/account/wallet" className="ml-1 inline-flex h-11 items-center rounded-full bg-primary-soft px-3 text-[13px] font-bold text-primary dark:text-text" aria-label={t("balance")}>
               {formatMoney(balances.HTG.available, "HTG", locale)}
             </Link>
           ) : (
-            <Link href="/auth/login" className="btn-primary ml-1 min-h-10 rounded-full px-4 text-[13px]">
+            <Link href="/auth/login" className="btn-primary ml-1 min-h-11 rounded-full px-4 text-[13px]">
               {t("signIn")}
             </Link>
           )}

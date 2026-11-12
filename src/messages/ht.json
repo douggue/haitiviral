@@ -78,7 +78,8 @@
     "inviteShort": "Envite zanmi",
     "hoursShort": "Lè",
     "helpCenter": "Sant èd",
-    "network": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò: sa w te ekri a la toujou, epi nou p ap chaje w de fwa."
+    "network": "Koneksyon an koupe. Tcheke entènèt ou epi eseye ankò: sa w te ekri a la toujou, epi nou p ap chaje w de fwa.",
+    "seeAll": "Wè tout"
   },
   "home": {
     "eyebrow": "Fèt an Ayiti, pou kreyatè yo",
@@ -374,7 +375,13 @@
     "cryptoSteps2": "Voye USDT sou {network} sèlman.",
     "cryptoSteps3": "Kole hash tranzaksyon an epi voye. N ap verifye l sou blockchain lan.",
     "methodAuto": "Otomatik",
-    "tooMany": "Ou gen 3 depo k ap tann verifikasyon deja. Tann ekip la tcheke yo anvan ou voye yon lòt."
+    "tooMany": "Ou gen 3 depo k ap tann verifikasyon deja. Tann ekip la tcheke yo anvan ou voye yon lòt.",
+    "doneAmount": "Kantite",
+    "doneMethod": "Metòd",
+    "doneRef": "Referans",
+    "doneWait": "N ap verifye peman an. Sa pran anjeneral 5 a 30 minit (pafwa plis nan mitan lannwit). W ap resevwa yon notifikasyon lè kòb la antre nan bous ou.",
+    "doneOrder": "Prepare yon kòmand",
+    "doneHistory": "Wè istwa bous mwen"
   },
   "auth": {
     "loginTitle": "Konekte",
@@ -768,7 +775,7 @@
     "addFunds": "Ajoute kòb",
     "riskAccept": "<b>Gwo risk.</b> Platfòm nan ka retire yon pati oswa limite kont ou. Mwen konprann epi mwen itilize sèvis sa a sou pwop responsablite m.",
     "confirm": "Konfime · {total}",
-    "signInToOrder": "Konekte pou kòmande",
+    "signInToOrder": "Kreye kont pou kòmande",
     "autoRefund": "Si yon kòmand pa fin livre, rès kòb la tounen nan bous ou otomatikman.",
     "gotIt": "Mwen konprann",
     "dripSheetTitle": "Kisa «voye tou dousman» ye? (drip-feed)",
@@ -1309,5 +1316,63 @@
     "need_soldOut": "pwodui sa a fini",
     "codeSeenAt": "rive a {time}",
     "codeWatching": "N ap tcheke otomatikman chak 10 segonn…"
+  },
+  "welcome": {
+    "title": "Byenvini",
+    "hello": "Byenvini, {name}!",
+    "intro": "Kont ou pare. Men sa pou w fè pou w kòmanse fè kont ou grandi.",
+    "next": "Sa pou w fè kounye a",
+    "trialTitle": "Pran esè gratis ou",
+    "trialSub": "Eseye sèvis la gratis anvan w peye.",
+    "walletTitle": "Mete kòb nan bous ou",
+    "walletSub": "Ak MonCash oswa NatCash. Ou peye kòmand yo ak bous la.",
+    "orderTitle": "Fè premye kòmand ou",
+    "orderSub": "Chwazi platfòm nan, sèvis la, epi mete lyen ou.",
+    "later": "Pita, ale nan paj akèy la"
+  },
+  "invite": {
+    "metaTitle": "Yon zanmi envite w sou HaitiViral",
+    "metaDescription": "Fè kont TikTok, Instagram, Facebook ak YouTube ou grandi. Eseye gratis.",
+    "title": "Yon zanmi envite w sou HaitiViral",
+    "titleFrom": "{name} envite w sou HaitiViral",
+    "lead": "Abòne, like ak vi pou TikTok, Instagram, Facebook ak YouTube. Ou peye ak MonCash oswa NatCash.",
+    "ctaTrial": "Kreye kont ou epi pran esè gratis la",
+    "ctaJoin": "Kreye kont ou, li gratis",
+    "haveAccount": "Mwen gen yon kont deja",
+    "trialTitle": "Esè gratis ou",
+    "avg": "anviwon {time}",
+    "trialNote": "Yon sèl esè pa moun. Ou chwazi youn apre ou kreye kont ou.",
+    "howTitle": "Kijan sa mache",
+    "step1": "Kreye kont ou ak imèl ou. Sa pran mwens pase yon minit.",
+    "step2": "Mete kòb nan bous ou ak MonCash oswa NatCash.",
+    "step3": "Chwazi sèvis la, mete lyen ou, epi gade kont ou grandi."
+  },
+  "aboutUi": {
+    "p1Title": "Fèt an Ayiti, pou Ayisyen",
+    "p1Body": "Pri yo an goud, sit la an kreyòl ak fransè, epi ekip la konprann sa ou bezwen.",
+    "p2Title": "Peye ak lajan mobil",
+    "p2Body": "MonCash antre otomatikman. Ekip la verifye NatCash. Pa bezwen kat bank.",
+    "p3Title": "Kòb ou pwoteje",
+    "p3Body": "Si yon kòmand pa ka fèt, oswa li fèt yon pati sèlman, nou remèt kòb la nan bous ou otomatikman.",
+    "p4Title": "Moun reyèl ki reponn ou",
+    "p4Body": "Ekri nou sou WhatsApp oswa ouvri yon demann sipò apati kòmand ou.",
+    "ctaOrder": "Fè yon kòmand",
+    "ctaContact": "Kontakte nou"
+  },
+  "contactUi": {
+    "ticket": "Ouvri yon demann sipò",
+    "ticketHint": "Pou yon pwoblèm ak yon kòmand, ouvri demann lan apati paj kòmand lan: nou wè tout detay yo touswit.",
+    "quickTitle": "Repons rapid",
+    "quickHelp": "Sant èd la",
+    "quickFaq": "Kesyon yo poze souvan",
+    "quickRefunds": "Ranbousman"
+  },
+  "errorUi": {
+    "title": "Paj sa a pa louvri byen",
+    "body": "Sa ka rive lè koneksyon an fèb. Kòb ou ak kòmand ou yo an sekirite. Eseye ankò.",
+    "retry": "Eseye ankò",
+    "home": "Tounen nan paj akèy la",
+    "help": "Toujou pa mache? Kontakte nou",
+    "ref": "Referans pou sipò"
   }
 }

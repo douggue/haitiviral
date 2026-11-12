@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PlatformIcon } from "@/components/PlatformIcon";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getSettings } from "@/lib/settings";
 import { formatMoney } from "@/lib/money";
@@ -40,7 +41,7 @@ export default async function AccountsPage({ params, searchParams }: { params: P
             <Card key={product.id} soldOut={variant.soldOut} href={`/accounts/${product.slug}`}>
               {(() => {
                 const b = accountBadge(product.tags, meta.kind);
-                return <span className="grid h-11 w-11 flex-none place-items-center rounded-xl text-sm font-extrabold text-white" style={{ background: b.color }}>{b.letters}</span>;
+                return b.logo ? <PlatformIcon slug={b.logo} size={44} radius={12} color={b.color} /> : <span className="grid h-11 w-11 flex-none place-items-center rounded-xl text-sm font-extrabold text-white" style={{ background: b.color }}>{b.letters}</span>;
               })()}
               <span className="flex min-w-0 flex-1 flex-col gap-1">
                 <span className="text-[15px] font-bold leading-snug">{txt(product.name, locale)}</span>

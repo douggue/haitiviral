@@ -38,7 +38,7 @@ export async function Footer({ settings }: { settings: Settings }) {
   const pages = await footerPages();
   const extra = settings.navigation?.footer ?? [];
   const chip = "inline-flex min-h-11 items-center rounded-full border border-[#24357A] bg-[#111C47] px-4 text-[15px] font-bold text-[#7B95FF] hover:bg-[#16245C]";
-  const label = "text-xs font-extrabold uppercase tracking-[1.6px] text-[#475176]";
+  const label = "text-xs font-extrabold uppercase tracking-[1.6px] text-[#94A0CC]";
   // Admin → Menus; the standard lists while staff haven't made their own.
   const pick = (list: { href: string; label: Record<string, string> }[] | undefined, fallback: typeof DEFAULT_FOOTER_SERVICES) =>
     (list?.length ? list : fallback).map((l) => ({ href: l.href, label: txt(l.label, locale), external: l.href.startsWith("https://") }));
@@ -64,7 +64,7 @@ export async function Footer({ settings }: { settings: Settings }) {
           <p className="font-display text-[28px] font-black uppercase leading-none tracking-[0.5px] text-white">
             {split[0]}<span className="text-[#FF4D6D]">{split[1]}</span>
           </p>
-          <p className="max-w-[460px] text-[15px] leading-relaxed text-[#8A93B2]">{t("footerTagline")}</p>
+          <p className="max-w-[460px] text-[15px] leading-relaxed text-[#AEB7D4]">{t("footerTagline")}</p>
         </div>
 
         <nav aria-label={t("ourServices")} className="flex flex-col gap-3">
@@ -80,9 +80,9 @@ export async function Footer({ settings }: { settings: Settings }) {
           <h2 className={label}>{t("help")}</h2>
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-[15px] font-semibold text-[#AEB7D4]">
             {help.map((l) => (l.external
-              ? <a key={l.href} href={l.href} target="_blank" rel="noopener" className="py-1 hover:text-white">{l.label}</a>
-              : <Link key={l.href} href={l.href} className="py-1 hover:text-white">{l.label}</Link>))}
-            <span className="py-1 text-[#6B7393]">{t("hoursShort")}: {settings.supportHours}</span>
+              ? <a key={l.href} href={l.href} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center hover:text-white">{l.label}</a>
+              : <Link key={l.href} href={l.href} className="inline-flex min-h-11 items-center hover:text-white">{l.label}</Link>))}
+            <span className="inline-flex min-h-11 items-center text-[#9AA3C4]">{t("hoursShort")}: {settings.supportHours}</span>
           </div>
         </nav>
 
@@ -96,23 +96,23 @@ export async function Footer({ settings }: { settings: Settings }) {
           <div className="flex flex-wrap gap-3">
             {socials.map(([key, url, title]) => (
               <a key={key} href={url} target="_blank" rel="noopener noreferrer" aria-label={title} title={title}
-                className="grid h-12 w-12 place-items-center rounded-full border border-[#2A3557] bg-[#151E36] text-[#7C86A6] hover:text-white">
+                className="grid h-12 w-12 place-items-center rounded-full border border-[#2A3557] bg-[#151E36] text-[#C7CEE3] hover:text-white">
                 <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>{ICONS[key]}</svg>
               </a>
             ))}
           </div>
         )}
 
-        <p className="text-sm text-[#4E5878]">© {new Date().getFullYear()} {name} — {t("rights")}</p>
+        <p className="text-sm text-[#9AA3C4]">© {new Date().getFullYear()} {name} — {t("rights")}</p>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[15px] text-[#C7CEE3]">
           <span aria-hidden>📄</span>
           {legal.map((l) => l.external
-            ? <a key={l.href} href={l.href} target="_blank" rel="noopener" className="border-b border-dashed border-[#5A6488] pb-0.5 hover:text-white">{l.label}</a>
-            : <Link key={l.href} href={l.href} className="border-b border-dashed border-[#5A6488] pb-0.5 hover:text-white">{l.label}</Link>)}
+            ? <a key={l.href} href={l.href} target="_blank" rel="noopener" className="inline-flex min-h-11 items-center hover:text-white"><span className="border-b border-dashed border-[#7A84A8] pb-0.5">{l.label}</span></a>
+            : <Link key={l.href} href={l.href} className="inline-flex min-h-11 items-center hover:text-white"><span className="border-b border-dashed border-[#7A84A8] pb-0.5">{l.label}</span></Link>)}
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-[#8A93B2] [&_*]:!text-[#8A93B2]"><DataSaverToggle /><InstallLink /></div>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[#AEB7D4] [&_*]:!text-[#AEB7D4]"><DataSaverToggle /><InstallLink /></div>
       </div>
     </footer>
   );

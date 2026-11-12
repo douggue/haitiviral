@@ -1,4 +1,5 @@
 "use client";
+import { PlatformIcon } from "@/components/PlatformIcon";
 import { safeCall } from "@/lib/safe-call";
 import { useEffect, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -124,7 +125,7 @@ export function TrialForm({ offers, signedIn, whatsapp, existing }: { offers: Of
           const on = i === pick;
           return (
             <button key={o.key} type="button" aria-pressed={on} onClick={() => setPick(i)} className={`flex items-center gap-3 rounded-[14px] border-2 bg-surface px-3.5 py-3 text-left ${on ? "border-text" : "border-border"}`}>
-              <span className="grid h-10 w-10 flex-none place-items-center rounded-[11px] text-[13px] font-extrabold text-white" style={{ background: p?.color }}>{p?.letter}</span>
+              <PlatformIcon slug={o.platform} size={40} radius={11} color={p?.color} />
               <span className="flex flex-1 flex-col gap-0.5">
                 <span className="text-[15px] font-bold">{o.label}</span>
                 <span className="text-xs text-muted">{t("avg", { time: o.avg })}</span>

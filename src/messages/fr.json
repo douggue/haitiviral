@@ -78,7 +78,8 @@
     "inviteShort": "Parrainage",
     "hoursShort": "Horaires",
     "helpCenter": "Centre d'aide",
-    "network": "La connexion a été coupée. Vérifiez internet et réessayez : ce que vous avez saisi est conservé et vous ne serez pas débité deux fois."
+    "network": "La connexion a été coupée. Vérifiez internet et réessayez : ce que vous avez saisi est conservé et vous ne serez pas débité deux fois.",
+    "seeAll": "Tout voir"
   },
   "home": {
     "eyebrow": "Fait en Haïti, pour les créateurs",
@@ -374,7 +375,13 @@
     "cryptoSteps2": "Envoyez de l'USDT sur {network} uniquement.",
     "cryptoSteps3": "Collez le hash de la transaction et envoyez. Nous le vérifions sur la blockchain.",
     "methodAuto": "Automatique",
-    "tooMany": "Vous avez déjà 3 dépôts en attente de vérification. Attendez que l’équipe les vérifie avant d’en envoyer un autre."
+    "tooMany": "Vous avez déjà 3 dépôts en attente de vérification. Attendez que l’équipe les vérifie avant d’en envoyer un autre.",
+    "doneAmount": "Montant",
+    "doneMethod": "Méthode",
+    "doneRef": "Référence",
+    "doneWait": "Nous vérifions le paiement. Cela prend en général 5 à 30 minutes (parfois plus la nuit). Vous recevrez une notification quand l'argent sera dans votre portefeuille.",
+    "doneOrder": "Préparer une commande",
+    "doneHistory": "Voir l'historique du portefeuille"
   },
   "auth": {
     "loginTitle": "Se connecter",
@@ -768,7 +775,7 @@
     "addFunds": "Ajouter des fonds",
     "riskAccept": "<b>Risque élevé.</b> La plateforme peut retirer une partie ou limiter votre compte. Je comprends et j'utilise ce service à mes propres risques.",
     "confirm": "Confirmer · {total}",
-    "signInToOrder": "Connectez-vous pour commander",
+    "signInToOrder": "Créer un compte pour commander",
     "autoRefund": "Si une commande n'est pas livrée entièrement, le reste revient automatiquement dans votre portefeuille.",
     "gotIt": "J'ai compris",
     "dripSheetTitle": "Qu’est-ce que l’envoi progressif ? (drip-feed)",
@@ -1309,5 +1316,63 @@
     "need_soldOut": "produit épuisé",
     "codeSeenAt": "reçu à {time}",
     "codeWatching": "Vérification automatique toutes les 10 secondes…"
+  },
+  "welcome": {
+    "title": "Bienvenue",
+    "hello": "Bienvenue, {name} !",
+    "intro": "Votre compte est prêt. Voici quoi faire pour commencer à faire grandir votre compte.",
+    "next": "Prochaines étapes",
+    "trialTitle": "Prenez votre essai gratuit",
+    "trialSub": "Essayez le service gratuitement avant de payer.",
+    "walletTitle": "Ajoutez de l'argent au portefeuille",
+    "walletSub": "Avec MonCash ou NatCash. Vos commandes sont payées avec le portefeuille.",
+    "orderTitle": "Passez votre première commande",
+    "orderSub": "Choisissez la plateforme, le service, puis mettez votre lien.",
+    "later": "Plus tard, aller à l'accueil"
+  },
+  "invite": {
+    "metaTitle": "Un ami vous invite sur HaitiViral",
+    "metaDescription": "Faites grandir vos comptes TikTok, Instagram, Facebook et YouTube. Essai gratuit.",
+    "title": "Un ami vous invite sur HaitiViral",
+    "titleFrom": "{name} vous invite sur HaitiViral",
+    "lead": "Abonnés, likes et vues pour TikTok, Instagram, Facebook et YouTube. Payez avec MonCash ou NatCash.",
+    "ctaTrial": "Créer un compte et prendre l'essai gratuit",
+    "ctaJoin": "Créer un compte, c'est gratuit",
+    "haveAccount": "J'ai déjà un compte",
+    "trialTitle": "Votre essai gratuit",
+    "avg": "environ {time}",
+    "trialNote": "Un seul essai par personne. Vous en choisissez un après avoir créé votre compte.",
+    "howTitle": "Comment ça marche",
+    "step1": "Créez votre compte avec votre e-mail. Moins d'une minute.",
+    "step2": "Ajoutez de l'argent avec MonCash ou NatCash.",
+    "step3": "Choisissez le service, mettez votre lien et regardez votre compte grandir."
+  },
+  "aboutUi": {
+    "p1Title": "Fait en Haïti, pour les Haïtiens",
+    "p1Body": "Prix en gourdes, site en créole et en français, et une équipe qui comprend vos besoins.",
+    "p2Title": "Payez avec l'argent mobile",
+    "p2Body": "MonCash est automatique. L'équipe vérifie NatCash. Pas besoin de carte bancaire.",
+    "p3Title": "Votre argent est protégé",
+    "p3Body": "Si une commande ne peut pas être faite, ou seulement en partie, l'argent revient dans votre portefeuille automatiquement.",
+    "p4Title": "De vraies personnes vous répondent",
+    "p4Body": "Écrivez-nous sur WhatsApp ou ouvrez une demande d'aide depuis votre commande.",
+    "ctaOrder": "Passer une commande",
+    "ctaContact": "Nous contacter"
+  },
+  "contactUi": {
+    "ticket": "Ouvrir une demande d'aide",
+    "ticketHint": "Pour un problème de commande, ouvrez la demande depuis la page de la commande : nous voyons tous les détails tout de suite.",
+    "quickTitle": "Réponses rapides",
+    "quickHelp": "Centre d'aide",
+    "quickFaq": "Questions fréquentes",
+    "quickRefunds": "Remboursements"
+  },
+  "errorUi": {
+    "title": "Cette page ne s'est pas bien ouverte",
+    "body": "Cela peut arriver quand la connexion est faible. Votre argent et vos commandes sont en sécurité. Réessayez.",
+    "retry": "Réessayer",
+    "home": "Retour à l'accueil",
+    "help": "Toujours bloqué ? Contactez-nous",
+    "ref": "Référence pour l'assistance"
   }
 }

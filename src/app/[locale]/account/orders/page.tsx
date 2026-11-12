@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { PlatformIcon } from "@/components/PlatformIcon";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { prisma } from "@/lib/db";
@@ -76,7 +77,7 @@ export default async function OrdersPage({ params, searchParams }: { params: Pro
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={product.category.image} alt="" className="h-[38px] w-[38px] rounded-[11px] object-cover" />
                   ) : (
-                    <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-[11px] text-sm font-extrabold text-white" style={{ background: platform?.color ?? "#334155" }}>{platform?.letter ?? "•"}</span>
+                    <PlatformIcon slug={product?.category.slug ?? ""} size={38} radius={11} />
                   )}
                   <span className="flex flex-col gap-0.5">
                     <span className="text-[15px] font-bold">{name}</span>

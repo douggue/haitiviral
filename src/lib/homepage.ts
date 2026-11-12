@@ -2,14 +2,14 @@ export const HOME_SECTIONS = ["categories", "featured", "howItWorks", "wallet", 
 export type HomeSectionId = (typeof HOME_SECTIONS)[number];
 
 export const HOME_SECTION_LABELS: Record<HomeSectionId, string> = {
-  categories: "Shop by category",
-  featured: "Popular products",
+  categories: "Platforms (and the accounts shop)",
+  featured: "Starter packs + most popular services",
   howItWorks: "How it works (3 steps)",
-  wallet: "Wallet promotion",
+  wallet: "Wallet (add money) promotion",
   news: "Latest news (3 newest articles)",
   reviews: "Customer reviews (Admin → Trust; hidden until one is approved)",
-  trust: "Why players choose us",
-  faq: "Frequently asked questions",
+  trust: "Why creators choose us (4 points)",
+  faq: "Frequently asked questions (4)",
 };
 
 export type HomepageConfig = {

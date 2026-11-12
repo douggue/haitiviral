@@ -1,4 +1,5 @@
 "use client";
+import { PlatformIcon } from "@/components/PlatformIcon";
 import { newRequestId, safeCall } from "@/lib/safe-call";
 import { useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -148,12 +149,12 @@ export function OrderForm({ catalog, balance, signedIn, initial, discount = 0, u
               const on = p.slug === platform.slug;
               return (
                 <button key={p.slug} type="button" aria-pressed={on} className={`${pill(on)} flex flex-none items-center gap-1.5 pl-1.5 pr-3`}
-                  onClick={() => { setPlatformSlug(p.slug); setTierPick(null); setAccepted(false); }}>
+                  onClick={(e) => { setPlatformSlug(p.slug); setTierPick(null); setAccepted(false); e.currentTarget.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" }); }}>
                   {p.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={p.image} alt="" className="h-[26px] w-[26px] rounded-lg object-cover" />
                   ) : (
-                    <span className="grid h-[26px] w-[26px] place-items-center rounded-lg text-[10px] font-extrabold text-white" style={{ background: p.color }}>{p.letter}</span>
+                    <PlatformIcon slug={p.slug} size={26} radius={8} color={p.color} />
                   )}
                   {p.name}
                 </button>

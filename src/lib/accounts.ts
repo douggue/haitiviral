@@ -16,18 +16,18 @@ export type AccountMeta = {
   about: Record<string, string>;
 };
 
-const BRANDS: [RegExp, string, string][] = [
-  [/gmail|google/, "G", "#EA4335"], [/insta/, "IG", "#C13584"], [/facebook|fb/, "f", "#1877F2"], [/tiktok/, "TT", "#000000"],
-  [/discord/, "D", "#5865F2"], [/telegram/, "TG", "#229ED9"], [/youtube/, "YT", "#FF0000"], [/twitter|^x$|-x-/, "X", "#000000"],
-  [/apple|icloud/, "", "#111827"], [/reddit/, "R", "#FF4500"], [/whatsapp/, "W", "#25D366"], [/sms|number|phone/, "SMS", "#16A34A"],
+const BRANDS: [RegExp, string, string, string?][] = [
+  [/gmail|google/, "G", "#EA4335"], [/insta/, "IG", "#C13584", "instagram"], [/facebook|fb/, "f", "#1877F2", "facebook"], [/tiktok/, "TT", "#000000", "tiktok"],
+  [/discord/, "D", "#5865F2"], [/telegram/, "TG", "#229ED9", "telegram"], [/youtube/, "YT", "#FF0000", "youtube"], [/twitter|^x$|-x-/, "X", "#000000", "x"],
+  [/apple|icloud/, "", "#111827"], [/reddit/, "R", "#FF4500"], [/whatsapp/, "W", "#25D366", "whatsapp"], [/sms|number|phone/, "SMS", "#16A34A"],
 ];
 
 /** Small badge for a product: letters and colour from its provider category tag ("acct:gmail"). */
 export function accountBadge(tags: string[], kind: "account" | "sms") {
   const key = (tags.find((t) => t.startsWith("acct:"))?.slice(5) ?? "").toLowerCase();
   const hit = BRANDS.find(([re]) => re.test(key));
-  if (hit) return { letters: hit[1] || key.slice(0, 1).toUpperCase(), color: hit[2] };
-  return kind === "sms" ? { letters: "SMS", color: "#16A34A" } : { letters: key.slice(0, 2).toUpperCase() || "#", color: "#00209F" };
+  if (hit) return { letters: hit[1] || key.slice(0, 1).toUpperCase(), color: hit[2], logo: hit[3] };
+  return kind === "sms" ? { letters: "SMS", color: "#16A34A", logo: undefined } : { letters: key.slice(0, 2).toUpperCase() || "#", color: "#00209F", logo: undefined };
 }
 
 export function parseAccountMeta(v: unknown): AccountMeta | null {

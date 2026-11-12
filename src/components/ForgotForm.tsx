@@ -62,7 +62,7 @@ export function ForgotForm({ emailEnabled, whatsappNumber }: { emailEnabled: boo
             <label htmlFor="email" className="label">{t("email")}</label>
             <input id="email" type="email" autoComplete="email" placeholder={t("emailPlaceholder")} className="input" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
-          <a href={`https://wa.me/${whatsappNumber}?text=${waText}`} target="_blank" rel="noopener" className="btn min-h-12 w-full bg-[#1fa855] text-white hover:bg-[#178a45]">
+          <a href={`https://wa.me/${whatsappNumber}?text=${waText}`} target="_blank" rel="noopener" className="btn min-h-12 w-full bg-[#15803D] text-white hover:bg-[#166534]">
             <WhatsAppIcon /> {t("forgotWhatsappButton")}
           </a>
         </div>

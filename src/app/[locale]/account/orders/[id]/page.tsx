@@ -107,7 +107,7 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
               <div>
                 <p className="font-medium">{itemTitle(item, locale)}{item.quantity > 1 ? ` × ${item.quantity}` : ""}</p>
                 <dl className="mt-1 space-y-0.5 text-sm">
-                  {Object.entries(item.fieldValues as Record<string, string>).filter(([k]) => !["riskAcceptedAt", "trial", "amountUsd", "feeUsd", "rate", "termsAcceptedAt", "warrantyHours", "publicConfirmedAt"].includes(k)).map(([k, v]) => (
+                  {Object.entries(item.fieldValues as Record<string, string>).filter(([k]) => !["riskAcceptedAt", "trial", "amountUsd", "feeUsd", "rate", "termsAcceptedAt", "warrantyHours", "publicConfirmedAt", "pack", "packName", "path", "equals"].includes(k)).map(([k, v]) => (
                     <div key={k} className="flex gap-1.5"><dt className="text-muted">{td.has(k) ? td(k) : k}:</dt><dd className="min-w-0 whitespace-pre-line break-all font-medium">{v}</dd></div>
                   ))}
                 </dl>
@@ -157,7 +157,7 @@ export default async function OrderPage({ params }: { params: Promise<{ locale: 
                 <p className="mt-1 whitespace-pre-wrap">{item.deliveryNote}</p>
               </div>
             )}
-            <Link href={parseAccountMeta(item.variant.account) ? `/accounts/${item.variant.product.slug}` : item.variant.product.tags.some((x) => x.startsWith("kind:")) ? `/order?platform=${item.variant.product.category.slug}&kind=${item.variant.product.tags.find((x) => x.startsWith("kind:"))!.slice(5)}` : `/products/${item.variant.product.slug}`} className="inline-block text-sm font-semibold text-primary">{to("buyAgain")} →</Link>
+            <Link href={parseAccountMeta(item.variant.account) ? `/accounts/${item.variant.product.slug}` : item.variant.product.tags.some((x) => x.startsWith("kind:")) ? `/order?platform=${item.variant.product.category.slug}&kind=${item.variant.product.tags.find((x) => x.startsWith("kind:"))!.slice(5)}` : item.variant.product.category.slug === "pake" ? `/order/pack/${item.variant.product.slug}` : `/order?platform=${item.variant.product.category.slug}`} className="inline-block text-sm font-semibold text-primary">{to("buyAgain")} →</Link>
           </div>
         ))}
         <div className="flex items-center justify-between p-5">
